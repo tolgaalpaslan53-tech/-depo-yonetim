@@ -3,7 +3,7 @@ const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 const date=s=>s?new Date(s).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',dateStyle:'short',timeStyle:'short'}):'—';
 const day=s=>new Date(s).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
 const qty=h=>(Number(h||0)/2).toLocaleString('tr-TR',{maximumFractionDigits:1});
-let tasks=[],moves=[],holds=[],holdMoves=[],events=[],users=[],refreshing=false,tab='active',selected=null,interval;
+let tasks=[],moves=[],holds=[],holdMoves=[],events=[],users=[],refreshing=false,tab='active',selected=null,interval,historyState={};
 const role=()=>profile?.role, own=()=>session?.user?.id;
 const api=async(path,opts)=>req('/rest/v1/'+path,opts);
 const action=async(name,id=null,data={})=>req('/rest/v1/rpc/v9_action',{method:'POST',body:{p_action:name,p_task:id,p_data:data}});
@@ -19,6 +19,10 @@ async function load(){if(!session||!profile||refreshing)return;refreshing=true;t
  const data=await Promise.all(base);[tasks,moves,users]=data;if(['count','fork','admin'].includes(role()))[holds,holdMoves]=data.slice(3,5);if(role()==='admin')events=data[5];render();
  }catch(ex){msg('V9 kurulum veya bağlantı hatası: '+ex.message)}finally{refreshing=false}}
 function render(){const root=document.getElementById('v9Body');if(!root)return;
+ const fields=['v9From','v9To','v9StoreFilter','v9DockFilter','v9PersonFilter'];
+ if(tab==='history')fields.forEach(id=>{const el=document.getElementById(id);if(el)historyState[id]=el.value});
+ const activeEl=document.activeElement;const typing=activeEl&&root.contains(activeEl)&&['INPUT','TEXTAREA','SELECT'].includes(activeEl.tagName);
+ if(typing)return;
  let html='<div class="v9tabs"><button data-tab="active">Aktif mağazalar</button><button data-tab="history">Tarih / geçmiş</button>';
  if(['count','fork','admin'].includes(role()))html+='<button data-tab="hold">Mal kabul bekleyen</button>';
  if(role()==='admin')html+='<button data-tab="audit">Yönetici</button>';
@@ -36,9 +40,9 @@ function render(){const root=document.getElementById('v9Body');if(!root)return;
  const create=root.querySelector('#v9Create');if(create)create.onsubmit=async ev=>{ev.preventDefault();const f=new FormData(create);await execute('create',null,{store:f.get('store'),dock:f.get('dock')})};
  const search=root.querySelector('#v9Search');if(search){search.oninput=drawList;drawList()}
  if(tab==='history'){
-  const now=day(new Date());root.querySelector('#v9From').value=now;root.querySelector('#v9To').value=now;
-  root.querySelectorAll('#v9From,#v9To,#v9StoreFilter,#v9DockFilter,#v9PersonFilter').forEach(x=>x.oninput=drawHistory);
-  root.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{const offset={today:0,yesterday:1,week:6,month:29}[b.dataset.range];const d=new Date();d.setDate(d.getDate()-offset);root.querySelector('#v9From').value=day(d);root.querySelector('#v9To').value=b.dataset.range==='yesterday'?day(d):now;drawHistory()});
+  const now=day(new Date());root.querySelector('#v9From').value=historyState.v9From||now;root.querySelector('#v9To').value=historyState.v9To||now;for(const id of ['v9StoreFilter','v9DockFilter','v9PersonFilter'])root.querySelector('#'+id).value=historyState[id]||'';
+  root.querySelectorAll('#v9From,#v9To,#v9StoreFilter,#v9DockFilter,#v9PersonFilter').forEach(x=>x.oninput=()=>{historyState[x.id]=x.value;drawHistory()});
+  root.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{const offset={today:0,yesterday:1,week:6,month:29}[b.dataset.range];const d=new Date();d.setDate(d.getDate()-offset);root.querySelector('#v9From').value=day(d);root.querySelector('#v9To').value=b.dataset.range==='yesterday'?day(d):now;historyState.v9From=root.querySelector('#v9From').value;historyState.v9To=root.querySelector('#v9To').value;drawHistory()});
   root.querySelector('#v9Export').onclick=exportCsv;drawHistory();
  }
  if(tab==='hold'){if(root.querySelector('#v9Hold'))root.querySelector('#v9Hold').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target);await execute('hold_create',null,{product:f.get('product'),location:f.get('location'),reason:f.get('reason'),halves:Math.round(Number(f.get('qty'))*2)})};drawHolds()}
@@ -56,13 +60,13 @@ function detail(id){const t=tasks.find(t=>t.id===id),el=document.getElementById(
  h+='<h4>Palet hareket geçmişi</h4>'+moves.filter(m=>m.task_id===id).map(m=>`<div class="small">${date(m.created_at)} • ${E(name(m.actor_id))} • ${m.halves>0?'+':''}${qty(m.halves)} palet${m.undo_of?' (geri alma)':''}</div>`).join('')+'</div>';el.innerHTML=h;
  el.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>execute('move',id,{halves:Number(b.dataset.move),request_id:crypto.randomUUID()}));
  el.querySelectorAll('[data-action]').forEach(b=>b.onclick=async()=>{const a=b.dataset.action;let data={};if(a==='ship_load')data={halves:Math.round(Number(el.querySelector('#v9Loaded').value)*2)};if(a==='dock_change')data={dock:el.querySelector('#v9DockNew').value};if(['ship_done','move_done','pick_done','undo'].includes(a)&&!confirm('İşlem onaylansın mı?'))return;await execute(a,id,data)});
- el.scrollIntoView({behavior:'smooth',block:'nearest'});
+ 
 }
 async function execute(a,id,data){const buttons=[...document.querySelectorAll('#v9Body button')];buttons.forEach(b=>b.disabled=true);try{await action(a,id,data);msg('İşlem kaydedildi.');await load()}catch(ex){msg('Hata: '+ex.message)}finally{buttons.forEach(b=>b.disabled=false)}}
 function historyRows(){const from=document.getElementById('v9From')?.value,to=document.getElementById('v9To')?.value,store=document.getElementById('v9StoreFilter')?.value.toLocaleLowerCase('tr-TR'),dock=document.getElementById('v9DockFilter')?.value.toLocaleLowerCase('tr-TR'),person=document.getElementById('v9PersonFilter')?.value;return moves.filter(m=>{const t=tasks.find(t=>t.id===m.task_id);if(!t)return false;const d=day(m.created_at);return (!from||d>=from)&&(!to||d<=to)&&(!store||t.store.toLocaleLowerCase('tr-TR').includes(store))&&(!dock||t.dock.toLocaleLowerCase('tr-TR').includes(dock))&&(!person||m.actor_id===person)}).map(m=>{const t=tasks.find(t=>t.id===m.task_id);return [date(m.created_at),t.store,t.dock,name(m.actor_id),qty(m.halves),t.id]})}
 function drawHistory(){const el=document.getElementById('v9History');if(!el)return;const rows=historyRows();el.innerHTML='<p><b>'+qty(rows.reduce((s,r)=>s+Math.round(Number(r[4].replace(',','.'))*2),0))+' palet</b> net hareket • '+rows.length+' işlem</p>'+rows.map(r=>`<div class="v9entry">${r.slice(0,5).map(E).join(' • ')}</div>`).join('')}
 function exportCsv(){const rows=[['Tarih','Mağaza','Peron','Personel','Palet','İş numarası'],...historyRows()];const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='v9-palet-hareketleri.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function drawHolds(){const el=document.getElementById('v9Holds');if(!el)return;el.innerHTML=holds.map(h=>{const used=holdMoves.filter(m=>m.hold_id===h.id).reduce((n,m)=>n+m.halves,0),remaining=h.initial_halves-used;return `<div class="v9entry"><b>${E(h.product)}</b> • ${E(h.location)} • ${qty(remaining)} palet kaldı<div class="small">${E(h.reason)} • ${date(h.created_at)} • ${E(name(h.created_by))}</div>${remaining>0&&role()!=='admin'?`<button data-hold="${h.id}" data-halves="1">0,5 içeri al</button> <button data-hold="${h.id}" data-halves="2" ${remaining<2?'disabled':''}>1 içeri al</button>`:''}</div>`}).join('');el.querySelectorAll('[data-hold]').forEach(b=>b.onclick=()=>execute('hold_move',b.dataset.hold,{halves:Number(b.dataset.halves)}))}
-function init(){if(!session||!profile)return;let panel=document.getElementById('v9Panel');if(!panel){panel=document.createElement('section');panel.id='v9Panel';panel.className='card';panel.innerHTML='<h2>📦 V9 — Mağaza ve Peron Takibi</h2><p id="v9Message" class="small"></p><button id="v9Reload" class="alt">↻ V9 Yenile</button><div id="v9Body"></div>';document.getElementById('app').appendChild(panel);document.getElementById('v9Reload').onclick=load;}panel.classList.remove('hidden');load();clearInterval(interval);interval=setInterval(()=>{if(!document.hidden&&!panel.contains(document.activeElement))load()},12000)}
+function init(){if(!session||!profile)return;let panel=document.getElementById('v9Panel');if(!panel){panel=document.createElement('section');panel.id='v9Panel';panel.className='card';panel.innerHTML='<h2>📦 Peron Takip</h2><p id="v9Message" class="small"></p><button id="v9Reload" class="alt">↻ V9 Yenile</button><div id="v9Body"></div>';document.getElementById('app').appendChild(panel);document.getElementById('v9Reload').onclick=load;}panel.classList.toggle('hidden',role()==='count'||role()==='fork');if(role()!=='count'&&role()!=='fork')load();clearInterval(interval);interval=setInterval(()=>{if(!document.hidden&&!panel.contains(document.activeElement))load()},12000)}
 const old=boot;boot=async function(){await old();init()};if(session&&profile)init();
 })();

@@ -21,6 +21,12 @@
     const sw = await navigator.serviceWorker.register('./sw.js', { scope: './' });
     const ready = await navigator.serviceWorker.ready;
     let sub = await ready.pushManager.getSubscription();
+    
+if (sub) {
+  await sub.unsubscribe();
+  sub = null;
+}
+
     if (!sub) sub = await ready.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64ToUint8Array(key) });
     const data = { user_id: s.user.id, subscription: sub.toJSON() };
     const response = await fetch(`${s.url}/rest/v1/dx_push_subscriptions?on_conflict=user_id,endpoint`, {

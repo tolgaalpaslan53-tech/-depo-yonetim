@@ -218,5 +218,36 @@ el('adminCategoryBack').addEventListener('click',()=>{current=null;show('adminCa
 el('adminCategoryDate').addEventListener('change',()=>{el('adminDate').value=el('adminCategoryDate').value;el('adminDate').dispatchEvent(new Event('change'));refresh()});
 })();
 </script><script src="reporting.js"></script><script src="v8.js"></script><script src="v9.js"></script>
+<script>
+// Public VAPID key is not a secret. Store it only on this device.
+(function () {
+  const storageKey = 'depox_vapid_public_key';
+  const validKey = key => /^[A-Za-z0-9_-]{87,88}$/.test(key);
+  const savedKey = (localStorage.getItem(storageKey) || '').trim();
+  if (validKey(savedKey)) window.DEPOX_VAPID_PUBLIC_KEY = savedKey;
+  function setupButton() {
+    if (document.getElementById('depoxVapidSetup')) return;
+    const button = document.createElement('button');
+    button.id = 'depoxVapidSetup';
+    button.type = 'button';
+    button.className = 'alt';
+    button.textContent = '🔔 Bildirim anahtarını ayarla';
+    button.style.cssText = 'display:block;margin:10px auto;font-size:13px';
+    button.addEventListener('click', () => {
+      const value = prompt('Notlar’daki VAPID PUBLIC KEY değerini yapıştır (PRIVATE KEY değil):', localStorage.getItem(storageKey) || '');
+      if (value === null) return;
+      const key = value.trim();
+      if (!validKey(key)) { alert('Public Key yaklaşık 87 karakterlik URL-güvenli bir anahtar olmalı. Private Key veya 32 karakterlik gizli şifreyi girme.'); return; }
+      localStorage.setItem(storageKey, key);
+      window.DEPOX_VAPID_PUBLIC_KEY = key;
+      alert('Public Key bu cihazda kaydedildi. Sayfa yeniden açılacak.');
+      location.reload();
+    });
+    document.querySelector('footer')?.appendChild(button);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupButton);
+  else setupButton();
+})();
+</script>
 <script src="depox-push.js"></script>
 </body></html> 

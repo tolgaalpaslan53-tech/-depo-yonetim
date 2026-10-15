@@ -130,4 +130,4 @@ jobs:
         with:
           name: DepoX-Android-APK
           path: android-app/app/build/outputs/apk/debug/app-debug.apk
-EOF
+

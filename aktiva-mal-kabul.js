@@ -6,6 +6,7 @@ const today=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul
 const displayDate=s=>s?String(s).split('-').reverse().join('/') : '';
 const timeOf=s=>s?new Date(s).toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}):'';
 shipmentDate=today();
+let lastToday=shipmentDate;
 const dateOf=s=>s?new Date(s).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'}):'';
 const dlist=()=>typeof deliveries==='undefined'?[]:deliveries;
 const plist=()=>typeof items==='undefined'?[]:items;
@@ -15,6 +16,10 @@ function installStyle(){if($a('ak-professional-style'))return;const style=docume
 #aktivaCountUI .ak-filter-card{background:#181e2a;border:1px solid #303743;border-radius:16px;padding:15px;display:grid;gap:9px;min-width:0;margin:12px 0 16px;box-sizing:border-box}
 #aktivaCountUI .ak-filter-card label{font-size:13px;font-weight:650;color:#d6dce6;margin:0}
 #aktivaCountUI .ak-filter-card input{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;border:1px solid #424a58;border-radius:11px;background:#101722;color:#fff;padding:13px 12px;font-size:16px;margin:0 0 5px;min-height:47px;color-scheme:dark}
+#aktivaCountUI .ak-date-wrap{position:relative;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden;border:1px solid #424a58;border-radius:11px;background:#101722;min-height:49px;display:flex;align-items:center;padding:0 13px}
+#aktivaCountUI .ak-date-display{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;font-size:16px;color:#fff;pointer-events:none}
+#aktivaCountUI .ak-date-wrap input[type=date]{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-width:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer;z-index:2}
+#aktivaCountUI .ak-date-wrap:focus-within{outline:2px solid #dc3049;outline-offset:1px}
 #aktivaCountUI .ak-filter-card input:focus{outline:2px solid #dc3049;outline-offset:1px}
 #aktivaCountUI .ak-filter-card input::placeholder{color:#9da5b3}
 #aktivaCountUI .ak-list-count{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:13px 0;color:#fff;font-size:15px}
@@ -28,7 +33,8 @@ function installStyle(){if($a('ak-professional-style'))return;const style=docume
 `;document.head.appendChild(style)}
 function toast(t){msg=t;render();}
 function build(){installStyle();if($a('aktivaCountUI'))return;const el=document.createElement('section');el.id='aktivaCountUI';el.className='hidden';$a('app').insertBefore(el,$a('message'));}
-function nav(to){if(to==='list')shipmentDate=today();view=to;opened=null;editId=null;msg='';render();}
+function nav(to){if(to==='list')shipmentDate=today();
+let lastToday=shipmentDate;view=to;opened=null;editId=null;msg='';render();}
 function options(arr,q){if(!q?.trim())return '';return [...arr].filter(x=>x.toLocaleLowerCase('tr').includes(q.toLocaleLowerCase('tr'))&&x.toLocaleLowerCase('tr')!==q.toLocaleLowerCase('tr')).slice(0,5).map(x=>`<button type="button" class="ak-suggestion" data-suggest="${safe(x)}">${safe(x)}</button>`).join('')}
 function summary(){const day=today(),me=session?.user?.id;const mine=dlist().filter(d=>d.created_by===me&&dateOf(d.arrived_at)===day);const counted=plist().filter(p=>p.counted_by===me&&p.count_completed&&dateOf(p.counted_at)===day);return {shipments:mine.length,products:counted.length,pallets:counted.reduce((a,p)=>a+Number(p.pallet_count||0),0)}}
 function message(s){if(!s.products)return 'Yeni bir gün, yeni fırsatlar.';if(s.products>=10)return 'Bugün büyük emek verdin, teşekkürler!';if(s.products>=3)return 'Güzel ilerliyorsun, emeğine sağlık!';return 'İyi bir başlangıç yaptın!'}
@@ -38,7 +44,7 @@ let html=`<div class="ak-user"><span class="ak-avatar">♙</span><div style="fle
 if(view==='home')html+=`<button class="ak-tile ak-primary" id="ak-new"><span class="ak-tile-icon">▣</span><strong>Ürün Kaydet</strong></button><button class="ak-tile" id="ak-list"><span class="ak-tile-icon">▤</span><strong>Kaydedilen Sevkiyatlar</strong><small>${dlist().length} sevkiyat</small></button>`;
 if(view==='create')html+=`<div class="ak-heading"><h2>Yeni Sevkiyat</h2><button class="ak-back" id="ak-back">Geri</button></div><form id="ak-form"><label>Gönderen firma *<input id="ak-firm" autocomplete="off" required maxlength="150" placeholder="Firma adı" value="${safe(draftFirm)}"></label><div id="ak-firm-suggestions" class="ak-suggestions"></div><label>Plaka (isteğe bağlı)<input id="ak-plate" maxlength="80" placeholder="48 ABC 123" value="${safe(draftPlate)}"></label><h3>Ürün Listesi</h3><div id="ak-lines">${lines.map((p,i)=>`<div class="ak-line"><div><strong>${safe(p.name)}</strong><small>${p.cartons} koli · ${p.pallets} palet</small></div><button type="button" class="ak-remove" data-remove="${i}">Sil</button></div>`).join('')}</div><label>Ürün adı<input id="ak-product" autocomplete="off" maxlength="200" placeholder="Ürün adı" value="${safe(draftName)}"></label><div id="ak-product-suggestions" class="ak-suggestions"></div><div class="ak-two"><label>Kaç koli?<input id="ak-cartons" type="number" min="1" step="1" placeholder="120"></label><label>Kaç palet?<input id="ak-pallets" type="number" min="1" step="1" placeholder="3"></label></div><button type="button" class="ak-outline" id="ak-add">+ Listeye Ürün Ekle</button><button type="submit" class="ak-submit" id="ak-save">Sevkiyatı Kaydet</button></form>`;
 if(view==='list'){
- html+=`<div class="ak-heading"><h2>Kaydedilen Sevkiyatlar</h2><button class="ak-back" id="ak-back">Geri</button></div><div class="ak-filter-card"><label for="ak-date-filter">Sevkiyat tarihi</label><input type="date" id="ak-date-filter" lang="tr-TR" value="${safe(shipmentDate)}"><label for="ak-shipment-search">Sevkiyat ara</label><input type="search" id="ak-shipment-search" autocomplete="off" placeholder="Firma adı veya plaka..." value="${safe(shipmentSearch)}"></div>`;
+ html+=`<div class="ak-heading"><h2>Kaydedilen Sevkiyatlar</h2><button class="ak-back" id="ak-back">Geri</button></div><div class="ak-filter-card"><label for="ak-date-filter">Sevkiyat tarihi</label><div class="ak-date-wrap"><span class="ak-date-display"><span id="ak-date-text">${safe(displayDate(shipmentDate))}</span><span aria-hidden="true">▦</span></span><input type="date" id="ak-date-filter" aria-label="Sevkiyat tarihi seç" value="${safe(shipmentDate)}"></div><label for="ak-shipment-search">Sevkiyat ara</label><input type="search" id="ak-shipment-search" autocomplete="off" placeholder="Firma adı veya plaka..." value="${safe(shipmentSearch)}"></div>`;
  const filtered=dlist().filter(d=>dateOf(d.arrived_at)===shipmentDate&&(String(d.supplier||'')+' '+String(d.vehicle||'')).toLocaleLowerCase('tr-TR').includes(shipmentSearch.trim().toLocaleLowerCase('tr-TR'))).sort((a,b)=>new Date(b.arrived_at)-new Date(a.arrived_at));
  html+=`<div class="ak-list-count"><strong>Sevkiyat Kayıtları</strong><span>${filtered.length} kayıt</span></div>`;
  for(const d of filtered){
@@ -74,5 +80,5 @@ function bindSuggest(type){const root=container(),id=type==='firm'?'ak-firm':'ak
 const oldRender=typeof render==='function'?render:null;
 // Ana uygulamanın yenileme ve oturum akışına müdahale etmeden, veriler yenilendiğinde ekranı güncelle.
 const observe=new MutationObserver(()=>{if(!logged())container()?.classList.add('hidden');else if(container()?.classList.contains('hidden'))render()});
-window.addEventListener('load',()=>{build();observe.observe($a('app'),{attributes:true,attributeFilter:['class']});setInterval(()=>{if(logged()&&!document.hidden&&view!=='create'&&editId===null&&!container()?.contains(document.activeElement))render()},10000);render()});
+window.addEventListener('load',()=>{build();observe.observe($a('app'),{attributes:true,attributeFilter:['class']});setInterval(()=>{const currentDay=today();if(currentDay!==lastToday){if(shipmentDate===lastToday)shipmentDate=currentDay;lastToday=currentDay;}if(logged()&&!document.hidden&&view!=='create'&&editId===null&&!container()?.contains(document.activeElement))render()},10000);render()});
 })();

@@ -1,7 +1,7 @@
 /* AKTİVA: Mal Kabul sade mobil arayüz. Mevcut Supabase oturumunu ve tablolarını kullanır. */
 (()=>{'use strict';
 const $a=id=>document.getElementById(id), safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let view='home',lines=[],editId=null,opened=null,firmNames=new Set(),productNames=new Set(),msg='',draftName='',draftFirm='',draftPlate='';
+let view='home',lines=[],editId=null,opened=null,firmNames=new Set(),productNames=new Set(),msg='',draftName='',draftFirm='',draftPlate='',shipmentDate='';
 const today=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
 const dateOf=s=>s?new Date(s).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'}):'';
 const dlist=()=>typeof deliveries==='undefined'?[]:deliveries;
@@ -16,14 +16,15 @@ function summary(){const day=today(),me=session?.user?.id;const mine=dlist().fil
 function message(s){if(!s.products)return 'Yeni bir gün, yeni fırsatlar.';if(s.products>=10)return 'Bugün büyük emek verdin, teşekkürler!';if(s.products>=3)return 'Güzel ilerliyorsun, emeğine sağlık!';return 'İyi bir başlangıç yaptın!'}
 function render(){build();const el=container();el.classList.toggle('hidden',!logged());if(!logged())return;
 const me=profile?.full_name||'Personel', stats=summary();firmNames=new Set([...firmNames,...dlist().map(d=>d.supplier).filter(Boolean)]);productNames=new Set([...productNames,...plist().map(p=>p.name).filter(Boolean)]);
-let html=`<div class="ak-user"><span class="ak-avatar">♙</span><div><small>Hoş geldin</small><strong>${safe(me)}</strong><small>Mal Kabul Personeli</small></div></div>`;
+let html=`<div class="ak-user"><span class="ak-avatar">♙</span><div style="flex:1;min-width:0"><small>Hoş geldin</small><strong>${safe(me)}</strong><small>Mal Kabul Personeli</small></div><button type="button" id="ak-logout" class="ak-outline" style="flex-shrink:0;padding:9px 12px;font-size:12px">Çıkış Yap</button></div>`;
 if(view==='home')html+=`<button class="ak-tile ak-primary" id="ak-new"><span class="ak-tile-icon">▣</span><strong>Ürün Kaydet</strong></button><button class="ak-tile" id="ak-list"><span class="ak-tile-icon">▤</span><strong>Kaydedilen Sevkiyatlar</strong><small>${dlist().length} sevkiyat</small></button>`;
 if(view==='create')html+=`<div class="ak-heading"><h2>Yeni Sevkiyat</h2><button class="ak-back" id="ak-back">Geri</button></div><form id="ak-form"><label>Gönderen firma *<input id="ak-firm" autocomplete="off" required maxlength="150" placeholder="Firma adı" value="${safe(draftFirm)}"></label><div id="ak-firm-suggestions" class="ak-suggestions"></div><label>Plaka (isteğe bağlı)<input id="ak-plate" maxlength="80" placeholder="48 ABC 123" value="${safe(draftPlate)}"></label><h3>Ürün Listesi</h3><div id="ak-lines">${lines.map((p,i)=>`<div class="ak-line"><div><strong>${safe(p.name)}</strong><small>${p.cartons} koli · ${p.pallets} palet</small></div><button type="button" class="ak-remove" data-remove="${i}">Sil</button></div>`).join('')}</div><label>Ürün adı<input id="ak-product" autocomplete="off" maxlength="200" placeholder="Ürün adı" value="${safe(draftName)}"></label><div id="ak-product-suggestions" class="ak-suggestions"></div><div class="ak-two"><label>Kaç koli?<input id="ak-cartons" type="number" min="1" step="1" placeholder="120"></label><label>Kaç palet?<input id="ak-pallets" type="number" min="1" step="1" placeholder="3"></label></div><button type="button" class="ak-outline" id="ak-add">+ Listeye Ürün Ekle</button><button type="submit" class="ak-submit" id="ak-save">Sevkiyatı Kaydet</button></form>`;
 if(view==='list'){
- html+=`<div class="ak-heading"><h2>Kaydedilen Sevkiyatlar</h2><button class="ak-back" id="ak-back">Geri</button></div>`;
- for(const d of dlist()){
+ html+=`<div class="ak-heading"><h2>Kaydedilen Sevkiyatlar</h2><button class="ak-back" id="ak-back">Geri</button></div><div class="ak-shipment"><label for="ak-date-filter">Sevkiyat tarihi</label><input type="date" id="ak-date-filter" value="${safe(shipmentDate)}"><button type="button" id="ak-all-dates" class="ak-outline" style="margin-top:8px;padding:8px 12px">Tüm Tarihler</button></div>`;
+ const filtered=dlist().filter(d=>!shipmentDate||dateOf(d.arrived_at)===shipmentDate);
+ for(const d of filtered){
   const ps=plist().filter(p=>p.delivery_id===d.id);
-  html+=`<div class="ak-shipment"><button class="ak-shipment-head" data-open="${safe(d.id)}"><strong>${safe(d.supplier)}</strong><small>${safe(d.vehicle||'Plakasız')} · ${ps.length} ürün</small></button>`;
+  html+=`<div class="ak-shipment"><button class="ak-shipment-head" data-open="${safe(d.id)}"><strong>${safe(d.supplier)}</strong><small>${safe(d.vehicle||'Plakasız')} · ${ps.length} ürün · ${safe(dateOf(d.arrived_at))}</small></button>`;
   if(opened===d.id){
    for(const p of ps){
     html+=`<div class="ak-product"><strong>${safe(p.name)}</strong><small>${Number(p.expected||0)} koli · ${Number(p.pallet_count||0)} palet</small><div class="ak-complete"><span>${p.count_completed?'✓ Sayımı Tamamlandı':'Bekliyor'}</span><button type="button" data-edit="${safe(p.id)}">${p.count_completed?'Düzenle':'Sayımı Tamamla'}</button></div>`;
@@ -33,11 +34,14 @@ if(view==='list'){
   }
   html+='</div>';
  }
- if(!dlist().length)html+='<p>Henüz sevkiyat bulunmuyor.</p>';
+ if(!filtered.length)html+='<p>Seçilen tarihte sevkiyat bulunmuyor.</p>';
 }
 
 html+=`<div class="ak-successes"><div class="ak-success-title">★ Günlük Başarıların <span>${new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})}</span></div><div class="ak-metrics"><div><strong>${stats.shipments}</strong><small>Sevkiyat</small></div><div><strong>${stats.products}</strong><small>Ürün</small></div><div><strong>${stats.pallets}</strong><small>Palet</small></div></div><p>${message(stats)}</p></div>`;
 if(msg)html+=`<p class="ak-message" role="status">${safe(msg)}</p>`;el.innerHTML=html;
+el.querySelector('#ak-logout')?.addEventListener('click',()=>{if(confirm('Oturumdan çıkış yapılsın mı?'))$a('logout')?.click()});
+el.querySelector('#ak-date-filter')?.addEventListener('change',e=>{shipmentDate=e.target.value;opened=null;editId=null;render()});
+el.querySelector('#ak-all-dates')?.addEventListener('click',()=>{shipmentDate='';opened=null;editId=null;render()});
 el.querySelector('#ak-new')?.addEventListener('click',()=>nav('create'));el.querySelector('#ak-list')?.addEventListener('click',()=>nav('list'));el.querySelector('#ak-back')?.addEventListener('click',()=>nav('home'));
 el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{opened=opened===b.dataset.open?null:b.dataset.open;editId=null;render()});
 el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editId=b.dataset.edit;render()});el.querySelector('#ak-cancel')?.addEventListener('click',()=>{editId=null;render()});

@@ -37,6 +37,43 @@ body:has(#login:not(.hidden)) #login:after{content:"";position:absolute;right:-2
 #login #changeCfg{background:transparent!important;color:#9d9da5!important;display:block;margin:19px auto 0;font-size:12px;box-shadow:none!important}
 @media(min-width:800px){body:has(#login:not(.hidden)) #login{width:410px}}
 @media(max-width:600px){header{padding:13px!important}.aktiva-header-logo{width:47px;height:47px}body:has(#login:not(.hidden)) .wrap{padding:18px!important}body:has(#login:not(.hidden)) #login{padding:21px!important}}
+</style><style id="aktivaCountSimplified">
+body[data-role="count"] header{max-width:580px;margin:10px auto!important;padding:12px!important}
+body[data-role="count"] header h1{font-size:20px!important}
+body[data-role="count"] #depoxRoleTitle{font-size:0!important}
+body[data-role="count"] #depoxRoleTitle:after{content:'AKTİVA';font-size:21px}
+body[data-role="count"] .wrap{max-width:610px}
+body[data-role="count"] #app>section.card.row:first-child{display:none!important}
+body[data-role="count"] #app>[data-mal-kabul],body[data-role="count"] #createPanel,body[data-role="count"] #detail,body[data-role="count"] #ocrPanel,body[data-role="count"] #v8Panel{display:none!important}
+body[data-role="count"] .card{background:#1c1f24!important;color:#fff!important}
+#aktivaCountUI{color:#fff;display:flex;flex-direction:column;gap:13px;padding:4px 0 16px}
+#aktivaCountUI.hidden{display:none!important}
+#aktivaCountUI button{font:inherit;cursor:pointer;border-radius:12px;box-shadow:none!important}
+.ak-user{display:flex;align-items:center;gap:12px;background:#1c1f24;padding:14px;border-radius:16px}
+.ak-user>div{display:flex;flex-direction:column;gap:3px}.ak-user small,.ak-tile small{color:#aeb4bd;font-size:12px}.ak-user strong{font-size:17px}.ak-avatar{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:#34373d;font-size:22px}
+#aktivaCountUI .ak-tile{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:22px 14px;min-height:116px;background:#292d33!important;color:#fff!important;border:1px solid #45484e!important}
+#aktivaCountUI .ak-tile.ak-primary{background:#c8232c!important;border:0!important}.ak-tile strong{font-size:17px}.ak-tile-icon{font-size:27px}
+.ak-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}.ak-heading h2{color:#fff;margin:4px 0;font-size:18px}
+#aktivaCountUI .ak-back,#aktivaCountUI .ak-outline{background:#292d33!important;color:#fff!important;border:1px solid #565a63!important;padding:11px 15px}
+#aktivaCountUI label{color:#e5e7eb;font-size:13px;margin:10px 0;display:block}
+#aktivaCountUI input{background:#292d33!important;border:1px solid #484b52!important;color:#fff!important;padding:12px;min-height:45px}
+#aktivaCountUI input::placeholder{color:#9298a3}
+#aktivaCountUI .ak-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#aktivaCountUI .ak-submit{background:#c8232c!important;color:white!important;padding:13px 16px;border:0!important}
+#aktivaCountUI #ak-form{display:flex;flex-direction:column;gap:6px}
+.ak-line,.ak-shipment,.ak-successes{background:#292d33;border-radius:14px;padding:13px}
+.ak-line{display:flex;justify-content:space-between;align-items:center;margin:6px 0}.ak-line strong,.ak-line small,.ak-shipment-head strong,.ak-shipment-head small,.ak-product strong,.ak-product small{display:block}.ak-line small,.ak-shipment-head small,.ak-product small{color:#b7bac2;margin-top:5px;font-size:12px}
+#aktivaCountUI .ak-remove{background:transparent!important;color:#ff9c9c!important;padding:8px}
+#aktivaCountUI .ak-suggestion{display:block;background:#33363d!important;color:#fff!important;width:100%;text-align:left;padding:10px;margin:2px 0}
+#aktivaCountUI .ak-shipment-head{background:transparent!important;color:#fff!important;border:0!important;padding:3px;text-align:left;width:100%}
+.ak-product{border-top:1px solid #484b52;margin-top:12px;padding-top:12px}
+.ak-complete{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-top:10px}.ak-complete span{font-size:12px;color:#a5e6b8}
+#aktivaCountUI .ak-complete button{background:#c8232c!important;color:#fff!important;padding:9px 12px;white-space:nowrap}
+.ak-edit-form{background:#1c1f24;padding:10px;border-radius:10px;margin-top:10px}
+.ak-successes{margin-top:7px}.ak-success-title{font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:6px}.ak-success-title span{font-size:11px;color:#b7bac2;font-weight:400}
+.ak-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.ak-metrics>div{background:#1c1f24;border-radius:10px;text-align:center;padding:12px 4px}.ak-metrics strong{font-size:23px;display:block}.ak-metrics small{color:#b7bac2;font-size:11px}.ak-successes p{font-size:13px;color:#d1d5db;margin:12px 0 0}
+.ak-message{background:#283b30;color:#d7ffe5;padding:12px;border-radius:10px;font-size:13px}
+@media(max-width:420px){body[data-role="count"] header .aktiva-header-logo{width:42px;height:42px}body[data-role="count"] header .topbadge{font-size:11px;max-width:42%}.ak-complete span{max-width:55%}}
 </style></head><body><div class="wrap"><header><div><h1 id="depoxHeading"><img class="aktiva-header-logo" src="aktiva-logo.png" alt="AKTİVA logosu"><span id="depoxRoleTitle">AKTİVA</span></h1><p class="depox-subtitle">Depoda Akıllı Yönetim</p></div><div id="account" class="topbadge"></div></header>
 <section id="setup" class="card hidden"><h2>İlk kurulum</h2><p>Bu sürüm Supabase ortak veritabanına bağlanır. Kurulum rehberindeki proje URL ve anon/publishable anahtarını girin. Bu anahtar gizli servis anahtarı değildir.</p><label>Supabase Project URL<input id="cfgUrl" placeholder="https://xxxx.supabase.co"></label><label>Anon / publishable key<input id="cfgKey" placeholder="sb_publishable_... veya eyJ..."></label><button id="saveCfg">Bağlantıyı kaydet</button><p class="small">Bağlantı bilgileri yalnızca bu cihazda tutulur. Diğer telefonda da aynı URL ve anahtar girilir.</p></section>
 <section id="login" class="card hidden"><div class="aktiva-login-brand"><img src="aktiva-logo.png" alt="AKTİVA"><p>Depoda Akıllı Yönetim</p></div><h2>Personel Girişi</h2><form id="loginForm"><label>E-posta<input type="email" id="email" autocomplete="username" required></label><label>Şifre<input type="password" id="password" autocomplete="current-password" required></label><button type="submit">Giriş Yap</button></form><button class="alt" id="changeCfg">Bağlantıyı değiştir</button></section>
@@ -289,5 +326,5 @@ el('adminCategoryDate').addEventListener('change',()=>{el('adminDate').value=el(
   if (validKey(savedKey)) window.DEPOX_VAPID_PUBLIC_KEY = savedKey;
   })();
 </script><script src="depox-push.js"></script>
-</body></html> 
+<script src="aktiva-mal-kabul.js"></script></body></html> 
 ```

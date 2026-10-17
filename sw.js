@@ -1,9 +1,9 @@
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; }
-  catch { data = { title: 'DepoX', body: event.data ? event.data.text() : 'Yeni bildirim' }; }
-  event.waitUntil(self.registration.showNotification(String(data.title || 'DepoX'), {
-    body: String(data.body || 'Yeni görev'), tag: String(data.tag || 'depox'),
+  catch { data = { title: 'AKTİVA', body: event.data ? event.data.text() : 'Yeni bildirim' }; }
+  event.waitUntil(self.registration.showNotification(String(data.title || 'AKTİVA'), {
+    body: String(data.body || 'Yeni görev'), tag: String(data.tag || 'aktiva'),
     data: { url: './' }
   }));
 });

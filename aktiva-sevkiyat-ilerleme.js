@@ -22,6 +22,6 @@ root.querySelectorAll('.ak-shipment-pro').forEach(card=>{const normal=card.query
 if(root.querySelector('[data-asn-open]'))fetchAsn();}
 async function fetchAsn(){if(loading||Date.now()-asnFetched<12000||typeof req!=='function')return;loading=true;asnFetched=Date.now();try{const data=await req('/rest/v1/aktiva_supplier_shipments?select=id,delivery_id&order=created_at.desc&limit=500');if(Array.isArray(data)){asnCache=data;queue()}}catch(e){/* Kayıtların görünmesini engelleme */}finally{loading=false}}
 function queue(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;update()})}
-function init(){install();const root=document.getElementById('aktivaCountUI');if(root)new MutationObserver(queue).observe(root,{childList:true,subtree:true});queue();document.addEventListener('visibilitychange',()=>{if(!document.hidden){asnFetched=0;queue()}})}
+function init(){install();let watched=null;const observer=new MutationObserver(()=>{const root=document.getElementById('aktivaCountUI');if(root&&root!==watched){watched=root;new MutationObserver(queue).observe(root,{childList:true,subtree:true});queue()}});observer.observe(document.body,{childList:true,subtree:true});const root=document.getElementById('aktivaCountUI');if(root){watched=root;new MutationObserver(queue).observe(root,{childList:true,subtree:true})}queue();document.addEventListener('visibilitychange',()=>{if(!document.hidden){asnFetched=0;queue()}})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

@@ -109,6 +109,6 @@ function attachMini(){
 new MutationObserver(attachMini).observe(document.documentElement,{childList:true,subtree:true});
 document.addEventListener('DOMContentLoaded',attachMini);
 
-function attach(){const root=document.getElementById('aktivaCountUI');if(!root||root.classList.contains('hidden')||root.querySelector('#ac-open'))return;const b=document.createElement('button');b.id='ac-open';b.textContent='▥ Ürün Kataloğu Yönetimi';b.style.cssText='display:block;width:100%;margin:10px 0;background:#c62842;color:white;padding:14px;border:0;border-radius:10px;font-weight:700';b.onclick=open;root.prepend(b)}
+function attach(){const root=document.getElementById('aktivaCountUI');if(!root||root.classList.contains('hidden'))return;const existing=root.querySelector('#ac-open');if(existing){existing.style.display=root.querySelector('#ak-new')?'block':'none';return;}const b=document.createElement('button');b.id='ac-open';b.textContent='▥ Ürün Kataloğu Yönetimi';b.style.cssText='display:block;width:100%;margin:10px 0;background:#c62842;color:white;padding:14px;border:0;border-radius:10px;font-weight:700';b.onclick=open;b.style.display=root.querySelector('#ak-new')?'block':'none';root.prepend(b)}
 new MutationObserver(attach).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});document.addEventListener('DOMContentLoaded',attach);
 })();

@@ -30,7 +30,8 @@ root.querySelectorAll('[data-open]').forEach(b=>{if(!b.dataset.sevenBound){b.dat
 root.querySelectorAll('[data-edit]').forEach(b=>{if(!b.dataset.sevenBound){b.dataset.sevenBound='1';b.addEventListener('click',()=>{const p=list().find(x=>x.id===b.dataset.edit);if(p)markStart(p.delivery_id)})}});
 const opened=root.querySelector('.ak-count-summary');if(opened&&!opened.querySelector('.ak-seven-timing')){const div=document.createElement('p');div.className='ak-seven-timing';div.style.color='#d1d5db';div.textContent='Sayım süresi: '+duration(list().find(x=>x.id===currentId())?.delivery_id);opened.append(div)}
 }
-function applyCode(code){code=String(code||'').trim();if(!code)return;stopScanner();if(window.AKTIVA_openBarcodeMatch){Promise.resolve(window.AKTIVA_openBarcodeMatch(code)).catch(err=>banner('Eşleştirme ekranı açılamadı: '+err.message,true));return;}const p=list().find(x=>x.barcode===code||x.sku===code);if(p){const search=$('#ak-product-filter');if(search){search.value=p.name;search.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod eşleşti: '+p.name)}else{const product=$('#ak-product');if(product){product.value=code;product.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod okundu: '+code+' · Ürün eşleşmesini kontrol edin.')}stopScanner()}
+let scanPurpose='catalog';
+function applyCode(code){code=String(code||'').trim();if(!code)return;stopScanner();banner('✓ Barkod başarıyla okundu: '+code);if(scanPurpose==='shipment'&&typeof window.AKTIVA_miniBarcodeHandler==='function' && window.AKTIVA_miniBarcodeHandler(code)===true)return;if(window.AKTIVA_openBarcodeMatch){Promise.resolve(window.AKTIVA_openBarcodeMatch(code)).catch(err=>banner('Eşleştirme ekranı açılamadı: '+err.message,true));return;}const p=list().find(x=>x.barcode===code||x.sku===code);if(p){const search=$('#ak-product-filter');if(search){search.value=p.name;search.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod eşleşti: '+p.name)}else{const product=$('#ak-product');if(product){product.value=code;product.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod okundu: '+code+' · Ürün eşleşmesini kontrol edin.')}stopScanner()}
 let zxingReader=null,zxingControls=null,scannerActive=false,scannerLoading=null,scanGeneration=0;
 function loadZXing(){
  if(window.ZXingBrowser?.BrowserMultiFormatReader)return Promise.resolve(window.ZXingBrowser);
@@ -58,7 +59,7 @@ function scannerBox(){
  return box;
 }
 function scanMessage(message,error=false){const x=document.getElementById('ak-scanner-status');if(x){x.textContent=message;x.style.color=error?'#ffb4b4':'#c9f6d3'}banner(message,error)}
-async function startScanner(){
+async function startScanner(purpose='catalog'){scanPurpose=purpose==='shipment'?'shipment':'catalog';
  const box=scannerBox();if(scannerActive)return;
  const generation=++scanGeneration;
  scannerActive=true;box.style.display='block';
@@ -86,8 +87,14 @@ async function startScanner(){
   const controls=await zxingReader.decodeFromVideoDevice(undefined,video,(result,err)=>{
    if(!valid())return;
    if(result){applyCode(result.getText());return}
-   if(err && !['NotFoundException','ChecksumException','FormatException'].includes(err.name)){
-    scanMessage('Barkod okunamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
+   if(err){
+    // ZXing reports an undecodable frame as an exception on every scan cycle.
+    // These are expected until a barcode enters the camera view.
+    const name=String(err.name||'');
+    const message=String(err.message||'');
+    const expected=['NotFoundException','ChecksumException','FormatException'].includes(name)
+      || /No MultiFormat Readers were able to detect the code|No code detected|not found|checksum|format exception/i.test(message);
+    if(!expected)scanMessage('Okuyucu hatası: '+message+' · Elle giriş yapabilirsiniz.',true);
    }
   });
   if(!valid()){controls.stop();return}
@@ -107,5 +114,6 @@ function stopScanner(hide=true){
  const box=document.getElementById('ak-seven-scanner-overlay');
  if(box){const video=box.querySelector('video');if(video){try{video.pause()}catch(_){}video.srcObject=null}if(hide)box.style.display='none'}
 }
+window.AKTIVA_startBarcodeScanner=startScanner;
 let last='';const observer=new MutationObserver(()=>{if(rendering)return;rendering=true;try{enhance()}finally{rendering=false}});window.addEventListener('load',()=>{const root=$('#app');if(root)observer.observe(root,{subtree:true,childList:true});enhance();setInterval(()=>{if(role()){updateStatus();if(navigator.onLine&&pendingCount())flush()}},12000)});document.addEventListener('input',e=>{if(role()&&(e.target.closest('#ak-form')||e.target.closest('[data-editform]')))draftSave()},true);window.addEventListener('online',flush);window.addEventListener('beforeunload',stopScanner);
 })();

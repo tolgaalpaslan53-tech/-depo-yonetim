@@ -31,7 +31,48 @@ root.querySelectorAll('[data-edit]').forEach(b=>{if(!b.dataset.sevenBound){b.dat
 const opened=root.querySelector('.ak-count-summary');if(opened&&!opened.querySelector('.ak-seven-timing')){const div=document.createElement('p');div.className='ak-seven-timing';div.style.color='#d1d5db';div.textContent='Sayım süresi: '+duration(list().find(x=>x.id===currentId())?.delivery_id);opened.append(div)}
 }
 function applyCode(code){code=String(code||'').trim();if(!code)return;const p=list().find(x=>x.barcode===code||x.sku===code);if(p){const search=$('#ak-product-filter');if(search){search.value=p.name;search.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod eşleşti: '+p.name)}else{const product=$('#ak-product');if(product){product.value=code;product.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod okundu: '+code+' · Ürün eşleşmesini kontrol edin.')}stopScanner()}
-async function startScanner(){const box=$('#ak-seven-scanner');if(!box)return;box.style.display='block';if(!navigator.mediaDevices?.getUserMedia){banner('Kamera kullanılamıyor; barkodu elle girebilirsiniz.',true);return}try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});const video=box.querySelector('video');video.srcObject=scanStream;await video.play();if(!('BarcodeDetector'in window)){banner('Bu tarayıcıda otomatik barkod okuma desteklenmiyor. Kodu elle girin.');return}const detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e']});scannerTimer=setInterval(async()=>{if(video.readyState<2)return;try{const codes=await detector.detect(video);if(codes[0])applyCode(codes[0].rawValue)}catch{}},650)}catch(e){banner('Kamera açılamadı: '+e.message+' · Barkodu elle girin.',true)}}
-function stopScanner(){if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;if(scanStream)scanStream.getTracks().forEach(t=>t.stop());scanStream=null;const box=$('#ak-seven-scanner');if(box)box.style.display='none'}
+let zxingReader=null,scannerActive=false,scannerLoading=null;
+function loadZXing(){
+ if(window.ZXing?.BrowserMultiFormatReader)return Promise.resolve(window.ZXing);
+ if(scannerLoading)return scannerLoading;
+ scannerLoading=new Promise((resolve,reject)=>{
+  const script=document.createElement('script');
+  script.src='https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+  script.async=true;
+  script.onload=()=>window.ZXing?.BrowserMultiFormatReader?resolve(window.ZXing):reject(Error('Barkod okuyucu yüklenemedi'));
+  script.onerror=()=>reject(Error('Barkod kütüphanesi indirilemedi; internet bağlantısını kontrol edin'));
+  document.head.appendChild(script);
+ }).catch(err=>{scannerLoading=null;throw err});
+ return scannerLoading;
+}
+async function startScanner(){
+ const box=$('#ak-seven-scanner');if(!box||scannerActive)return;
+ scannerActive=true;box.style.display='block';
+ if(!navigator.mediaDevices?.getUserMedia){scannerActive=false;banner('Kamera kullanılamıyor; barkodu elle girebilirsiniz.',true);return}
+ try{
+  scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+  if(!scannerActive){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;return}
+  const video=box.querySelector('video');video.srcObject=scanStream;await video.play();
+  banner('Kamerayı barkoda doğrultun.');
+  if('BarcodeDetector'in window){
+   try{
+    const detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf']});
+    let busy=false;
+    scannerTimer=setInterval(async()=>{if(!scannerActive||busy||video.readyState<2)return;busy=true;try{const codes=await detector.detect(video);if(codes[0]&&scannerActive)applyCode(codes[0].rawValue)}catch{}finally{busy=false}},400);
+    return;
+   }catch(_){/* Desteklenmeyen formatlarda ZXing'e geç. */}
+  }
+  const ZXing=await loadZXing();if(!scannerActive)return;
+  zxingReader=new ZXing.BrowserMultiFormatReader();
+  zxingReader.decodeFromVideoElement(video).then(result=>{if(scannerActive&&result)applyCode(result.getText())}).catch(err=>{if(scannerActive)banner('Barkod okunamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true)});
+ }catch(err){if(scannerActive)banner('Okuyucu başlatılamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);stopScanner(false)}
+}
+function stopScanner(hide=true){
+ scannerActive=false;
+ if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;
+ if(zxingReader){try{zxingReader.reset()}catch(_){}zxingReader=null}
+ if(scanStream)scanStream.getTracks().forEach(t=>t.stop());scanStream=null;
+ const box=$('#ak-seven-scanner');if(box&&hide)box.style.display='none';
+}
 let last='';const observer=new MutationObserver(()=>{if(rendering)return;rendering=true;try{enhance()}finally{rendering=false}});window.addEventListener('load',()=>{const root=$('#app');if(root)observer.observe(root,{subtree:true,childList:true});enhance();setInterval(()=>{if(role()){updateStatus();if(navigator.onLine&&pendingCount())flush()}},12000)});document.addEventListener('input',e=>{if(role()&&(e.target.closest('#ak-form')||e.target.closest('[data-editform]')))draftSave()},true);window.addEventListener('online',flush);window.addEventListener('beforeunload',stopScanner);
 })();

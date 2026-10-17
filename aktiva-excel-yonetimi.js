@@ -27,5 +27,5 @@ window.AKTIVA_excelOpen=()=>{if(typeof profile==='undefined'||!['count','admin']
    saved+=Number(result?.updated??portion.length);
   }catch(error){throw Error(saved+' ürün kaydedildi, kalan '+(changes.length-saved)+' ürün kaydedilemedi: '+error.message)}
  }
- notice('Başarılı: '+saved+' ürün ortak Supabase kataloğuna kaydedildi. Forkliftçi ürün adından peron arayabilir.');window.dispatchEvent(new Event('aktiva:catalog-updated'));pending=[];root.querySelector('#ak-excel-preview').innerHTML='';}catch(err){notice('Kaydedilemedi: '+err.message);b.disabled=false}}}
+ notice('Başarılı: '+saved+' ürün ortak Supabase kataloğuna kaydedildi. Forkliftçi ürün adından peron arayabilir.');window.dispatchEvent(new Event('aktiva:catalog-updated'));try{localStorage.setItem('aktiva_catalog_updated_at',String(Date.now()))}catch(_){}pending=[];root.querySelector('#ak-excel-preview').innerHTML='';}catch(err){notice('Kaydedilemedi: '+err.message);b.disabled=false}}}
 })();

@@ -83,10 +83,14 @@ async function startScanner(){
   scanMessage('Kamera başlatılıyor...');
   // decodeFromVideoDevice handles permission, stream and playback itself.
   // decodeFromVideoElement would call getUserMedia a second time.
-  zxingReader.decodeFromVideoDevice(undefined,video).then(result=>{
-   if(scannerActive&&result)applyCode(result.getText());
-  }).catch(err=>{
-   if(scannerActive&&err?.name!=='NotFoundException')scanMessage('Barkod okunamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
+  // @zxing/library 0.21.x requires a callback as the third argument.
+  // It continuously decodes frames; NotFoundException is normal between scans.
+  await zxingReader.decodeFromVideoDevice(undefined,video,(result,err)=>{
+   if(!scannerActive)return;
+   if(result){applyCode(result.getText());return}
+   if(err && err.name!=='NotFoundException' && err.name!=='ChecksumException' && err.name!=='FormatException'){
+    scanMessage('Barkod okunamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
+   }
   });
  }catch(err){
   if(scannerActive)scanMessage('Okuyucu başlatılamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);

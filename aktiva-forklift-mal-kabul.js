@@ -7,7 +7,7 @@ const ds=()=>typeof deliveries!=='undefined'?deliveries:[];
 const ps=()=>typeof items!=='undefined'?items:[];
 const fmt=s=>s?new Date(s).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',hour12:false}):'—';
 const key=s=>String(s||'').toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]/g,'');
-let progress=[],moves=[],catalog=[],catalogState='loading',catalogError='',catalogSynced='',catalogSource='supabase',view='home',filter='waiting',expanded=null,loaded=false,busy=false,lastCount=-1,alertOn=false,search='',message='';
+let progress=[],moves=[],catalog=[],catalogState='loading',catalogError='',catalogSynced='',catalogSource='supabase',view='home',filter='waiting',expanded=null,loaded=false,busy=false,lastCount=-1,alertOn=false,search='',message='',showCount=40,localCatalog=[];
 const moved=p=>moves.filter(m=>m.product_id===p.id).reduce((a,m)=>a+Number(m.qty||0),0);
 const left=p=>Math.max(0,Number(p.pallet_count||0)-moved(p));
 const remainingRows=()=>ps().filter(p=>Number(p.pallet_count||0)>0&&left(p)>0);
@@ -22,9 +22,9 @@ function position(p){const x=catalogFor(p);return x?`<strong>Peron / Pozisyon: $
 function render(){const r=role(),el=root();if(view==='positions'&&document.activeElement?.id==='af-search'){drawSearch();return;}if(!['fork','count'].includes(r)){el.style.display='none';return}styles();el.style.display='block';const isFork=r==='fork';if(!isFork&&view!=='remaining')view='remaining';const title=view==='home'?'Forklift Operasyonu':view==='shipments'?'Sevkiyat İşlemleri':view==='remaining'?'Mal Kabulde Bekleyen Paletler':view==='history'?'İşlem Geçmişi':'Ürün Peronları';let html=`<div class="af-head"><div><div class="af-sub">AKTİVA · ${isFork?'Forklift Personeli':'Mal Kabul Takibi'}</div><h2>${title}</h2></div><div class="af-bar"><button class="af-quiet" data-af="refresh">↻ Yenile</button>${isFork?'<button class="af-quiet" data-af="logout">Çıkış</button>':''}</div></div>`;
 if(isFork&&view!=='home')html+='<button class="af-quiet af-back" data-af="back">← Ana Ekran</button>';
 if(view==='home'){
-html+=`<div class="af-stats"><div class="af-stat"><small>Bekleyen sevkiyat</small><strong>${ds().filter(d=>status(d)==='waiting').length}</strong></div><div class="af-stat"><small>Mal Kabulde palet*</small><strong>${totalRemaining()}</strong></div></div><div class="af-home"><button class="af-nav primary" data-view="shipments"><span class="af-ico">🚚</span><span>Sevkiyat İşlemleri<small>Bekleyen ve devam eden işler</small></span><span class="af-arrow">›</span></button><button class="af-nav" data-view="remaining"><span class="af-ico">📦</span><span>Mal Kabulde Bekleyen Paletler<small>Yerleştirilemeyen paletleri gör ve yerleştir</small></span><span class="af-arrow">›</span></button><button class="af-nav" data-view="history"><span class="af-ico">🕒</span><span>İşlem Geçmişi<small>Tamamlanan sevkiyat ve işlem saatleri</small></span><span class="af-arrow">›</span></button></div><button class="af-quiet" style="width:100%;margin-top:12px" data-view="positions">🔎 Güncel Ürün Peronlarını Ara</button><p class="af-sub">* Bekleyen toplam, uygulamada kayıtlı ve yerleştirme hareketi düşülmemiş paletleri kapsar; eski sevkiyatlar da bulunabilir.</p>`;
+html+=`<div class="af-stats"><div class="af-stat"><small>Bekleyen sevkiyat</small><strong>${ds().filter(d=>status(d)==='waiting').length}</strong></div><div class="af-stat"><small>Mal Kabulde palet*</small><strong>${totalRemaining()}</strong></div></div><div class="af-home"><button class="af-nav primary" data-view="shipments"><span class="af-ico">🚚</span><span>Sevkiyat İşlemleri<small>Bekleyen ve devam eden işler</small></span><span class="af-arrow">›</span></button><button class="af-nav" data-view="remaining"><span class="af-ico">📦</span><span>Mal Kabulde Bekleyen Paletler<small>Yerleştirilemeyen paletleri gör ve yerleştir</small></span><span class="af-arrow">›</span></button><button class="af-nav" data-view="history"><span class="af-ico">🕒</span><span>İşlem Geçmişi<small>Tamamlanan sevkiyat ve işlem saatleri</small></span><span class="af-arrow">›</span></button></div><button class="af-quiet" style="width:100%;margin-top:12px" data-view="positions">🔎 Ürün Adından Peron Bul</button><p class="af-sub">* Bekleyen toplam, uygulamada kayıtlı ve yerleştirme hareketi düşülmemiş paletleri kapsar; eski sevkiyatlar da bulunabilir.</p>`;
 }else if(view==='positions'){
-html+=`<div class="af-note">Mal Kabul personelinin <b>Excel'i onaylayarak kaydettiği</b> ortak ürün listesi gösterilir. Forkliftçi yalnızca arama yapabilir.</div><div id="af-catalog-status" class="af-dim" style="margin-top:12px"></div><button class="af-quiet" type="button" data-af="catalogrefresh" style="margin-top:8px">↻ Güncel Ürün Listesini Getir</button><input class="af-search" type="search" id="af-search" placeholder="Ürün adı, ürün kodu veya peron ara" value="${esc(search)}"><div id="af-results"></div>`;
+html+=`<div class="af-note">Ürün adını yazın; eşleşen ürünlerin güncel peronlarını görün. Liste arama yapınca açılır.</div><div id="af-catalog-status" class="af-dim" style="margin-top:12px"></div><button class="af-quiet" type="button" data-af="catalogrefresh" style="margin-top:8px">↻ Güncel Ürün Listesini Getir</button><input class="af-search" type="search" id="af-search" placeholder="Ürün adını yazın (ör. makarna)" value="${esc(search)}"><div id="af-results"></div><button class="af-quiet" style="display:none;width:100%;margin-top:12px" type="button" id="af-more">Daha Fazla Ürün Göster</button>`;
 }else if(view==='remaining'){
 let arr=remainingRows();html+=`<div class="af-stat"><small>Mal Kabulde bekleyen toplam</small><strong>${totalRemaining()} palet</strong></div>`;
 if(arr.length===0)html+='<p class="af-empty">Bekleyen palet bulunmuyor.</p>';
@@ -41,41 +41,51 @@ if(isFork&&!history){if(state==='waiting')html+=`<button data-action="start" dat
 }
 if(message)html+=`<p class="af-note" id="af-message" role="status">${esc(message)}</p>`;
 html+='<p class="af-sub">Mal Kabul personeli paletleri görüntüler; forkliftçi yerleştirme işlemlerini kaydeder.</p>';el.innerHTML=html;
-el.querySelector('[data-af="refresh"]')?.addEventListener('click',()=>{load();loadCatalog()});el.querySelector('[data-af="catalogrefresh"]')?.addEventListener('click',()=>loadCatalog(true));el.querySelector('[data-af="logout"]')?.addEventListener('click',()=>$('#logout')?.click());el.querySelector('[data-af="back"]')?.addEventListener('click',()=>{view='home';expanded=null;render()});el.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;expanded=null;message='';render()});el.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;expanded=null;render()});el.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{expanded=expanded===b.dataset.detail?null:b.dataset.detail;render()});el.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>place(b.dataset.place));el.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.delivery,b.dataset.action));el.querySelector('#af-search')?.addEventListener('input',e=>{search=e.target.value;drawSearch()});drawSearch();updateCatalogStatus();
+el.querySelector('[data-af="refresh"]')?.addEventListener('click',()=>{load();loadCatalog()});el.querySelector('[data-af="catalogrefresh"]')?.addEventListener('click',()=>loadCatalog(true));el.querySelector('[data-af="logout"]')?.addEventListener('click',()=>$('#logout')?.click());el.querySelector('[data-af="back"]')?.addEventListener('click',()=>{view='home';expanded=null;render()});el.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;expanded=null;message='';showCount=40;render()});el.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;expanded=null;render()});el.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{expanded=expanded===b.dataset.detail?null:b.dataset.detail;render()});el.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>place(b.dataset.place));el.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.delivery,b.dataset.action));el.querySelector('#af-search')?.addEventListener('input',e=>{search=e.target.value;showCount=40;drawSearch()});el.querySelector('#af-more')?.addEventListener('click',()=>{showCount+=40;drawSearch()});drawSearch();updateCatalogStatus();
 }
 function updateCatalogStatus(){
  const node=$('#af-catalog-status');if(!node)return;
- if(catalogState==='loading')node.textContent='Ortak ürün kataloğu yükleniyor…';
- else if(catalogState==='error')node.textContent='Ortak katalog alınamadı: '+catalogError;
- else if(catalogState==='empty')node.textContent='Supabase ortak kataloğunda henüz ürün yok. Mal Kabul personeli Excel yükleyip Önizleme → Onayla ve Kaydet işlemini tamamlamalı.';
- else node.textContent=`Supabase ortak kataloğu: ${catalog.length} ürün · Son kontrol: ${catalogSynced||'—'}`;
+ if(catalogState==='loading')node.textContent='Ürün listesi yükleniyor…';
+ else if(catalogState==='error')node.textContent=`${catalog.length} ürün · Supabase erişim hatası: ${catalogError}. Yerel katalog varsa sadece yedek olarak gösterilir.`;
+ else if(catalogState==='empty')node.textContent='Ortak katalogda ürün yok. Mal Kabul personeli Excel yükleyip Onayla ve Kaydet demeli.';
+ else node.textContent=`Toplam ${catalog.length} ürün · ${catalogSource==='supabase'?'Supabase ortak kataloğu':'Yerel başlangıç kataloğu (güncelliği doğrulanmadı)'} · Kontrol: ${catalogSynced||'—'}`;
 }
-function drawSearch(){const node=$('#af-results');if(!node)return;updateCatalogStatus();const q=key(search);
- if(!q){node.innerHTML='<p class="af-empty">Ürün adı, kodu veya peron yazarak ara.</p>';return}
- if(catalogState==='loading'){node.innerHTML='<p class="af-empty">Ürünler yükleniyor…</p>';return}
- if(catalogState==='error'){node.innerHTML='<p class="af-empty">Katalog bağlantısı kurulamadı. Yukarıdaki hatayı kontrol edin.</p>';return}
- if(catalogState==='empty'){node.innerHTML='<p class="af-empty">Henüz onaylanmış ortak ürün listesi bulunmuyor. Mal Kabul hesabından Excel Ürün Listesi Yönetimi ile yükleyip onaylayın.</p>';return}
- const found=catalog.filter(p=>[p.name,p.code,p.position,p.barcode].some(v=>key(v).includes(q))).slice(0,40);
- node.innerHTML=found.length?found.map(p=>`<div class="af-card"><div class="af-title">${esc(p.name)}</div><div class="af-dim">Ürün kodu: ${esc(p.code)}</div><div style="padding:9px 0"><strong>📍 Yerleştirme peronu: ${esc(p.position||'Henüz tanımlanmamış')}</strong></div><div class="af-dim">Koli içi: ${esc(p.pack??'—')} adet</div></div>`).join(''):'<p class="af-empty">Aradığınız ürün ortak katalogda bulunamadı. Mal Kabul personeli Excel listesini kontrol etsin.</p>';
+function drawSearch(){const node=$('#af-results');if(!node)return;updateCatalogStatus();const more=$('#af-more');if(!more)return;
+ if(catalogState==='loading'&&!catalog.length){node.innerHTML='<p class="af-empty">Ürünler yükleniyor…</p>';more.style.display='none';return}
+ const q=key(search);if(!q){node.innerHTML='<p class="af-empty">Peronunu öğrenmek istediğiniz ürünün adını yazın.</p>';more.style.display='none';return;}const found=catalog.filter(p=>key(p.name).includes(q));
+ const visible=found.slice(0,showCount);
+ node.innerHTML=visible.length?visible.map(p=>`<div class="af-card"><div class="af-title">${esc(p.name)}</div><div class="af-dim">Ürün kodu: ${esc(p.code)}</div><div style="padding:9px 0"><strong>📍 Yerleştirme peronu: ${esc(p.position||'Tanımlanmamış')}</strong></div><div class="af-dim">Koli içi: ${esc(p.pack??'—')} adet</div></div>`).join(''):'<p class="af-empty">'+(catalog.length?'Aradığınız ürün bulunamadı.':'Ürün kataloğunda henüz kayıt yok.')+'</p>';
+ more.style.display=found.length>showCount?'block':'none';more.textContent=`Daha Fazla Ürün Göster (${Math.min(showCount,found.length)} / ${found.length})`;
+}
+async function loadLocalCatalog(){
+ try{const r=await fetch('aktiva-urunler.json',{cache:'no-store'});if(!r.ok)throw Error('Yerel liste alınamadı');const data=await r.json();if(Array.isArray(data))localCatalog=data.filter(p=>p.code&&p.name).map(p=>({code:String(p.code),name:p.name,position:p.position||'',pack:p.pack??null,barcode:p.barcode||''}));}catch(e){console.warn('AKTİVA yerel ürün listesi:',e.message)}
 }
 let catalogBusy=false;
 async function loadCatalog(force=false){
- if(catalogBusy||!['fork','count'].includes(role())||typeof req!=='function'||typeof session==='undefined'||!session)return;
+ if(catalogBusy||!['fork','count'].includes(role()))return;
  catalogBusy=true;catalogState=catalog.length?'ready':'loading';updateCatalogStatus();
  try{
-  const all=[];let offset=0;const limit=1000;
-  while(true){
-   const page=await req('/rest/v1/aktiva_excel_catalog?select=code,name,position,pack,barcode&order=code.asc&limit='+limit+'&offset='+offset);
-   if(!Array.isArray(page))throw Error('Sunucudan beklenen ürün listesi gelmedi');
-   all.push(...page);
-   if(page.length<limit)break;
-   offset+=limit;
-   if(offset>=50000)throw Error('Ürün listesi 50.000 kaydı aşıyor; sayfalama sınırını kontrol edin');
-  }
-  catalog=all.filter(p=>p.code&&p.name);
-  catalogState=catalog.length?'ready':'empty';catalogError='';
-  catalogSynced=new Date().toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit'});
- }catch(e){catalogState='error';catalogError=String(e.message||e);}
+  if(!localCatalog.length)await loadLocalCatalog();
+  let all=[];let ok=false;let error='';
+  if(typeof req==='function'&&typeof session!=='undefined'&&session){
+   try{
+    let offset=0;const limit=500;
+    while(true){
+     const page=await req('/rest/v1/aktiva_excel_catalog?select=code,name,position,pack,barcode&order=code.asc&limit='+limit+'&offset='+offset);
+     if(!Array.isArray(page))throw Error('Ürün listesi yanıtı geçersiz');
+     all.push(...page);if(page.length<limit)break;offset+=limit;
+     if(offset>=200000)throw Error('Katalog 200.000 ürünü aştı');
+    }
+    ok=true;
+   }catch(e){error=String(e.message||e)}
+  }else error='Oturum veya sunucu bağlantısı hazır değil';
+  const byCode=new Map(localCatalog.map(p=>[key(p.code),p]));
+  for(const p of all)if(p.code&&p.name)byCode.set(key(p.code),p);
+  catalog=[...byCode.values()].sort((a,b)=>String(a.position||'').localeCompare(String(b.position||''),'tr-TR',{numeric:true}));
+  catalogSource=ok&&all.length?'supabase':'local';
+  catalogState=!catalog.length?(error?'error':'empty'):(error?'error':'ready');
+  catalogError=error;catalogSynced=new Date().toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit'});
+ }catch(e){catalogState='error';catalogError=String(e.message||e)}
  finally{catalogBusy=false;updateCatalogStatus();if(view==='positions')drawSearch();else if(document.activeElement?.tagName!=='INPUT')render()}
 }
 async function load(){if(busy||!['fork','count'].includes(role())||typeof req!=='function'||typeof session==='undefined'||!session)return;busy=true;try{const [p,m]=await Promise.all([req('/rest/v1/aktiva_forklift_progress?select=*&limit=2000'),req('/rest/v1/aktiva_pallet_placements?select=*&limit=10000')]);progress=p;moves=m;loaded=true;message='';const pending=ds().filter(d=>status(d)==='waiting').length;if(role()==='fork'&&lastCount>=0&&pending>lastCount&&alertOn){try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=730;o.start();g.gain.setValueAtTime(.09,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.35);o.stop(ctx.currentTime+.36)}catch(_){}}lastCount=pending;render()}catch(e){message='Operasyon verileri yüklenemedi: '+e.message;render()}finally{busy=false}}

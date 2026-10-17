@@ -30,16 +30,16 @@ root.querySelectorAll('[data-open]').forEach(b=>{if(!b.dataset.sevenBound){b.dat
 root.querySelectorAll('[data-edit]').forEach(b=>{if(!b.dataset.sevenBound){b.dataset.sevenBound='1';b.addEventListener('click',()=>{const p=list().find(x=>x.id===b.dataset.edit);if(p)markStart(p.delivery_id)})}});
 const opened=root.querySelector('.ak-count-summary');if(opened&&!opened.querySelector('.ak-seven-timing')){const div=document.createElement('p');div.className='ak-seven-timing';div.style.color='#d1d5db';div.textContent='Sayım süresi: '+duration(list().find(x=>x.id===currentId())?.delivery_id);opened.append(div)}
 }
-function applyCode(code){code=String(code||'').trim();if(!code)return;stopScanner();if(window.AKTIVA_openBarcodeMatch){window.AKTIVA_openBarcodeMatch(code);return;}const p=list().find(x=>x.barcode===code||x.sku===code);if(p){const search=$('#ak-product-filter');if(search){search.value=p.name;search.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod eşleşti: '+p.name)}else{const product=$('#ak-product');if(product){product.value=code;product.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod okundu: '+code+' · Ürün eşleşmesini kontrol edin.')}stopScanner()}
-let zxingReader=null,scannerActive=false,scannerLoading=null;
+function applyCode(code){code=String(code||'').trim();if(!code)return;stopScanner();if(window.AKTIVA_openBarcodeMatch){Promise.resolve(window.AKTIVA_openBarcodeMatch(code)).catch(err=>banner('Eşleştirme ekranı açılamadı: '+err.message,true));return;}const p=list().find(x=>x.barcode===code||x.sku===code);if(p){const search=$('#ak-product-filter');if(search){search.value=p.name;search.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod eşleşti: '+p.name)}else{const product=$('#ak-product');if(product){product.value=code;product.dispatchEvent(new Event('input',{bubbles:true}))}banner('Barkod okundu: '+code+' · Ürün eşleşmesini kontrol edin.')}stopScanner()}
+let zxingReader=null,zxingControls=null,scannerActive=false,scannerLoading=null,scanGeneration=0;
 function loadZXing(){
- if(window.ZXing?.BrowserMultiFormatReader)return Promise.resolve(window.ZXing);
+ if(window.ZXingBrowser?.BrowserMultiFormatReader)return Promise.resolve(window.ZXingBrowser);
  if(scannerLoading)return scannerLoading;
  scannerLoading=new Promise((resolve,reject)=>{
   const script=document.createElement('script');
-  script.src='https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+  script.src='https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';
   script.async=true;
-  script.onload=()=>window.ZXing?.BrowserMultiFormatReader?resolve(window.ZXing):reject(Error('Barkod okuyucu yüklenemedi'));
+  script.onload=()=>window.ZXingBrowser?.BrowserMultiFormatReader?resolve(window.ZXingBrowser):reject(Error('ZXing Browser yüklenemedi'));
   script.onerror=()=>reject(Error('Barkod kütüphanesi indirilemedi; internet bağlantısını kontrol edin'));
   document.head.appendChild(script);
  }).catch(err=>{scannerLoading=null;throw err});
@@ -60,49 +60,52 @@ function scannerBox(){
 function scanMessage(message,error=false){const x=document.getElementById('ak-scanner-status');if(x){x.textContent=message;x.style.color=error?'#ffb4b4':'#c9f6d3'}banner(message,error)}
 async function startScanner(){
  const box=scannerBox();if(scannerActive)return;
+ const generation=++scanGeneration;
  scannerActive=true;box.style.display='block';
  const video=box.querySelector('video');
+ const valid=()=>scannerActive&&scanGeneration===generation;
  try{
-  // Native BarcodeDetector uses a stream opened by AKTIVA. ZXing opens its OWN
-  // stream instead: never open the same camera twice on iOS/Android.
   if(typeof window.BarcodeDetector==='function' && navigator.mediaDevices?.getUserMedia){
    let detector=null;
-   try{detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf']})}catch(_){detector=null}
+   try{detector=new window.BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf']})}catch(_){detector=null}
    if(detector){
-    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
-    if(!scannerActive){stopScanner();return}
-    video.srcObject=scanStream;await video.play();
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    if(!valid()){stream.getTracks().forEach(t=>t.stop());return}
+    scanStream=stream;video.srcObject=stream;await video.play();
+    if(!valid())return;
     scanMessage('Kamerayı barkoda doğrultun.');
     let busy=false;
-    scannerTimer=setInterval(async()=>{if(!scannerActive||busy||video.readyState<2)return;busy=true;try{const codes=await detector.detect(video);if(codes[0]&&scannerActive)applyCode(codes[0].rawValue)}catch(_){}finally{busy=false}},400);
+    scannerTimer=setInterval(async()=>{if(!valid()||busy||video.readyState<2)return;busy=true;try{const codes=await detector.detect(video);if(codes[0]&&valid())applyCode(codes[0].rawValue)}catch(_){}finally{busy=false}},400);
     return;
    }
   }
-  const ZXing=await loadZXing();if(!scannerActive)return;
+  const ZXing=await loadZXing();if(!valid())return;
   zxingReader=new ZXing.BrowserMultiFormatReader();
   scanMessage('Kamera başlatılıyor...');
-  // decodeFromVideoDevice handles permission, stream and playback itself.
-  // decodeFromVideoElement would call getUserMedia a second time.
-  // @zxing/library 0.21.x requires a callback as the third argument.
-  // It continuously decodes frames; NotFoundException is normal between scans.
-  await zxingReader.decodeFromVideoDevice(undefined,video,(result,err)=>{
-   if(!scannerActive)return;
+  // @zxing/browser returns camera controls and delivers scans via callback.
+  const controls=await zxingReader.decodeFromVideoDevice(undefined,video,(result,err)=>{
+   if(!valid())return;
    if(result){applyCode(result.getText());return}
-   if(err && err.name!=='NotFoundException' && err.name!=='ChecksumException' && err.name!=='FormatException'){
+   if(err && !['NotFoundException','ChecksumException','FormatException'].includes(err.name)){
     scanMessage('Barkod okunamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
    }
   });
+  if(!valid()){controls.stop();return}
+  zxingControls=controls;
+  scanMessage('Kamerayı barkoda doğrultun.');
  }catch(err){
-  if(scannerActive)scanMessage('Okuyucu başlatılamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
+  if(valid())scanMessage('Okuyucu başlatılamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
   if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
  }
 }
 function stopScanner(hide=true){
- scannerActive=false;
+ scannerActive=false;++scanGeneration;
  if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;
- if(zxingReader){try{zxingReader.reset()}catch(_){}zxingReader=null}
+ if(zxingControls){try{zxingControls.stop()}catch(_){}zxingControls=null}
+ zxingReader=null;
  if(scanStream)scanStream.getTracks().forEach(t=>t.stop());scanStream=null;
- const box=document.getElementById('ak-seven-scanner-overlay');if(box&&hide)box.style.display='none';
+ const box=document.getElementById('ak-seven-scanner-overlay');
+ if(box){const video=box.querySelector('video');if(video){try{video.pause()}catch(_){}video.srcObject=null}if(hide)box.style.display='none'}
 }
 let last='';const observer=new MutationObserver(()=>{if(rendering)return;rendering=true;try{enhance()}finally{rendering=false}});window.addEventListener('load',()=>{const root=$('#app');if(root)observer.observe(root,{subtree:true,childList:true});enhance();setInterval(()=>{if(role()){updateStatus();if(navigator.onLine&&pendingCount())flush()}},12000)});document.addEventListener('input',e=>{if(role()&&(e.target.closest('#ak-form')||e.target.closest('[data-editform]')))draftSave()},true);window.addEventListener('online',flush);window.addEventListener('beforeunload',stopScanner);
 })();

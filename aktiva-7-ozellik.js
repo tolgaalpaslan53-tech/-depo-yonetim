@@ -61,24 +61,37 @@ function scanMessage(message,error=false){const x=document.getElementById('ak-sc
 async function startScanner(){
  const box=scannerBox();if(scannerActive)return;
  scannerActive=true;box.style.display='block';
- if(!navigator.mediaDevices?.getUserMedia){scannerActive=false;banner('Kamera kullanılamıyor; barkodu elle girebilirsiniz.',true);return}
+ const video=box.querySelector('video');
  try{
-  scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
-  if(!scannerActive){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;return}
-  const video=box.querySelector('video');video.srcObject=scanStream;await video.play();
-  scanMessage('Kamerayı barkoda doğrultun.');
-  if(typeof window.BarcodeDetector==='function'){
-   try{
-    const detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf']});
+  // Native BarcodeDetector uses a stream opened by AKTIVA. ZXing opens its OWN
+  // stream instead: never open the same camera twice on iOS/Android.
+  if(typeof window.BarcodeDetector==='function' && navigator.mediaDevices?.getUserMedia){
+   let detector=null;
+   try{detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf']})}catch(_){detector=null}
+   if(detector){
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    if(!scannerActive){stopScanner();return}
+    video.srcObject=scanStream;await video.play();
+    scanMessage('Kamerayı barkoda doğrultun.');
     let busy=false;
-    scannerTimer=setInterval(async()=>{if(!scannerActive||busy||video.readyState<2)return;busy=true;try{const codes=await detector.detect(video);if(codes[0]&&scannerActive)applyCode(codes[0].rawValue)}catch{}finally{busy=false}},400);
+    scannerTimer=setInterval(async()=>{if(!scannerActive||busy||video.readyState<2)return;busy=true;try{const codes=await detector.detect(video);if(codes[0]&&scannerActive)applyCode(codes[0].rawValue)}catch(_){}finally{busy=false}},400);
     return;
-   }catch(_){/* Desteklenmeyen formatlarda ZXing'e geç. */}
+   }
   }
   const ZXing=await loadZXing();if(!scannerActive)return;
   zxingReader=new ZXing.BrowserMultiFormatReader();
-  zxingReader.decodeFromVideoElement(video).then(result=>{if(scannerActive&&result)applyCode(result.getText())}).catch(err=>{if(scannerActive)scanMessage('Barkod okunamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true)});
- }catch(err){if(scannerActive)scanMessage('Okuyucu başlatılamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}}
+  scanMessage('Kamera başlatılıyor...');
+  // decodeFromVideoDevice handles permission, stream and playback itself.
+  // decodeFromVideoElement would call getUserMedia a second time.
+  zxingReader.decodeFromVideoDevice(undefined,video).then(result=>{
+   if(scannerActive&&result)applyCode(result.getText());
+  }).catch(err=>{
+   if(scannerActive&&err?.name!=='NotFoundException')scanMessage('Barkod okunamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
+  });
+ }catch(err){
+  if(scannerActive)scanMessage('Okuyucu başlatılamadı: '+err.message+' · Elle giriş yapabilirsiniz.',true);
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
+ }
 }
 function stopScanner(hide=true){
  scannerActive=false;

@@ -28,20 +28,22 @@
   async function render(){
     const s=current();let panel=document.getElementById('akForkPushPanel');
     if(s.role!=='fork'||!s.user){panel?.remove();return}
-    const host=document.querySelector('#ak-fork-host .afv-main') || document.getElementById('ak-fork-host');
+    // Keep the panel outside the forklift dashboard: sync() redraws that dashboard every 8 seconds.
+    const host=document.body;
     if(!host)return;
     if(!panel){
       panel=document.createElement('section');panel.id='akForkPushPanel';
-      panel.style.cssText='max-width:900px;margin:18px auto;padding:14px;border:1px solid #385a76;border-radius:14px;background:#0b2236;color:#fff';
+      panel.style.cssText='position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:100000;max-width:min(360px,calc(100vw - 24px));padding:12px;border:1px solid #385a76;border-radius:14px;background:#0b2236;color:#fff;box-shadow:0 8px 28px #0009';
       panel.innerHTML='<button id="akForkPushEnable" type="button" style="background:#ffd135!important;color:#0a1b2b!important;font-weight:800;border-radius:10px">🔔 Telefon Bildirimlerini Aç</button><p id="akForkPushInfo" style="color:#c5d5e4;font-size:12px;margin:9px 0 0"></p>';
       host.append(panel);
       const btn=panel.querySelector('button'),msg=panel.querySelector('p');
-      btn.onclick=async()=>{btn.disabled=true;msg.textContent='Cihaz kaydediliyor…';try{await register();msg.textContent='Bildirim izni verildi ve cihaz kaydedildi.';btn.style.display='none'}catch(e){msg.textContent=e.message||String(e)}finally{btn.disabled=false}};
+      btn.onclick=async()=>{btn.disabled=true;msg.textContent='Cihaz kaydediliyor…';try{await register();msg.textContent='Bildirim izni verildi ve cihaz kaydedildi.';btn.style.display='none';panel.style.display='none'}catch(e){msg.textContent=e.message||String(e)}finally{btn.disabled=false}};
     }
     const btn=panel.querySelector('button'),msg=panel.querySelector('p');
+    panel.style.display='block';
     if(!isSupported()){btn.style.display='none';msg.textContent='Bildirim için HTTPS ve desteklenen tarayıcı gerekir. iPhone: Ana Ekrana Ekle.';return}
     if(Notification.permission==='denied'){btn.style.display='none';msg.textContent='Bildirim izni engellenmiş. Telefonun uygulama ayarlarından açın.';return}
-    if(Notification.permission==='granted' && localStorage.getItem('aktiva_fork_push_registered')===s.user.id){btn.style.display='none';msg.textContent='🔔 Telefon bildirimleri bu cihazda etkin.';return}
+    if(Notification.permission==='granted' && localStorage.getItem('aktiva_fork_push_registered')===s.user.id){btn.style.display='none';panel.style.display='none';msg.textContent='🔔 Telefon bildirimleri bu cihazda etkin.';return}
     btn.style.display='inline-block';
     msg.textContent='İzin vermek için dokunun. iPhone’da uygulamayı Ana Ekrana Ekle ile açın.';
   }

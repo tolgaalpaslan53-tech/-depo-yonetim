@@ -40,6 +40,42 @@ function installStyle(){if($a('ak-professional-style'))return;const style=docume
 #aktivaCountUI .ak-ship-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#c5ccd7;font-size:13px;flex-wrap:wrap}
 #aktivaCountUI .ak-ship-detail{color:#929cab;font-size:12px}
 #aktivaCountUI .ak-empty{text-align:center;color:#b3bac6;padding:22px 8px}
+
+/* AKTIVA Mal Kabul V2: forklift ana ekraninin yerlesim dili; yalnizca count ana sayfasi. */
+body[data-role="count"] #aktivaCountUI{max-width:none!important;width:100%!important;margin:0!important;padding:0!important;background:transparent!important;overflow:visible!important;color:#f6f9ff}
+body[data-role="count"] #aktivaCountUI.ak-v2-home{display:block!important;min-height:100dvh;position:relative;isolation:isolate}
+body[data-role="count"] #aktivaCountUI.ak-v2-home:before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(90deg,#061322dd,#061322a8),url('forklift-depo-arkaplan.webp') center/cover;filter:blur(8px);transform:scale(1.04);pointer-events:none}
+#aktivaCountUI .ak-v2-shell{display:grid;grid-template-columns:150px minmax(0,1fr);min-height:100dvh}
+#aktivaCountUI .ak-v2-side{background:#061421ee;border-right:1px solid #37546b;padding:16px 7px;display:flex;flex-direction:column;gap:18px;align-items:center}
+#aktivaCountUI .ak-v2-logo{width:100%;max-width:125px;border-radius:17px;object-fit:contain;box-shadow:0 10px 25px #0006}
+#aktivaCountUI .ak-v2-sidehome{background:#ffd138!important;color:#101b29!important;border:0!important;border-radius:13px!important;min-height:110px;width:100%;font-size:16px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#aktivaCountUI .ak-v2-sidehome span{font-size:30px}
+#aktivaCountUI .ak-v2-main{min-width:0;padding:20px clamp(10px,2.4vw,34px) 44px}
+#aktivaCountUI .ak-v2-top{display:flex;align-items:center;gap:10px;margin-bottom:23px}
+#aktivaCountUI .ak-v2-person{flex:1;min-width:0;border:1px solid #426b88;border-radius:16px;background:#061b30dc;padding:12px 15px;display:flex;gap:12px;align-items:center}
+#aktivaCountUI .ak-v2-person-icon{font-size:27px}
+#aktivaCountUI .ak-v2-person strong{display:block;overflow-wrap:anywhere;font-size:15px}
+#aktivaCountUI .ak-v2-person small{display:block;color:#b3c4d8;font-size:12px}
+#aktivaCountUI .ak-v2-topbtn{border:1px solid #416e90!important;border-radius:13px!important;background:#102b43!important;color:white!important;padding:12px!important;min-width:44px;font-size:21px}
+#aktivaCountUI .ak-v2-title{font-size:clamp(23px,3vw,34px);margin:0 0 28px;color:#fff;font-weight:850}
+#aktivaCountUI .ak-v2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#aktivaCountUI .ak-v2-card{min-width:0;min-height:185px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:linear-gradient(145deg,#193b54f5,#0a1b2ff5)!important;border:1px solid #40799e!important;border-bottom:6px solid #ffcf30!important;border-radius:20px!important;color:#fff!important;padding:16px 8px!important;text-align:center;box-shadow:0 12px 25px #0005}
+#aktivaCountUI .ak-v2-card .ak-v2-ico{font-size:42px;line-height:1.1;color:#ffce30}
+#aktivaCountUI .ak-v2-card strong{font-size:clamp(14px,2.4vw,19px);line-height:1.28}
+#aktivaCountUI .ak-v2-card .ak-v2-arrow{font-size:26px;color:#ffcf30;font-weight:900}
+#aktivaCountUI .ak-v2-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:30px}
+#aktivaCountUI .ak-v2-stat,#aktivaCountUI .ak-v2-last{border:1px solid #416783;border-radius:18px;background:#071d32e8;color:white;padding:18px;min-width:0}
+#aktivaCountUI .ak-v2-stat strong{font-size:29px;color:#ffce30;display:block;margin-top:8px}
+#aktivaCountUI .ak-v2-stat small{color:#c0cddd}
+#aktivaCountUI .ak-v2-last{margin-top:13px;display:flex;flex-direction:column;gap:12px}
+#aktivaCountUI .ak-v2-lastline{border-top:1px solid #42637c;padding-top:13px;display:flex;align-items:center;gap:10px}
+#aktivaCountUI .ak-v2-lastline b{border-left:3px solid #ffce30;padding-left:10px;flex:1;min-width:0;overflow-wrap:anywhere}
+#aktivaCountUI .ak-v2-lastline small{color:#b8c7d9}
+#aktivaCountUI .ak-v2-shortcuts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+#aktivaCountUI .ak-v2-shortcuts button{background:#142f46!important;border:1px solid #4c7593!important;color:white!important;border-radius:12px!important;padding:12px!important;font-weight:700}
+#aktivaCountUI.ak-v2-home>.ak-successes{display:none!important}
+#aktivaCountUI.ak-v2-home>#ac-open,#aktivaCountUI.ak-v2-home>#ak-seven-launch{display:none!important}
+@media(max-width:560px){#aktivaCountUI .ak-v2-shell{grid-template-columns:82px minmax(0,1fr)}#aktivaCountUI .ak-v2-side{padding:12px 5px}#aktivaCountUI .ak-v2-logo{border-radius:11px}#aktivaCountUI .ak-v2-sidehome{font-size:11px;min-height:90px}#aktivaCountUI .ak-v2-sidehome span{font-size:24px}#aktivaCountUI .ak-v2-main{padding:15px 9px 35px}#aktivaCountUI .ak-v2-card{min-height:165px;gap:11px;padding:12px 5px!important;border-radius:17px!important}#aktivaCountUI .ak-v2-card .ak-v2-ico{font-size:35px}#aktivaCountUI .ak-v2-title{font-size:23px;margin-bottom:22px}#aktivaCountUI .ak-v2-stat{padding:12px}#aktivaCountUI .ak-v2-stat strong{font-size:24px}#aktivaCountUI .ak-v2-last{padding:13px}#aktivaCountUI .ak-v2-person{padding:9px}#aktivaCountUI .ak-v2-topbtn{padding:9px!important;min-width:36px}#aktivaCountUI .ak-v2-top{gap:6px}}
 `;document.head.appendChild(style)}
 function toast(t){msg=t;render();}
 async function notifyForkliftAfterCount(product, delivery){
@@ -62,10 +98,16 @@ function options(arr,q){if(!q?.trim())return '';return [...arr].filter(x=>x.toLo
 function summary(){const day=today(),me=session?.user?.id;const mine=dlist().filter(d=>d.created_by===me&&dateOf(d.arrived_at)===day);const counted=plist().filter(p=>p.counted_by===me&&p.count_completed&&dateOf(p.counted_at)===day);return {shipments:mine.length,products:counted.length,pallets:counted.reduce((a,p)=>a+Number(p.pallet_count||0),0)}}
 function countInfo(p){const expected=Number(p.expected||0),received=Number(p.received||0),damaged=Number(p.damaged||0),missing=Math.max(0,expected-received),excess=Math.max(0,received-expected),sound=Math.max(0,received-damaged);return {expected,received,damaged,missing,excess,sound};}
 function message(s){if(!s.products)return 'Yeni bir gün, yeni fırsatlar.';if(s.products>=10)return 'Bugün büyük emek verdin, teşekkürler!';if(s.products>=3)return 'Güzel ilerliyorsun, emeğine sağlık!';return 'İyi bir başlangıç yaptın!'}
-function render(){build();const el=container();el.classList.toggle('hidden',!logged());if(!logged())return;
+function render(){build();const el=container();el.classList.toggle('hidden',!logged());el.classList.toggle('ak-v2-home',logged()&&view==='home');if(!logged())return;
 const me=profile?.full_name||'Personel', stats=summary();firmNames=new Set([...firmNames,...dlist().map(d=>d.supplier).filter(Boolean)]);productNames=new Set([...productNames,...plist().map(p=>p.name).filter(Boolean)]);
-let html=`<div class="ak-user"><span class="ak-avatar">♙</span><div style="flex:1;min-width:0"><small>Hoş geldin</small><strong>${safe(me)}</strong><small>Mal Kabul Personeli</small></div><button type="button" id="ak-logout" class="ak-outline" style="flex-shrink:0;padding:9px 12px;font-size:12px">Çıkış Yap</button></div>`;
-if(view==='home')html+=`<button class="ak-tile ak-primary" id="ak-new"><span class="ak-tile-icon">▣</span><strong>Yeni Sevkiyat Kaydı</strong></button><button class="ak-tile" id="ak-asn"><span class="ak-tile-icon">▣</span><strong>Tedarikçi Sevkiyatları</strong><small>Plaka, firma veya irsaliye ile ara</small></button><button class="ak-tile" id="ak-list"><span class="ak-tile-icon">▤</span><strong>Kaydedilen Sevkiyatlar</strong></button>`;
+let html='';
+if(view==='home'){
+ const day=today(), todays=dlist().filter(d=>dateOf(d.arrived_at)===day), pal=todays.reduce((sum,d)=>sum+Number(d.pallets||0),0), finished=todays.filter(d=>d.status==='done').length;
+ const latest=[...dlist()].sort((a,b)=>new Date(b.arrived_at||0)-new Date(a.arrived_at||0))[0];
+ const lastText=latest?safe(latest.supplier||latest.vehicle||'Sevkiyat'):'Henüz sevkiyat yok';
+ const lastTime=latest?timeOf(latest.arrived_at):'';
+ html=`<div class="ak-v2-shell"><aside class="ak-v2-side"><img class="ak-v2-logo" src="aktiva-logo.png" alt="AKTİVA"><button class="ak-v2-sidehome" id="ak-v2-home"><span>⌂</span>Anasayfa</button></aside><main class="ak-v2-main"><div class="ak-v2-top"><div class="ak-v2-person"><span class="ak-v2-person-icon">♙</span><div><strong>${safe(me)}</strong><small>Mal Kabul Personeli</small></div></div><button class="ak-v2-topbtn" id="ak-v2-refresh" aria-label="Yenile">↻</button><button class="ak-v2-topbtn" id="ak-logout" aria-label="Çıkış">⇥</button></div><h2 class="ak-v2-title">Mal Kabul Operasyonu</h2><div class="ak-v2-grid"><button class="ak-v2-card" id="ak-list"><span class="ak-v2-ico">🚚</span><strong>Mal Kabul<br>İşlemleri</strong><span class="ak-v2-arrow">❯</span></button><button class="ak-v2-card" id="ak-v2-barcode"><span class="ak-v2-ico">▥</span><strong>Barkod<br>İşlemleri</strong><span class="ak-v2-arrow">❯</span></button><button class="ak-v2-card" id="ak-v2-catalog"><span class="ak-v2-ico">▣</span><strong>Ürün<br>Kataloğu</strong><span class="ak-v2-arrow">❯</span></button><button class="ak-v2-card" id="ak-asn"><span class="ak-v2-ico">▤</span><strong>İrsaliye<br>İşlemleri</strong><span class="ak-v2-arrow">❯</span></button></div><div class="ak-v2-stats"><div class="ak-v2-stat"><b>Bugün Gelen</b><strong>${pal}</strong><small>Palet</small></div><div class="ak-v2-stat"><b>Tamamlanan Sayım</b><strong>${finished}</strong><small>Sevkiyat</small></div></div><div class="ak-v2-last"><b>Son İşlem</b><div class="ak-v2-lastline"><span style="font-size:27px">▣</span><b>${lastText}</b><small>${safe(lastTime)}</small></div></div><div class="ak-v2-shortcuts"><button id="ak-new">＋ Yeni Sevkiyat</button></div></main></div>`;
+}else html=`<div class="ak-user"><span class="ak-avatar">♙</span><div style="flex:1;min-width:0"><small>Hoş geldin</small><strong>${safe(me)}</strong><small>Mal Kabul Personeli</small></div><button type="button" id="ak-logout" class="ak-outline" style="flex-shrink:0;padding:9px 12px;font-size:12px">Çıkış Yap</button></div>`;
 if(view==='asn'){
  html+=`<div class="ak-heading"><h2>Tedarikçi Sevkiyatları</h2><button class="ak-back" id="ak-back">Geri</button></div><div class="ak-filter-card"><label>Tek akıllı arama</label><input id="ak-asn-search" type="search" autocomplete="off" placeholder="Plaka, firma, irsaliye veya AKT numarası" value="${safe(asnQuery)}"><small>Sevkiyatlar tır gelene kadar kayıtlı kalır.</small></div>`;
  if(asnError)html+=`<p class="ak-message">${safe(asnError)}. Önce AKTIVA_SQL_TEDARIKCI.sql dosyasını Supabase SQL Editor'de çalıştırın.</p>`;
@@ -108,6 +150,11 @@ if(view==='list'){
 html+=`<div class="ak-successes"><div class="ak-success-title">★ Günlük Başarıların <span>${new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})}</span></div><div class="ak-metrics"><div><strong>${stats.shipments}</strong><small>Sevkiyat</small></div><div><strong>${stats.products}</strong><small>Ürün</small></div><div><strong>${stats.pallets}</strong><small>Palet</small></div></div><p>${message(stats)}</p></div>`;
 if(msg)html+=`<p class="ak-message" role="status">${safe(msg)}</p>`;el.innerHTML=html;
 el.querySelector('#ak-logout')?.addEventListener('click',()=>{if(confirm('Oturumdan çıkış yapılsın mı?'))$a('logout')?.click()});
+el.querySelector('#ak-v2-home')?.addEventListener('click',()=>nav('home'));
+el.querySelector('#ak-v2-refresh')?.addEventListener('click',async()=>{try{await sync(true);toast('Veriler yenilendi.')}catch(e){toast('Yenileme hatası: '+e.message)}});
+el.querySelector('#ak-v2-barcode')?.addEventListener('click',()=>{const launch=el.querySelector('#ak-seven-launch');if(launch){launch.click();const tools=el.querySelector('#ak-seven-tools');if(tools){tools.style.display='block';tools.scrollIntoView({behavior:'smooth',block:'start'})}}else toast('Barkod araçları yükleniyor, tekrar deneyin.')});
+el.querySelector('#ak-v2-catalog')?.addEventListener('click',()=>{const launch=el.querySelector('#ac-open');if(launch)launch.click();else toast('Ürün kataloğu henüz yüklenmedi.')});
+
 el.querySelector('#ak-all-dates')?.addEventListener('click',()=>{shipmentDate='';render()});el.querySelector('#ak-date-filter')?.addEventListener('change',e=>{shipmentDate=e.target.value;opened=null;editId=null;render()});
 el.querySelector('#ak-shipment-search')?.addEventListener('input',e=>{shipmentSearch=e.target.value;opened=null;editId=null;const pos=e.target.selectionStart;render();const field=el.querySelector('#ak-shipment-search');field?.focus();try{field?.setSelectionRange(pos,pos)}catch(_){}});
 el.querySelector('#ak-asn')?.addEventListener('click',()=>{nav('asn');loadAsn()});el.querySelector('#ak-new')?.addEventListener('click',()=>nav('create'));el.querySelector('#ak-list')?.addEventListener('click',()=>nav('list'));el.querySelector('#ak-back')?.addEventListener('click',()=>nav('home'));

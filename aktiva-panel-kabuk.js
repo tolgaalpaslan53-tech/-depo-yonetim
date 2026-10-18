@@ -63,7 +63,9 @@ body[data-role="count"] #aktivaCountUI .ak-recent p{display:flex;justify-content
 body[data-role="count"] #aktivaCountUI .ak-recent small{font-size:10px;color:#bdcbd9}
 body[data-role="fork"] #ak-fork-host .af-home+.af-sub{display:none!important}
 #aktiva-shell-sidebar{padding-top:72px!important}
-#aktiva-shell-top{position:relative;z-index:10}
+#aktiva-shell-top{position:sticky!important;top:env(safe-area-inset-top,0px)!important;z-index:850!important;background:#081a2b!important;border-radius:14px!important;padding:7px 0!important;margin:4px 0 18px!important;display:flex!important;visibility:visible!important;opacity:1!important}
+body[data-role="fork"] #app>#aktiva-shell-top{display:flex!important}
+body[data-role="count"] #app>#aktiva-shell-top{display:flex!important}
 `;
 const style=document.createElement('style');style.id='aktiva-shell-style';style.textContent=css;document.head.appendChild(style);
 let lastRole='';
@@ -86,8 +88,8 @@ function paint(){const role=document.body.dataset.role;if(!['count','fork'].incl
  sidebar.innerHTML='<img class="as-logo" src="aktiva-logo.png" alt="AKTİVA">'+links.map(([key,icon,name],i)=>'<button type="button" data-as-page="'+key+'" class="'+(i===0?'active':'')+'"><span class="as-icon">'+icon+'</span>'+name+'</button>').join('');
  sidebar.addEventListener('click',e=>{const b=e.target.closest('[data-as-page]');if(!b)return;sidebar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));goto(b.dataset.asPage)});document.body.appendChild(sidebar);
  const top=document.createElement('div');top.id='aktiva-shell-top';const person=typeof profile!=='undefined'&&profile?.full_name?profile.full_name:'Personel';top.innerHTML='<div id="aktiva-shell-person"><span class="as-person-icon">♙</span><span class="as-person-text"><strong></strong><small>'+(role==='count'?'Mal Kabul Personeli':'Forklift Personeli')+'</small></span></div><button type="button" class="as-top-btn" id="as-refresh" aria-label="Yenile">⟳</button><button type="button" class="as-top-btn" id="as-logout" aria-label="Çıkış">⇥</button>';top.querySelector('strong').textContent=person;
- top.querySelector('#as-refresh').onclick=()=>trigger(role==='fork'?'#ak-fork-host [data-af="refresh"]':'#refresh');top.querySelector('#as-logout').onclick=()=>trigger(role==='fork'?'#ak-fork-host [data-af="logout"]':'#ak-logout');
- host.parentNode.insertBefore(top,host);
+ top.querySelector('#as-refresh').onclick=()=>{if(!trigger(role==='fork'?'#ak-fork-host [data-af="refresh"]':'#refresh'))trigger('#refresh')};top.querySelector('#as-logout').onclick=()=>{if(!trigger(role==='fork'?'#ak-fork-host [data-af="logout"]':'#ak-logout'))trigger('#logout')};
+ document.getElementById('app').insertBefore(top,document.getElementById('app').firstChild);
 }
 const observer=new MutationObserver(()=>{if(document.body.dataset.role!==lastRole||!document.getElementById('aktiva-shell-top'))paint()});observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['data-role','class','style']});document.addEventListener('DOMContentLoaded',paint);paint();
 })();

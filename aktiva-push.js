@@ -37,13 +37,13 @@
       panel.innerHTML='<button id="akForkPushEnable" type="button" style="background:#ffd135!important;color:#0a1b2b!important;font-weight:800;border-radius:10px">🔔 Telefon Bildirimlerini Aç</button><p id="akForkPushInfo" style="color:#c5d5e4;font-size:12px;margin:9px 0 0"></p>';
       host.append(panel);
       const btn=panel.querySelector('button'),msg=panel.querySelector('p');
-      btn.onclick=async()=>{btn.disabled=true;msg.textContent='Cihaz kaydediliyor…';try{await register();msg.textContent='Bildirim izni verildi ve cihaz kaydedildi.';btn.style.display='none';panel.style.display='none'}catch(e){msg.textContent=e.message||String(e)}finally{btn.disabled=false}};
+      btn.onclick=async()=>{btn.disabled=true;msg.textContent='Cihaz kaydediliyor…';try{await register();msg.textContent='🟢 Bildirimler açık · Cihaz kaydedildi';btn.style.display='none';panel.style.display='block'}catch(e){msg.textContent=e.message||String(e)}finally{btn.disabled=false}};
     }
     const btn=panel.querySelector('button'),msg=panel.querySelector('p');
     panel.style.display='block';
     if(!isSupported()){btn.style.display='none';msg.textContent='Bildirim için HTTPS ve desteklenen tarayıcı gerekir. iPhone: Ana Ekrana Ekle.';return}
     if(Notification.permission==='denied'){btn.style.display='none';msg.textContent='Bildirim izni engellenmiş. Telefonun uygulama ayarlarından açın.';return}
-    if(Notification.permission==='granted' && localStorage.getItem('aktiva_fork_push_registered')===s.user.id){btn.style.display='none';panel.style.display='none';msg.textContent='🔔 Telefon bildirimleri bu cihazda etkin.';return}
+    if(Notification.permission==='granted' && localStorage.getItem('aktiva_fork_push_registered')===s.user.id){btn.style.display='none';panel.style.display='block';msg.textContent='🟢 Bildirimler açık · Cihaz kaydedildi';return}
     btn.style.display='inline-block';
     msg.textContent='İzin vermek için dokunun. iPhone’da uygulamayı Ana Ekrana Ekle ile açın.';
   }

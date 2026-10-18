@@ -52,7 +52,7 @@ async function notifyForkliftAfterCount(product, delivery){
  });
  const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{data=null}
  if(!res.ok||data?.error||data?.success===false)throw Error(String(data?.error||data?.message||raw||'Sunucu hatası').slice(0,160)+' ('+res.status+')');
- return data;
+ return { ...data, _httpStatus:res.status, _endpoint:base+'/functions/v1/send-push' };
 }
 
 function build(){installStyle();if($a('aktivaCountUI'))return;const el=document.createElement('section');el.id='aktivaCountUI';el.className='hidden';$a('app').insertBefore(el,$a('message'));}
@@ -116,7 +116,12 @@ el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{opened=opened===b.d
 el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editId=b.dataset.edit;render()});el.querySelector('#ak-cancel')?.addEventListener('click',()=>{editId=null;render()});
 el.querySelectorAll('[data-editform]').forEach(f=>f.onsubmit=async e=>{e.preventDefault();const p=plist().find(x=>x.id===f.dataset.editform);if(!p)return;const actual=Number(f.elements.actual.value),a=Number(f.elements.pallets.value),dam=Number(f.elements.damaged.value);if(!Number.isSafeInteger(actual)||actual<0||!Number.isSafeInteger(a)||a<0||!Number.isSafeInteger(dam)||dam<0||dam>actual){toast('Miktarları kontrol et.');return}try{await req('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',body:{received:actual,pallet_count:a,damaged:dam,count_note:f.elements.count_note.value.trim(),counted_by:session.user.id,count_completed:true,counted_at:new Date().toISOString()}});const d=p.delivery_id;await sync(true);const ps=plist().filter(x=>x.delivery_id===d&&!x.count_completed);productFilter='all';productSearch='';editId=ps.length?ps[0].id:null;
 let pushMessage='';
-if(!p.count_completed){try{const delivery=dlist().find(x=>x.id===d);await notifyForkliftAfterCount(p,delivery);pushMessage=' Forklift bildirim isteği gönderildi.'}catch(pushError){pushMessage=' Bildirim hatası: '+pushError.message;console.error('AKTİVA push:',pushError)}}
+if(!p.count_completed){try{const delivery=dlist().find(x=>x.id===d);const pushResult=await notifyForkliftAfterCount(p,delivery);
+const sent=Number(pushResult?.sent);const total=Number(pushResult?.total);
+const hasCounts=Number.isFinite(sent)&&Number.isFinite(total);
+pushMessage=hasCounts?(' Bildirim sonucu: '+sent+'/'+total+' cihaza gönderildi (HTTP '+pushResult._httpStatus+').'):(' Sunucu yanıt verdi (HTTP '+pushResult._httpStatus+'); gönderilen cihaz sayısı belirtilmedi.');
+if(pushResult?.errors?.length)pushMessage+=' Hata: '+String(pushResult.errors[0]).slice(0,120);
+console.info('AKTİVA PUSH RESPONSE',pushResult);}catch(pushError){pushMessage=' Bildirim hatası: '+pushError.message;console.error('AKTİVA push:',pushError)}}
 toast('Sayım kaydedildi.'+pushMessage+(editId?' Sonraki ürün açıldı.':' Tüm ürünler sayıldı; düzeltme yapabilirsiniz.'))}catch(err){toast(err.message)}});
 el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{lines.splice(Number(b.dataset.remove),1);render()});
 const fi=el.querySelector('#ak-firm'),pr=el.querySelector('#ak-product');if(fi){fi.oninput=()=>{draftFirm=fi.value;el.querySelector('#ak-firm-suggestions').innerHTML=options(firmNames,fi.value);bindSuggest('firm')};fi.dispatchEvent(new Event('input'))}if(pr){pr.oninput=()=>{if(scannedProduct&&pr.value.trim()!==scannedProduct.name)scannedProduct=null;draftName=pr.value;el.querySelector('#ak-product-suggestions').innerHTML=options(productNames,pr.value);bindSuggest('product')};pr.dispatchEvent(new Event('input'))}

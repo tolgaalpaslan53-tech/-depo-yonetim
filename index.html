@@ -300,7 +300,22 @@ function renderDetail(){
  $('statusBtn').onclick=async()=>{
   if(d.status!=='done'&&!products.length){notice('Önce en az bir ürün kaydet.');return}
   if(d.status!=='done'&&!confirm('Sayım tamamlansın ve forkliftçilere bildirim gönderilsin mi?'))return;
-  try{await req('/rest/v1/deliveries?id=eq.'+encodeURIComponent(d.id),{method:'PATCH',body:{status:d.status==='done'?'open':'done'}});await sync(true);notice('Durum kaydedildi.',true)}catch(e){notice(e.message)}
+  try{
+   const completing=d.status!=='done';
+   await req('/rest/v1/deliveries?id=eq.'+encodeURIComponent(d.id),{method:'PATCH',body:{status:completing?'done':'open'}});
+   if(completing){
+    try{
+     const pushRes=await fetch(cfg.url+'/functions/v1/send-push',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':cfg.key,'Authorization':'Bearer '+session.access_token},
+      body:JSON.stringify({event:'count_completed',delivery_id:d.id,vehicle:d.vehicle,supplier:d.supplier,title:'AKTİVA • Sayım tamamlandı',body:(d.vehicle||'Araç')+' için mal kabul sayımı tamamlandı.'})
+     });
+     const pushText=await pushRes.text();let pushData;try{pushData=JSON.parse(pushText)}catch{pushData=null}
+     if(!pushRes.ok || pushData?.error || pushData?.success===false){throw Error((pushData?.error||pushData?.message||pushText||'Sunucu hatası').slice(0,180)+' ('+pushRes.status+')')}
+     await sync(true);notice('Sayım kaydedildi · Bildirim isteği gönderildi.',true);
+    }catch(pushError){await sync(true);notice('Sayım kaydedildi, ancak bildirim gönderilemedi: '+pushError.message)}
+   }else{await sync(true);notice('Sayım yeniden açıldı.',true)}
+  }catch(e){notice(e.message)}
  };
  const pf=$('productForm');if(pf)pf.onsubmit=async e=>{
   e.preventDefault();const f=new FormData(e.target);const name=String(f.get('name')||'').trim(),cartons=Number(f.get('cartons')),pallets=Number(f.get('pallets'));

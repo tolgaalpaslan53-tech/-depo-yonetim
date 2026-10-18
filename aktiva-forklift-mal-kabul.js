@@ -113,8 +113,8 @@ function countLaunchers(){
  const ui=$('#aktivaCountUI');if(!ui||ui.classList.contains('hidden'))return;
  const header=ui.querySelector('.ak-user');if(!header||!ui.querySelector('#ak-new')||ui.querySelector('#ak-count-pallet-links'))return;
  const box=document.createElement('div');box.id='ak-count-pallet-links';
- box.innerHTML='<button type="button" data-count-panel="remaining">📦 Mal Kabulde Bekleyen Paletler</button><button type="button" data-count-panel="placement-history">📋 Palet Yerleştirme Geçmişi</button>';
- header.insertAdjacentElement('afterend',box);
+ box.innerHTML='<button type="button" data-count-panel="remaining">📦 Mal Kabulde Bekleyen Paletler <span>›</span></button><button type="button" data-count-panel="placement-history">📋 Palet Yerleştirme Geçmişi <span>›</span></button>';
+ (ui.querySelector('.ak-modern-section')||header).insertAdjacentElement('beforeend',box);
  box.querySelectorAll('[data-count-panel]').forEach(b=>b.addEventListener('click',()=>{
   view=b.dataset.countPanel;expanded=null;movementSearch='';movementLimit=50;
   const pane=root();document.body.appendChild(pane);pane.classList.add('af-count-visible');document.body.style.overflow='hidden';
@@ -124,7 +124,7 @@ function countLaunchers(){
 function installCountUI(){
  if($('#ak-count-fork-integration'))return;
  const sheet=document.createElement('style');sheet.id='ak-count-fork-integration';
- sheet.textContent='body[data-role="count"] #ak-fork-host:not(.af-count-visible){display:none!important}body[data-role="count"] #ak-fork-host.af-count-visible{display:block!important;position:fixed!important;inset:0!important;z-index:2147482000!important;overflow-y:auto!important;overscroll-behavior:contain;background:#111722!important;margin:0!important;padding:calc(env(safe-area-inset-top, 0px) + 14px) 15px calc(env(safe-area-inset-bottom, 0px) + 24px)!important;border:0!important;border-radius:0!important}#ak-count-pallet-links{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0}#ak-count-pallet-links button{padding:14px;text-align:left;border:1px solid #39475a;background:#202b3b;color:#fff;border-radius:12px;font-size:14px;font-weight:650;min-height:52px}';
+ sheet.textContent='body[data-role="count"] #ak-fork-host:not(.af-count-visible){display:none!important}body[data-role="count"] #ak-fork-host.af-count-visible{display:block!important;position:fixed!important;inset:0!important;z-index:2147482000!important;overflow-y:auto!important;overscroll-behavior:contain;background:#111722!important;margin:0!important;padding:calc(env(safe-area-inset-top, 0px) + 14px) 15px calc(env(safe-area-inset-bottom, 0px) + 24px)!important;border:0!important;border-radius:0!important}#ak-count-pallet-links{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0}#ak-count-pallet-links button{padding:14px;text-align:left;border:1px solid #36506b;background:#17283c;color:#fff;border-radius:12px;font-size:14px;font-weight:650;min-height:52px;display:flex;justify-content:space-between}#ak-count-pallet-links button span{color:#f2c94c;font-size:20px}';
  document.head.appendChild(sheet);
  const app=$('#app');if(app){new MutationObserver(()=>countLaunchers()).observe(app,{childList:true,subtree:true});countLaunchers()}
 }

@@ -52,7 +52,7 @@ async function notifyForkliftAfterCount(product, delivery){
  });
  const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{data=null}
  if(!res.ok||data?.error||data?.success===false)throw Error(String(data?.error||data?.message||raw||'Sunucu hatası').slice(0,160)+' ('+res.status+')');
- return { ...data, _httpStatus:res.status, _endpoint:base+'/functions/v1/send-push' };
+ return data;
 }
 
 function build(){installStyle();if($a('aktivaCountUI'))return;const el=document.createElement('section');el.id='aktivaCountUI';el.className='hidden';$a('app').insertBefore(el,$a('message'));}
@@ -88,8 +88,12 @@ if(view==='list'){
   html+=`<div class="ak-shipment ak-shipment-pro"><button class="ak-shipment-head" data-open="${safe(d.id)}"><span class="ak-ship-title">🚚 &nbsp;${safe(d.supplier)}</span><span class="ak-ship-meta"><span>${safe(d.vehicle||'Plakasız')}</span><span>◷ ${safe(timeOf(d.arrived_at))}</span></span><span class="ak-ship-detail">${ps.length} ürün · ${safe(displayDate(dateOf(d.arrived_at)))}</span></button>`;
   if(opened===d.id){
    const done=ps.filter(p=>p.count_completed).length;
+   const shipment=d;
    const totals=ps.reduce((a,p)=>{const x=countInfo(p);a.expected+=x.expected;if(p.count_completed){a.received+=x.received;a.missing+=x.missing;a.excess+=x.excess;a.damaged+=x.damaged;}return a;},{expected:0,received:0,missing:0,excess:0,damaged:0});
    html+=`<div class="ak-count-summary"><strong>İrsaliye / Sayım Karşılaştırması</strong><div class="ak-count-grid"><span>Beklenen <b>${totals.expected}</b></span><span>Sayılan <b>${totals.received}</b></span><span>Eksik <b>${totals.missing}</b></span><span>Fazla <b>${totals.excess}</b></span><span>Hasarlı <b>${totals.damaged}</b></span></div><small>${done}/${ps.length} ürün sayıldı</small><div class="ak-progress"><i style="width:${ps.length?Math.round(done*100/ps.length):0}%"></i></div><label>Ürün ara<input type="search" id="ak-product-filter" placeholder="Ürün adı" value="${safe(productSearch)}"></label><div class="ak-filter-actions"><button type="button" data-filter="all">Tümü</button><button type="button" data-filter="pending">Sayılmayan</button><button type="button" data-filter="done">Sayılan</button></div></div>`;
+   if(ps.length&&done===ps.length){
+    html+=`<div class="ak-finish-panel" style="padding:12px;background:#152b21;border:1px solid #32794f;border-radius:12px;margin:12px 0"><strong>${d.status==='done'?'✓ Sevkiyat sayımı tamamlandı':'Tüm ürünler sayıldı'}</strong><p style="font-size:12px;margin:8px 0">${d.status==='done'?'Forklift bildirim işlemi tamamlandı veya denendi.':'Forkliftçiye tek bildirim göndermek için sevkiyatı bitirin.'}</p>${d.status==='done'?'':`<button type="button" class="ak-submit" data-finish-delivery="${safe(d.id)}" style="width:100%">✓ Sevkiyat Sayımını Bitir ve Bildir</button>`}</div>`;
+   }
    for(const p of ps.filter(p=>(productFilter==='all'||(productFilter==='done'?p.count_completed:!p.count_completed))&&searchKey(p.name).includes(searchKey(productSearch)))){ 
     html+=`<div class="ak-product"><strong>${safe(p.name)}</strong><small>İrsaliye: ${Number(p.expected||0)} koli · Sayılan: ${p.count_completed?Number(p.received||0):'—'} koli · ${Number(p.pallet_count||0)} palet</small>${p.count_completed?`<small class="ak-diff">Eksik: ${countInfo(p).missing} · Fazla: ${countInfo(p).excess} · Hasarlı: ${countInfo(p).damaged} · Sağlam: ${countInfo(p).sound}</small>`:''}<div class="ak-complete"><span>${p.count_completed?'✓ Sayımı Tamamlandı':'Bekliyor'}</span><button type="button" data-edit="${safe(p.id)}">${p.count_completed?'Düzenle':'Sayımı Tamamla'}</button></div>`;
     if(editId===p.id)html+=`<form class="ak-edit-form" data-editform="${safe(p.id)}"><label>Gerçek gelen koli<input name="actual" type="number" min="0" step="1" value="${p.count_completed?Number(p.received||0):Number(p.expected||0)}" required></label><label>Hasarlı koli<input name="damaged" type="number" min="0" step="1" value="${Number(p.damaged||0)}" required></label><label>Sayım notu<input name="count_note" maxlength="500" placeholder="Açıklama (isteğe bağlı)" value="${safe(p.count_note||'')}"></label><label>Gerçek palet sayısı<input name="pallets" type="number" min="0" step="1" value="${Number(p.pallet_count||0)}" required></label><div class="ak-two"><button type="button" class="ak-outline" id="ak-cancel">İptal</button><button type="submit" class="ak-submit">Kaydet</button></div></form>`;
@@ -113,16 +117,30 @@ el.querySelectorAll('[data-asn-import]').forEach(b=>b.onclick=async()=>{if(asnBu
  const result=await req('/rest/v1/rpc/aktiva_import_supplier_shipment',{method:'POST',body:{shipment_id:a.id}});const id=result?.delivery_id||result;if(!id)throw Error('Sayım kaydı alınamadı');await sync(true);shipmentDate='';shipmentSearch=a.plate||a.supplier;opened=id;view='list';toast('Sevkiyat sayım ekranına aktarıldı.');}catch(e){toast('Aktarma hatası: '+e.message)}finally{asnBusy=false}});
 el.querySelector('#ak-product-filter')?.addEventListener('input',e=>{productSearch=e.target.value;render();const input=el.querySelector('#ak-product-filter');input?.focus()});el.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{productFilter=b.dataset.filter;render()});
 el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{opened=opened===b.dataset.open?null:b.dataset.open;editId=null;productFilter='all';productSearch='';render()});
+el.querySelectorAll('[data-finish-delivery]').forEach(b=>b.onclick=async()=>{
+ const id=b.dataset.finishDelivery;
+ if(!navigator.onLine){toast('İnternet bağlantısı gerekli.');return}
+ if(!confirm('Sevkiyatın bütün sayımı tamamlandı. Forkliftçiye bir kez bildirim gönderilsin mi?'))return;
+ b.disabled=true;
+ try{
+  await sync(true);
+  const products=plist().filter(p=>p.delivery_id===id);
+  if(!products.length||products.some(p=>!p.count_completed))throw Error('Henüz sayılmamış ürün var.');
+  const before=dlist().find(d=>d.id===id);
+  if(before?.status==='done'){toast('Bu sevkiyat zaten tamamlandı; ikinci bildirim gönderilmedi.');return}
+  const changed=await req('/rest/v1/deliveries?id=eq.'+encodeURIComponent(id)+'&status=eq.open',{method:'PATCH',body:{status:'done'},headers:{Prefer:'return=representation'}});
+  if(!Array.isArray(changed)||changed.length!==1){await sync(true);toast('Sevkiyat zaten tamamlanmış veya güncellenemedi. Tekrar bildirim gönderilmedi.');return}
+  await sync(true);
+  try{
+   const result=await notifyForkliftAfterCount(products[products.length-1],before);
+   const sent=Number(result?.sent||0),total=Number(result?.total||0);
+   toast(sent>0?'✓ Sevkiyat tamamlandı · '+sent+' cihaza bildirim gönderildi.':'✓ Sevkiyat tamamlandı · Bildirim ulaşmadı (0/'+total+' cihaz). '+String(result?.errors?.[0]||'Abonelikleri kontrol edin.').slice(0,100));
+  }catch(error){toast('✓ Sevkiyat tamamlandı · Bildirim hatası: '+error.message)}
+ }catch(error){toast('Tamamlama hatası: '+error.message)}finally{b.disabled=false}
+});
 el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editId=b.dataset.edit;render()});el.querySelector('#ak-cancel')?.addEventListener('click',()=>{editId=null;render()});
 el.querySelectorAll('[data-editform]').forEach(f=>f.onsubmit=async e=>{e.preventDefault();const p=plist().find(x=>x.id===f.dataset.editform);if(!p)return;const actual=Number(f.elements.actual.value),a=Number(f.elements.pallets.value),dam=Number(f.elements.damaged.value);if(!Number.isSafeInteger(actual)||actual<0||!Number.isSafeInteger(a)||a<0||!Number.isSafeInteger(dam)||dam<0||dam>actual){toast('Miktarları kontrol et.');return}try{await req('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',body:{received:actual,pallet_count:a,damaged:dam,count_note:f.elements.count_note.value.trim(),counted_by:session.user.id,count_completed:true,counted_at:new Date().toISOString()}});const d=p.delivery_id;await sync(true);const ps=plist().filter(x=>x.delivery_id===d&&!x.count_completed);productFilter='all';productSearch='';editId=ps.length?ps[0].id:null;
-let pushMessage='';
-if(!p.count_completed){try{const delivery=dlist().find(x=>x.id===d);const pushResult=await notifyForkliftAfterCount(p,delivery);
-const sent=Number(pushResult?.sent);const total=Number(pushResult?.total);
-const hasCounts=Number.isFinite(sent)&&Number.isFinite(total);
-pushMessage=hasCounts?(' Bildirim sonucu: '+sent+'/'+total+' cihaza gönderildi (HTTP '+pushResult._httpStatus+').'):(' Sunucu yanıt verdi (HTTP '+pushResult._httpStatus+'); gönderilen cihaz sayısı belirtilmedi.');
-if(pushResult?.errors?.length)pushMessage+=' Hata: '+String(pushResult.errors[0]).slice(0,120);
-console.info('AKTİVA PUSH RESPONSE',pushResult);}catch(pushError){pushMessage=' Bildirim hatası: '+pushError.message;console.error('AKTİVA push:',pushError)}}
-toast('Sayım kaydedildi.'+pushMessage+(editId?' Sonraki ürün açıldı.':' Tüm ürünler sayıldı; düzeltme yapabilirsiniz.'))}catch(err){toast(err.message)}});
+toast('Sayım kaydedildi.'+(editId?' Sonraki ürün açıldı.':' Tüm ürünler sayıldı; sevkiyatı tamamlayabilirsiniz.'))}catch(err){toast(err.message)}});
 el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{lines.splice(Number(b.dataset.remove),1);render()});
 const fi=el.querySelector('#ak-firm'),pr=el.querySelector('#ak-product');if(fi){fi.oninput=()=>{draftFirm=fi.value;el.querySelector('#ak-firm-suggestions').innerHTML=options(firmNames,fi.value);bindSuggest('firm')};fi.dispatchEvent(new Event('input'))}if(pr){pr.oninput=()=>{if(scannedProduct&&pr.value.trim()!==scannedProduct.name)scannedProduct=null;draftName=pr.value;el.querySelector('#ak-product-suggestions').innerHTML=options(productNames,pr.value);bindSuggest('product')};pr.dispatchEvent(new Event('input'))}
 el.querySelector('#ak-add')?.addEventListener('click',()=>{const n=pr.value.trim(),c=Number(el.querySelector('#ak-cartons').value),p=Number(el.querySelector('#ak-pallets').value);if(!n||!Number.isSafeInteger(c)||c<=0||!Number.isSafeInteger(p)||p<=0){toast('Ürün adı, koli ve palet sayılarını kontrol et.');return}draftFirm=fi.value;draftPlate=el.querySelector('#ak-plate').value;lines.push({name:n,cartons:c,pallets:p,sku:scannedProduct?.name===n?scannedProduct.sku:'',barcode:scannedProduct?.name===n?scannedProduct.barcode:'',units_per_carton:scannedProduct?.name===n?scannedProduct.units_per_carton:null});scannedProduct=null;draftName='';render()});

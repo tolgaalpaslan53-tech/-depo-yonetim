@@ -28,6 +28,31 @@ body[data-role="fork"] #ak-fork-host .af-stats{margin:24px 0 14px!important;gap:
 body[data-role="fork"] #ak-fork-host .af-stat{background:#0b2033!important;border:1px solid #456e8b!important;border-radius:19px!important;padding:19px!important}
 body[data-role="fork"] #ak-fork-host .af-stat strong{color:#ffd13c!important;font-size:29px!important}
 @media(max-width:430px){#aktiva-shell-sidebar{width:98px;padding:90px 5px 12px}#aktiva-shell-sidebar .as-logo{max-width:88px;border-radius:15px}#aktiva-shell-sidebar button{min-height:79px;font-size:11px}body[data-role="count"] #app,body[data-role="fork"] #app{margin-left:98px!important;width:calc(100% - 98px)!important;padding:12px 9px 75px!important}#aktiva-shell-person{min-height:58px;padding:8px 5px}#aktiva-shell-person .as-person-icon{display:none}#aktiva-shell-top .as-top-btn{min-width:37px;height:43px;font-size:20px}body[data-role="count"] #aktivaCountUI .ak-modern-tile{min-height:148px;padding:10px 4px 25px}body[data-role="count"] #aktivaCountUI .ak-modern-tile strong{font-size:13px}body[data-role="count"] #aktivaCountUI .ak-modern-ico{font-size:28px}body[data-role="fork"] #ak-fork-host .af-home .af-nav{min-height:145px;font-size:13px}}
+
+/* iPhone / Android: fixed compact rail, no horizontal page overflow */
+html,body{max-width:100%;overflow-x:hidden}
+body[data-role="count"],body[data-role="fork"]{--as-rail:82px}
+body[data-role="count"] #app,body[data-role="fork"] #app{margin-left:var(--as-rail)!important;width:calc(100% - var(--as-rail))!important;max-width:calc(100% - var(--as-rail))!important;min-width:0!important;padding:12px 9px 75px!important;overflow-x:clip;box-sizing:border-box}
+#aktiva-shell-sidebar{width:var(--as-rail,82px)!important;padding:80px 5px 12px!important;gap:8px!important;overflow-y:auto;overflow-x:hidden}
+#aktiva-shell-sidebar .as-logo{width:66px!important;max-width:100%!important;margin:0 auto 15px!important;border-radius:12px!important}
+#aktiva-shell-sidebar button{min-height:66px!important;font-size:10px!important;gap:5px!important;padding:7px 2px!important;overflow-wrap:anywhere}
+#aktiva-shell-sidebar button .as-icon{font-size:22px!important}
+#aktiva-shell-top{min-width:0!important;max-width:100%;gap:5px!important;margin:4px 0 14px!important}
+#aktiva-shell-person{min-width:0!important;padding:7px 5px!important;min-height:48px!important}
+#aktiva-shell-person .as-person-icon{display:none!important}
+#aktiva-shell-person strong{font-size:11px!important}
+#aktiva-shell-person small{font-size:9px!important}
+#aktiva-shell-top .as-top-btn{min-width:32px!important;width:32px!important;height:37px!important;font-size:18px!important;padding:2px!important;flex-shrink:0}
+body[data-role="count"] #aktivaCountUI,body[data-role="fork"] #ak-fork-host{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box}
+body[data-role="count"] #aktivaCountUI .ak-modern-grid,body[data-role="fork"] #ak-fork-host .af-home{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;min-width:0}
+body[data-role="count"] #aktivaCountUI .ak-modern-tile,body[data-role="fork"] #ak-fork-host .af-home .af-nav{width:100%!important;min-width:0!important;min-height:140px!important;padding:10px 4px 20px!important;border-radius:15px!important;box-sizing:border-box;overflow-wrap:anywhere}
+body[data-role="count"] #aktivaCountUI .ak-modern-tile strong{font-size:clamp(11px,3vw,16px)!important;line-height:1.25!important}
+body[data-role="count"] #aktivaCountUI .ak-modern-ico{font-size:27px!important}
+body[data-role="count"] #aktivaCountUI .ak-modern-arrow{font-size:25px!important}
+body[data-role="fork"] #ak-fork-host .af-home .af-nav{font-size:clamp(11px,3vw,15px)!important}
+body[data-role="count"] #aktivaCountUI input,body[data-role="fork"] #ak-fork-host input{max-width:100%;box-sizing:border-box}
+@media(min-width:700px){body[data-role="count"],body[data-role="fork"]{--as-rail:132px}#aktiva-shell-sidebar{padding-top:75px!important}#aktiva-shell-sidebar .as-logo{width:100px!important}#aktiva-shell-sidebar button{min-height:80px!important;font-size:13px!important}body[data-role="count"] #app,body[data-role="fork"] #app{padding:18px 18px 90px!important}body[data-role="count"] #aktivaCountUI .ak-modern-grid,body[data-role="fork"] #ak-fork-host .af-home{gap:14px!important}body[data-role="count"] #aktivaCountUI .ak-modern-tile,body[data-role="fork"] #ak-fork-host .af-home .af-nav{min-height:190px!important;padding:16px!important}}
+@media(max-width:360px){body[data-role="count"],body[data-role="fork"]{--as-rail:68px}#aktiva-shell-sidebar .as-logo{width:54px!important}#aktiva-shell-sidebar button{font-size:9px!important;min-height:58px!important}body[data-role="count"] #app,body[data-role="fork"] #app{padding:9px 5px 60px!important}#aktiva-shell-top .as-top-btn{min-width:28px!important;width:28px!important}body[data-role="count"] #aktivaCountUI .ak-modern-grid,body[data-role="fork"] #ak-fork-host .af-home{gap:5px!important}}
 `;
 const style=document.createElement('style');style.id='aktiva-shell-style';style.textContent=css;document.head.appendChild(style);
 let lastRole='';

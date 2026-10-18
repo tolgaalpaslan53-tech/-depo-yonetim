@@ -62,7 +62,7 @@ body[data-role="count"] #aktivaCountUI .ak-recent>strong{display:block;font-size
 body[data-role="count"] #aktivaCountUI .ak-recent p{display:flex;justify-content:space-between;gap:9px;font-size:13px;align-items:center}
 body[data-role="count"] #aktivaCountUI .ak-recent small{font-size:10px;color:#bdcbd9}
 body[data-role="fork"] #ak-fork-host .af-home+.af-sub{display:none!important}
-#aktiva-shell-sidebar{padding-top:105px!important}
+#aktiva-shell-sidebar{padding-top:72px!important}
 #aktiva-shell-top{position:relative;z-index:10}
 `;
 const style=document.createElement('style');style.id='aktiva-shell-style';style.textContent=css;document.head.appendChild(style);
@@ -82,7 +82,7 @@ function paint(){const role=document.body.dataset.role;if(!['count','fork'].incl
  const host=role==='count'?document.querySelector('#aktivaCountUI'):document.querySelector('#ak-fork-host');if(!host||host.classList.contains('hidden')||host.style.display==='none')return;
  if(role===lastRole&&document.getElementById('aktiva-shell-top'))return;lastRole=role;
  document.getElementById('aktiva-shell-sidebar')?.remove();document.getElementById('aktiva-shell-top')?.remove();
- const sidebar=document.createElement('aside');sidebar.id='aktiva-shell-sidebar';const links=role==='count'?[['home','⌂','Anasayfa'],['shipment','▣','Sevkiyat'],['barcode','▥','Barkod'],['catalog','▤','Katalog'],['invoice','▧','İrsaliye']]:[['home','⌂','Anasayfa'],['shipment','▣','Sevkiyat'],['remaining','▥','Paletler'],['positions','⌖','Peron'],['history','▤','Geçmiş']];
+ const sidebar=document.createElement('aside');sidebar.id='aktiva-shell-sidebar';const links=role==='count'?[['home','⌂','Anasayfa']]:[['home','⌂','Anasayfa'],['shipment','▣','Sevkiyat'],['remaining','▥','Paletler'],['positions','⌖','Peron'],['history','▤','Geçmiş']];
  sidebar.innerHTML='<img class="as-logo" src="aktiva-logo.png" alt="AKTİVA">'+links.map(([key,icon,name],i)=>'<button type="button" data-as-page="'+key+'" class="'+(i===0?'active':'')+'"><span class="as-icon">'+icon+'</span>'+name+'</button>').join('');
  sidebar.addEventListener('click',e=>{const b=e.target.closest('[data-as-page]');if(!b)return;sidebar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));goto(b.dataset.asPage)});document.body.appendChild(sidebar);
  const top=document.createElement('div');top.id='aktiva-shell-top';const person=typeof profile!=='undefined'&&profile?.full_name?profile.full_name:'Personel';top.innerHTML='<div id="aktiva-shell-person"><span class="as-person-icon">♙</span><span class="as-person-text"><strong></strong><small>'+(role==='count'?'Mal Kabul Personeli':'Forklift Personeli')+'</small></span></div><button type="button" class="as-top-btn" id="as-refresh" aria-label="Yenile">⟳</button><button type="button" class="as-top-btn" id="as-logout" aria-label="Çıkış">⇥</button>';top.querySelector('strong').textContent=person;

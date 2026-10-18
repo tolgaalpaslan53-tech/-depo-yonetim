@@ -27,7 +27,7 @@
   }
   async function render(){
     const s=current();let panel=document.getElementById('akForkPushPanel');
-    if(s.role!=='fork'||!s.user){panel?.remove();return}
+    if(s.role!=='fork'||!s.user){if(panel)panel.style.display='none';return}
     // Keep the panel outside the forklift dashboard: sync() redraws that dashboard every 8 seconds.
     const host=document.body;
     if(!host)return;

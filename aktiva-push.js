@@ -2,6 +2,8 @@
 (() => {
   'use strict';
   const keyName = 'aktiva_vapid_public_key';
+  let busy=false;
+  const marker='aktiva_fork_push_registered';
   const b64 = v => Uint8Array.from(atob(v.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-v.length%4)%4)), c=>c.charCodeAt(0));
   const current = () => {try {return {user:session?.user,role:profile?.role,token:session?.access_token,url:cfg?.url,apikey:cfg?.key};}catch{return {}}};
   const isSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol==='https:';
@@ -22,8 +24,25 @@
       body:JSON.stringify({user_id:s.user.id,subscription:sub.toJSON()})
     });
     if(!res.ok)throw Error('Cihaz kaydedilemedi ('+res.status+'): '+(await res.text()).slice(0,160));
-    localStorage.setItem('aktiva_fork_push_registered',s.user.id);
+    localStorage.setItem(marker,s.user.id);
     return true;
+  }
+  async function disable(){
+    const s=current();
+    if(!s.user || s.role!=='fork' || !s.token)throw Error('Forkliftçi oturumu gerekli.');
+    if(!isSupported())throw Error('Bu cihazda bildirim desteği yok.');
+    const registration=await navigator.serviceWorker.getRegistration('./');
+    const sub=await registration?.pushManager.getSubscription();
+    if(sub){
+      // Remove only this device's subscription. Never affect another forklift user's phone.
+      const endpoint=encodeURIComponent(sub.endpoint);
+      const url=s.url+'/rest/v1/dx_push_subscriptions?user_id=eq.'+encodeURIComponent(s.user.id)+'&endpoint=eq.'+endpoint;
+      const res=await fetch(url,{method:'DELETE',headers:{apikey:s.apikey,Authorization:'Bearer '+s.token,Prefer:'return=minimal'}});
+      if(!res.ok)throw Error('Bildirim kaydı silinemedi ('+res.status+'): '+(await res.text()).slice(0,140));
+      const ok=await sub.unsubscribe();
+      if(!ok)throw Error('Telefon aboneliği kapatılamadı. Tekrar deneyin.');
+    }
+    localStorage.removeItem(marker);
   }
   async function render(){
     const s=current();let panel=document.getElementById('akForkPushPanel');
@@ -34,17 +53,19 @@
     if(!panel){
       panel=document.createElement('section');panel.id='akForkPushPanel';
       panel.style.cssText='position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:100000;max-width:min(360px,calc(100vw - 24px));padding:12px;border:1px solid #385a76;border-radius:14px;background:#0b2236;color:#fff;box-shadow:0 8px 28px #0009';
-      panel.innerHTML='<button id="akForkPushEnable" type="button" style="background:#ffd135!important;color:#0a1b2b!important;font-weight:800;border-radius:10px">🔔 Telefon Bildirimlerini Aç</button><p id="akForkPushInfo" style="color:#c5d5e4;font-size:12px;margin:9px 0 0"></p>';
+      panel.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:7px"><button id="akForkPushEnable" type="button" style="background:#ffd135!important;color:#0a1b2b!important;font-weight:800;border-radius:10px">🔔 Bildirimleri Aç</button><button id="akForkPushDisable" type="button" style="background:#35475b!important;color:#fff!important;font-weight:750;border-radius:10px">🔕 Bildirimleri Kapat</button></div><p id="akForkPushInfo" style="color:#c5d5e4;font-size:12px;margin:9px 0 0"></p>';
       host.append(panel);
-      const btn=panel.querySelector('button'),msg=panel.querySelector('p');
-      btn.onclick=async()=>{btn.disabled=true;msg.textContent='Cihaz kaydediliyor…';try{await register();msg.textContent='🟢 Bildirimler açık · Cihaz kaydedildi';btn.style.display='none';panel.style.display='block'}catch(e){msg.textContent=e.message||String(e)}finally{btn.disabled=false}};
+      const btn=panel.querySelector('#akForkPushEnable'),off=panel.querySelector('#akForkPushDisable'),msg=panel.querySelector('p');
+      btn.onclick=async()=>{if(busy)return;busy=true;btn.disabled=true;off.disabled=true;msg.textContent='Cihaz kaydediliyor…';try{await register();msg.textContent='🟢 Bildirimler açık · Cihaz kaydedildi';await render()}catch(e){msg.textContent=e.message||String(e)}finally{busy=false;btn.disabled=false;off.disabled=false}};
+      off.onclick=async()=>{if(busy)return;busy=true;btn.disabled=true;off.disabled=true;msg.textContent='Bildirimler kapatılıyor…';try{await disable();msg.textContent='🔕 Bildirimler bu cihazda kapalı';await render()}catch(e){msg.textContent=e.message||String(e)}finally{busy=false;btn.disabled=false;off.disabled=false}};
     }
-    const btn=panel.querySelector('button'),msg=panel.querySelector('p');
+    const btn=panel.querySelector('#akForkPushEnable'),off=panel.querySelector('#akForkPushDisable'),msg=panel.querySelector('p');
     panel.style.display='block';
-    if(!isSupported()){btn.style.display='none';msg.textContent='Bildirim için HTTPS ve desteklenen tarayıcı gerekir. iPhone: Ana Ekrana Ekle.';return}
-    if(Notification.permission==='denied'){btn.style.display='none';msg.textContent='Bildirim izni engellenmiş. Telefonun uygulama ayarlarından açın.';return}
-    if(Notification.permission==='granted' && localStorage.getItem('aktiva_fork_push_registered')===s.user.id){btn.style.display='none';panel.style.display='block';msg.textContent='🟢 Bildirimler açık · Cihaz kaydedildi';return}
-    btn.style.display='inline-block';
+    if(busy)return;
+    if(!isSupported()){off.style.display='none';btn.style.display='none';msg.textContent='Bildirim için HTTPS ve desteklenen tarayıcı gerekir. iPhone: Ana Ekrana Ekle.';return}
+    if(Notification.permission==='denied'){off.style.display='none';btn.style.display='none';msg.textContent='Bildirim izni engellenmiş. Telefonun uygulama ayarlarından açın.';return}
+    if(Notification.permission==='granted' && localStorage.getItem(marker)===s.user.id){btn.style.display='none';off.style.display='inline-block';panel.style.display='block';msg.textContent='🟢 Bildirimler açık · Cihaz kaydedildi';return}
+    btn.style.display='inline-block';off.style.display='none';
     msg.textContent='İzin vermek için dokunun. iPhone’da uygulamayı Ana Ekrana Ekle ile açın.';
   }
   document.addEventListener('DOMContentLoaded',render);

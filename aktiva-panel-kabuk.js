@@ -50,6 +50,20 @@ body[data-role="fork"] #ak-fork-host .af-stat small{font-size:11px!important}
 body[data-role="fork"] #ak-fork-host input,body[data-role="count"] #aktivaCountUI input{max-width:100%;min-width:0;box-sizing:border-box}
 @media(min-width:700px){body[data-role="count"],body[data-role="fork"]{--ak-rail:132px}#aktiva-shell-sidebar .as-logo{width:110px;height:110px}#aktiva-shell-sidebar button{min-height:82px;font-size:13px}#aktiva-shell-sidebar button .as-icon{font-size:27px}body[data-role="count"] #app,body[data-role="fork"] #app{padding:0 22px 80px!important}body[data-role="count"] #aktivaCountUI .ak-modern-grid,body[data-role="fork"] #ak-fork-host .af-home{gap:15px!important}body[data-role="count"] #aktivaCountUI .ak-modern-tile,body[data-role="fork"] #ak-fork-host .af-home .af-nav{min-height:200px!important}#aktiva-shell-person strong{font-size:15px}#aktiva-shell-person small{font-size:12px}}
 @media(max-width:360px){body[data-role="count"],body[data-role="fork"]{--ak-rail:68px}#aktiva-shell-sidebar .as-logo{width:54px;height:54px}#aktiva-shell-sidebar button{font-size:9px;min-height:57px}body[data-role="count"] #app,body[data-role="fork"] #app{padding:0 6px 65px!important}#aktiva-shell-person .as-person-icon{display:none}#aktiva-shell-top .as-top-btn{flex-basis:29px;width:29px}body[data-role="count"] #aktivaCountUI .ak-modern-grid,body[data-role="fork"] #ak-fork-host .af-home{gap:6px!important}}
+
+body[data-role="count"] #ak-fork-host:not(.af-count-visible){display:none!important}
+body[data-role="fork"] #aktivaCountUI{display:none!important}
+body[data-role="count"] #aktivaCountUI .ak-role-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}
+body[data-role="count"] #aktivaCountUI .ak-role-stats>div{min-width:0;background:#0c2135;border:1px solid #426986;border-radius:16px;padding:13px 10px}
+body[data-role="count"] #aktivaCountUI .ak-role-stats small{display:block;color:#b9c8d7;font-size:11px;line-height:1.4}
+body[data-role="count"] #aktivaCountUI .ak-role-stats strong{display:block;color:#ffce37;font-size:27px;margin-top:8px}
+body[data-role="count"] #aktivaCountUI .ak-recent{border:1px solid #426986;border-radius:16px;background:#0c2135;padding:15px;margin:12px 0 25px}
+body[data-role="count"] #aktivaCountUI .ak-recent>strong{display:block;font-size:16px;padding-bottom:12px;border-bottom:1px solid #35506b}
+body[data-role="count"] #aktivaCountUI .ak-recent p{display:flex;justify-content:space-between;gap:9px;font-size:13px;align-items:center}
+body[data-role="count"] #aktivaCountUI .ak-recent small{font-size:10px;color:#bdcbd9}
+body[data-role="fork"] #ak-fork-host .af-home+.af-sub{display:none!important}
+#aktiva-shell-sidebar{padding-top:105px!important}
+#aktiva-shell-top{position:relative;z-index:10}
 `;
 const style=document.createElement('style');style.id='aktiva-shell-style';style.textContent=css;document.head.appendChild(style);
 let lastRole='';

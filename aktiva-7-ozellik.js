@@ -21,10 +21,34 @@ function draftSave(){if(!role())return;const data={};for(const id of ['ak-firm',
 function draftRestore(){const data=get(draftKey,{});for(const [id,value]of Object.entries(data)){if(id==='edit')continue;const el=$('#'+id);if(el&&document.activeElement!==el&&!el.value&&value)el.value=value}const f=$('[data-editform]');if(f&&data.edit?.id===f.dataset.editform&&!f.dataset.draftRestored){for(const field of ['actual','damaged','pallets','count_note'])if(f.elements[field]&&data.edit[field]!=null)f.elements[field].value=data.edit[field];f.dataset.draftRestored='1'}}
 function queue(){return get(key,[])}function pendingCount(){return queue().length}
 async function sendSave(op){return req('/rest/v1/rpc/aktiva_safe_count',{method:'POST',body:{p_product_id:op.id,p_expected_version:op.version,p_received:op.received,p_damaged:op.damaged,p_pallets:op.pallets,p_note:op.note,p_client_id:op.clientId}})}
+// Send push only after the secure count RPC has succeeded.
+async function notifyForkliftSecure(product){
+ const delivery=ds().find(d=>d.id===product.delivery_id);
+ const result=await req('/functions/v1/send-push',{method:'POST',body:{
+  event:'count_completed',product_id:product.id,delivery_id:product.delivery_id,
+  vehicle:delivery?.vehicle||'',supplier:delivery?.supplier||''
+ }});
+ if(result?.success!==true)throw Error(result?.error||result?.message||'Sunucu bildirimi onaylamadı');
+ return result;
+}
 async function flush(){if(syncing||!navigator.onLine||!me())return;syncing=true;try{let q=queue();for(const op of [...q]){try{await sendSave(op);q=q.filter(x=>x.clientId!==op.clientId);set(key,q)}catch(e){banner('Bekleyen kayıt: '+e.message,true);break}}if(!q.length){banner('Tüm çevrimdışı kayıtlar sunucuya aktarıldı.');if(typeof sync==='function')await sync(true)}}finally{syncing=false;updateStatus()}}
 function updateStatus(){const x=$('#ak-seven-queue');if(x)x.textContent=(navigator.onLine?'Çevrimiçi':'Çevrimdışı')+' · Bekleyen kayıt: '+pendingCount()}
 // Capture submit before original handler. This replaces direct PATCH with version-checked RPC.
-document.addEventListener('submit',async e=>{if(!role()||!e.target.matches('[data-editform]'))return;const f=e.target,p=list().find(x=>x.id===f.dataset.editform);if(!p)return;e.preventDefault();e.stopImmediatePropagation();const received=Number(f.elements.actual?.value),damaged=Number(f.elements.damaged?.value),pallets=Number(f.elements.pallets?.value);if(![received,damaged,pallets].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=999999)||damaged>received){banner('Koli, hasar ve palet miktarlarını kontrol edin.',true);return}const op={id:p.id,version:Number(p.aktiva_version||0),received,damaged,pallets,note:String(f.elements.count_note?.value||'').trim().slice(0,500),clientId:crypto.randomUUID(),user:me(),created:stamp()};markStart(p.delivery_id);const button=f.querySelector('button[type=submit]');if(button)button.disabled=true;try{if(!navigator.onLine)throw Error('Çevrimdışı');await sendSave(op);localStorage.removeItem(draftKey);banner('Sayım güvenli şekilde kaydedildi.');if(typeof sync==='function')await sync(true)}catch(err){if(!navigator.onLine||/fetch|network|failed to fetch/i.test(err.message)){const q=queue();q.push(op);set(key,q);banner('İnternet yok: sayım bu cihazda sıraya alındı. Çıkış yapmadan senkronize edin.')}else{banner('Kayıt reddedildi: '+err.message+' · Veriyi kontrol edip yenileyin.',true)}}finally{if(button)button.disabled=false;updateStatus()}},true);
+document.addEventListener('submit',async e=>{if(!role()||!e.target.matches('[data-editform]'))return;const f=e.target,p=list().find(x=>x.id===f.dataset.editform);if(!p)return;e.preventDefault();e.stopImmediatePropagation();const received=Number(f.elements.actual?.value),damaged=Number(f.elements.damaged?.value),pallets=Number(f.elements.pallets?.value);if(![received,damaged,pallets].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=999999)||damaged>received){banner('Koli, hasar ve palet miktarlarını kontrol edin.',true);return}const op={id:p.id,version:Number(p.aktiva_version||0),received,damaged,pallets,note:String(f.elements.count_note?.value||'').trim().slice(0,500),clientId:crypto.randomUUID(),user:me(),created:stamp()};markStart(p.delivery_id);const button=f.querySelector('button[type=submit]');if(button)button.disabled=true;try{if(!navigator.onLine)throw Error('Çevrimdışı');await sendSave(op);localStorage.removeItem(draftKey);
+ if(typeof sync==='function')await sync(true);
+ if(!p.count_completed){
+  try{
+   const updated=list().find(x=>x.id===p.id);
+   if(!updated?.count_completed)throw Error('Sayım kaydedildi ancak tamamlanma durumu doğrulanamadı');
+   const result=await notifyForkliftSecure(updated);
+   const sent=Number(result.sent||0),total=Number(result.total||0);
+   if(sent>0)banner('✓ Sayım kaydedildi · '+sent+' forkliftçi cihazına bildirim gönderildi.');
+   else banner('✓ Sayım kaydedildi · Bildirim ulaştırılamadı (0/'+total+' cihaz). '+(result.errors?.[0]||'Forkliftçi aboneliğini kontrol edin.'),true);
+  }catch(pushError){
+   console.error('AKTİVA forklift bildirimi:',pushError);
+   banner('✓ Sayım kaydedildi · Bildirim hatası: '+pushError.message,true);
+  }
+ }else banner('Sayım güncellendi (tekrar bildirim gönderilmedi).');}catch(err){if(!navigator.onLine||/fetch|network|failed to fetch/i.test(err.message)){const q=queue();q.push(op);set(key,q);banner('İnternet yok: sayım bu cihazda sıraya alındı. Çıkış yapmadan senkronize edin.')}else{banner('Kayıt reddedildi: '+err.message+' · Veriyi kontrol edip yenileyin.',true)}}finally{if(button)button.disabled=false;updateStatus()}},true);
 function enhance(){if(!role())return;const root=$('#aktivaCountUI');if(!root||root.classList.contains('hidden'))return;if(!$('#ak-seven-tools')){const panel=document.createElement('section');panel.id='ak-seven-tools';panel.style.cssText='background:#1c1f24;color:white;border:1px solid #434750;border-radius:14px;padding:13px;margin:8px 0';panel.innerHTML='<strong>📦 AKTİVA · Ürün Barkod Tanıtımı</strong><p id="ak-seven-queue" style="color:#cbd5e1;margin:8px 0"></p><div style="display:flex;flex-wrap:wrap;gap:7px"><button type="button" id="ak-seven-sync">↻ Bekleyenleri gönder</button><button type="button" id="ak-seven-report">📄 Ayrıntılı CSV raporu</button><button type="button" id="ak-seven-scan">▥ Barkod okut</button></div><p id="ak-seven-message" style="font-size:12px;margin:8px 0"></p><div id="ak-seven-scanner" style="display:none"><video autoplay playsinline muted style="width:100%;max-height:240px"></video><label>Barkod elle giriş<input id="ak-seven-code" placeholder="Barkod numarası"></label><button type="button" id="ak-seven-code-apply">Kodu kullan</button><button type="button" id="ak-seven-stop">Kamerayı kapat</button></div><div id="ak-seven-catalog" style="font-size:12px;margin-top:8px"></div>';panel.style.display='none';root.prepend(panel);$('#ak-seven-sync').onclick=flush;$('#ak-seven-report').onclick=report;$('#ak-seven-scan').onclick=startScanner;updateStatus()}
 // Panels and navigation are separate: show tool launcher only on home.
  const home=!!root.querySelector('#ak-new');

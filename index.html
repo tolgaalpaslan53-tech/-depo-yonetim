@@ -140,7 +140,7 @@ body[data-role="count"] #aktivaSyncBadge{display:flex!important;align-items:cent
 body[data-role="count"] #message:empty{display:none!important}
 body[data-role="count"] #message .alert.success{display:none!important}
 html,body{background-color:#090a0e!important}
-</style><style id="aktiva-forklift-clean-layout">body[data-role="fork"] #app > :not(#ak-fork-host){display:none!important}body[data-role="fork"] #pickingModule,body[data-role="fork"] #v9Panel,body[data-role="fork"] #v8Panel,body[data-role="fork"] #incomingPanel,body[data-role="fork"] #incomingNotification,body[data-role="fork"] #message{display:none!important}body[data-role="fork"] #ak-fork-host{display:block!important}</style><style id="aktivaForkliftApproachStyle">
+</style><style id="aktiva-forklift-clean-layout">body[data-role="fork"] #app:has(#ak-fork-host .afv-shell) > :not(#ak-fork-host){display:none!important}body[data-role="fork"] #pickingModule,body[data-role="fork"] #v9Panel,body[data-role="fork"] #v8Panel,body[data-role="fork"] #incomingPanel,body[data-role="fork"] #incomingNotification,body[data-role="fork"] #message{display:none!important}body[data-role="fork"] #ak-fork-host{display:block!important}</style><style id="aktivaForkliftApproachStyle">
 /* Role unknown: never show a truck before learning whether this is a forklift session. */
 #aktivaStartup:not(.ak-role-truck) .ak-truck-scene{display:none!important}
 #aktivaStartup.ak-fork-intro{background:#090e16}
@@ -614,4 +614,41 @@ el('adminCategoryDate').addEventListener('change',()=>{el('adminDate').value=el(
 })();
 </script><script src="aktiva-urun-katalog.js?v=20261017-20"></script>
 <script src="aktiva-excel-yonetimi.js?v=20261018-01"></script>
-<script src="aktiva-forklift-mal-kabul.js?v=20261019-manuel1"></script><link rel="stylesheet" href="aktiva-mal-kabul-dashboard.css?v=20261019-1"><script src="aktiva-mal-kabul-dashboard.js?v=20261019-1"></script></body></html> 
+<script src="aktiva-forklift-mal-kabul.js?v=20261019-manuel1"></script>
+<style id="aktivaForkliftBlankScreenGuard">
+/* Eski arayüzü yalnızca forklift paneli gerçekten oluştuğunda gizle. */
+body[data-role="fork"] #app:not(:has(#ak-fork-host .afv-shell)) > :not(#ak-fork-host):not(#message){display:none!important}
+body[data-role="fork"] #app > #ak-fork-host{display:block!important;min-height:100dvh}
+body[data-role="fork"] #ak-fork-host .ak-fork-recovery{max-width:430px;margin:22vh auto 0;padding:22px;border:1px solid #37536b;border-radius:16px;background:#102438;color:#fff;text-align:center}
+body[data-role="fork"] #ak-fork-host .ak-fork-recovery p{color:#bcd0e1}
+</style>
+<script id="aktivaForkliftScreenGuard">
+(function(){
+ 'use strict';
+ let attempted=false;
+ function check(){
+  if(document.body.dataset.role!=='fork'||document.body.classList.contains('aktiva-booting'))return;
+  const app=document.getElementById('app');
+  if(!app||app.classList.contains('hidden'))return;
+  let host=document.getElementById('ak-fork-host');
+  if(host&&host.querySelector('.afv-shell')){attempted=false;return;}
+  if(!host){host=document.createElement('section');host.id='ak-fork-host';app.prepend(host)}
+  else if(host.parentElement!==app)app.prepend(host);
+  if(host.querySelector('.ak-fork-recovery'))return;
+  host.innerHTML='<div class="ak-fork-recovery"><h2>Forklift Operasyonu</h2><p>Operasyon ekranı yüklenemedi. Yeniden yükleyerek deneyin.</p><button type="button" id="akForkRetry">↻ Ekranı Yeniden Yükle</button></div>';
+  document.getElementById('akForkRetry').addEventListener('click',function(){
+   if(attempted)return;
+   attempted=true;this.disabled=true;this.textContent='Yükleniyor…';
+   const u=new URL('aktiva-forklift-mal-kabul.js',location.href);
+   u.searchParams.set('v',String(Date.now()));
+   const script=document.createElement('script');script.src=u.href;
+   script.onerror=()=>{attempted=false;this.disabled=false;this.textContent='↻ Tekrar Dene'};
+   script.onload=()=>setTimeout(()=>{if(!host.querySelector('.afv-shell'))location.reload()},800);
+   document.body.append(script);
+  });
+ }
+ window.addEventListener('load',()=>setTimeout(check,1800));
+ new MutationObserver(()=>{if(document.body.dataset.role==='fork')setTimeout(check,1800)}).observe(document.body,{attributes:true,attributeFilter:['data-role']});
+ setTimeout(check,3500);
+})();
+</script><link rel="stylesheet" href="aktiva-mal-kabul-dashboard.css?v=20261019-1"><script src="aktiva-mal-kabul-dashboard.js?v=20261019-1"></script></body></html> 

@@ -147,7 +147,7 @@ function closeCountPanel(){
  const el=document.getElementById('ak-fork-host');
  if(!el)return;
  el.classList.remove('af-count-visible');
- el.style.setProperty('display','none','important');
+ el.style.removeProperty('display');
  document.body.style.overflow='';
 }
 // Mal Kabul ana ekranı: takip sayfaları, sevkiyat girişinden ayrı açılır.
@@ -167,7 +167,7 @@ function countLaunchers(){
 function installCountUI(){
  if($('#ak-count-fork-integration'))return;
  const sheet=document.createElement('style');sheet.id='ak-count-fork-integration';
- sheet.textContent='body:not([data-role="fork"]):not([data-role="count"]) #ak-fork-host{display:none!important}body[data-role="count"] #ak-fork-host:not(.af-count-visible){display:none!important}body[data-role="count"] #ak-fork-host.af-count-visible{display:block!important;position:fixed!important;inset:0!important;z-index:2147482000!important;overflow-y:auto!important;overscroll-behavior:contain;background:#111722!important;margin:0!important;padding:calc(env(safe-area-inset-top, 0px) + 14px) 15px calc(env(safe-area-inset-bottom, 0px) + 24px)!important;border:0!important;border-radius:0!important}#ak-count-pallet-links{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0}#ak-count-pallet-links button{padding:14px;text-align:left;border:1px solid #39475a;background:#202b3b;color:#fff;border-radius:12px;font-size:14px;font-weight:650;min-height:52px}';
+ sheet.textContent='body[data-role="count"] #ak-fork-host:not(.af-count-visible){display:none!important}body[data-role="count"] #ak-fork-host.af-count-visible{display:block!important;position:fixed!important;inset:0!important;z-index:2147482000!important;overflow-y:auto!important;overscroll-behavior:contain;background:#111722!important;margin:0!important;padding:calc(env(safe-area-inset-top, 0px) + 14px) 15px calc(env(safe-area-inset-bottom, 0px) + 24px)!important;border:0!important;border-radius:0!important}#ak-count-pallet-links{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0}#ak-count-pallet-links button{padding:14px;text-align:left;border:1px solid #39475a;background:#202b3b;color:#fff;border-radius:12px;font-size:14px;font-weight:650;min-height:52px}';
  document.head.appendChild(sheet);
  const app=$('#app');if(app){new MutationObserver(()=>countLaunchers()).observe(app,{childList:true,subtree:true});countLaunchers()}const countUI=$('#aktivaCountUI');if(countUI)new MutationObserver(()=>countLaunchers()).observe(countUI,{attributes:true,attributeFilter:['class','style']});new MutationObserver(()=>{if(role()!=='count')closeCountPanel()}).observe(document.body,{attributes:true,attributeFilter:['data-role']});
 }

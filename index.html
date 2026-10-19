@@ -614,7 +614,7 @@ el('adminCategoryDate').addEventListener('change',()=>{el('adminDate').value=el(
 })();
 </script><script src="aktiva-urun-katalog.js?v=20261017-20"></script>
 <script src="aktiva-excel-yonetimi.js?v=20261018-01"></script>
-<script src="aktiva-forklift-mal-kabul.js?v=20261019-manuel1"></script>
+<script src="aktiva-forklift-mal-kabul.js?v=20261019-panel-onarim2"></script>
 <style id="aktivaForkliftBlankScreenGuard">
 /* Eski arayüzü yalnızca forklift paneli gerçekten oluştuğunda gizle. */
 body[data-role="fork"] #app:not(:has(#ak-fork-host .afv-shell)) > :not(#ak-fork-host):not(#message){display:none!important}
@@ -651,4 +651,26 @@ body[data-role="fork"] #ak-fork-host .ak-fork-recovery p{color:#bcd0e1}
  new MutationObserver(()=>{if(document.body.dataset.role==='fork')setTimeout(check,1800)}).observe(document.body,{attributes:true,attributeFilter:['data-role']});
  setTimeout(check,3500);
 })();
-</script><link rel="stylesheet" href="aktiva-mal-kabul-dashboard.css?v=20261019-1"><script src="aktiva-mal-kabul-dashboard.js?v=20261019-1"></script></body></html> 
+</script><link rel="stylesheet" href="aktiva-mal-kabul-dashboard.css?v=20261019-1"><script src="aktiva-mal-kabul-dashboard.js?v=20261019-1"></script><style id="akForkPanelVisibilityRepair">
+body[data-role="fork"] #app:not(.hidden){display:block!important;visibility:visible!important}
+body[data-role="fork"] #ak-fork-host:has(.afv-shell){display:block!important;visibility:visible!important;opacity:1!important}
+body[data-role="fork"] #ak-fork-host .afv-shell{display:grid!important;visibility:visible!important;opacity:1!important}
+</style>
+<script id="akForkPanelMountRepair">
+(function(){
+ let last=0;
+ function repair(){
+  if(document.body.dataset.role!=='fork')return;
+  const app=document.getElementById('app'),host=document.getElementById('ak-fork-host');
+  if(!app||!host)return;
+  if(host.parentElement!==app)app.prepend(host);
+  if(host.querySelector('.afv-shell')){
+   const recovery=host.querySelector('.ak-fork-recovery');if(recovery)recovery.remove();
+  }
+ }
+ new MutationObserver(()=>{const now=Date.now();if(now-last>250){last=now;repair()}}).observe(document.body,{attributes:true,attributeFilter:['data-role'],childList:true,subtree:true});
+ window.addEventListener('load',repair);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)repair()});
+ setTimeout(repair,1500);setTimeout(repair,3500);
+})();
+</script></body></html> 

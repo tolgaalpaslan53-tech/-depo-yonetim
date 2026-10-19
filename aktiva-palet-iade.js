@@ -10,7 +10,7 @@ async function rpc(fn,body){const x=await api('/rest/v1/rpc/'+fn,{method:'POST',
 async function getAll(table,cols='*'){let a=[];for(let off=0;off<50000;off+=1000){const x=await api('/rest/v1/'+table+'?select='+encodeURIComponent(cols)+'&limit=1000&offset='+off);a.push(...x);if(x.length<1000)return a}throw Error('Rapor sınırı aşıldı; eksik rapor üretilmedi')}
 async function load(){[data,catalog]=await Promise.all([getAll('ak_palet_returns'),getAll('ak_palet_catalog')]);data.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))}
 function open(){if(!['count','fork'].includes(role()))return;page='list';message='';document.getElementById('akpi-modal').hidden=false;refresh()}
-function close(){document.getElementById('akpi-modal').hidden=true}
+function close(){const modal=document.getElementById('akpi-modal');if(modal)modal.hidden=true}
 async function refresh(){busy=true;draw();try{await load();message=''}catch(e){message='Veri alınamadı: '+e.message}finally{busy=false;draw()}}
 function draw(){const host=$('#akpi-content');if(!host)return;const count=role()==='count',fork=role()==='fork';if(!count&&!fork){close();return}
 let h=`<div class="akpi-top"><div><small>AKTİVA · ${count?'Mal Kabul':'Forklift Personeli'}</small><h2>Palet İade Operasyonu</h2></div><button data-pi="close" class="akpi-outline">✕ Kapat</button></div><nav class="akpi-tabs"><button data-pi="list">Görevler</button>${count?'<button data-pi="create">+ Yeni İade</button><button data-pi="catalog">Ürün Kataloğu</button>':''}<button data-pi="report">Excel Raporları</button></nav>`;
@@ -31,7 +31,44 @@ async function saveProduct(e){e.preventDefault();const f=e.target;try{await rpc(
 async function importFile(){const f=$('#akpi-file')?.files?.[0];if(!f)return alert('CSV/TXT dosyası seçiniz');if(f.size>2000000)return alert('Dosya 2 MB sınırını aşıyor');const raw=(await f.text()).replace(/^\uFEFF/,'');const rows=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(s=>{const m=s.match(/^([^;,\t]+)[;,\t](.+)$/);return m?[m[1].trim().replace(/^"|"$/g,''),m[2].trim().replace(/^"|"$/g,'')]:null}).filter(x=>x&&x[0]&&x[1]&&/\d/.test(x[0]));if(!rows.length)return alert('Ürün kodu ve adı bulunan satır yok');if(!confirm(rows.length+' ürün kaydedilsin mi? İlk satır: '+rows[0].join(' · ')))return;let ok=0;try{for(const [code,name] of rows){await rpc('ak_palet_catalog_save',{p_code:code,p_name:name});ok++}await refresh();message=ok+' ürün kaydedildi';draw()}catch(e){message=ok+' ürün kaydedildi; sonraki satırda hata: '+e.message;draw()}}
 let photoDraft=[];let selectedPhotoSource="";
 function photoReview(){const el=$('#akpi-photo-review');if(!el)return;el.innerHTML='<p class="akpi-hint">'+photoDraft.length+' satır bulundu. Hatalı kod ve adları düzeltiniz; istemediklerinizi siliniz. Kaydetmeden önce kontrol zorunludur.</p>'+photoDraft.map((r,i)=>`<div class="akpi-grid akpi-photo-row"><label>Kod<input data-photo-code="${i}" value="${esc(r[0])}"></label><label>Ürün adı<input data-photo-name="${i}" value="${esc(r[1])}"></label></div>`).join('')+'<button type="button" data-pi="photo-save">Kontrol Ettim · Ürünleri Kaydet</button>'}
-async function readPhoto(){const f=$(selectedPhotoSource==='camera'?'#akpi-photo-camera':'#akpi-photo-gallery')?.files?.[0];if(!f)return alert('Önce kameradan fotoğraf çekiniz veya galeriden seçiniz');if(!f.type.startsWith('image/'))return alert('Bir fotoğraf dosyası seçiniz');if(f.size>12000000)return alert('Fotoğraf 12 MB sınırını aşıyor');const el=$('#akpi-photo-review');el.textContent='Fotoğraf okunuyor, lütfen bekleyiniz…';try{if(!window.Tesseract){await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=resolve;sc.onerror=()=>reject(Error('OCR kütüphanesi indirilemedi. İnternet bağlantısını kontrol ediniz.'));document.head.append(sc)})}const result=await window.Tesseract.recognize(f,'tur+eng');const lines=result.data.text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);photoDraft=[];for(const line of lines){const m=line.match(/(?:^|\s)(\d{7,10})\s*[-:;.,]?\s*(.{3,})/);if(m){const code=m[1],name=m[2].trim();if(!photoDraft.some(r=>r[0]===code))photoDraft.push([code,name])}}if(!photoDraft.length){el.textContent='Ürün kodu tespit edilemedi. Daha net, düz çekilmiş fotoğraf deneyiniz veya elle ürün ekleyiniz.';return}photoReview()}catch(e){el.textContent='Fotoğraf okunamadı: '+e.message}}
+async function readPhoto(){
+ const f=$(selectedPhotoSource==='camera'?'#akpi-photo-camera':'#akpi-photo-gallery')?.files?.[0];
+ if(!f)return alert('Önce fotoğraf çekiniz veya galeriden seçiniz');
+ if(!f.type.startsWith('image/'))return alert('Fotoğraf seçiniz');
+ if(f.size>12000000)return alert('Fotoğraf 12 MB sınırını aşıyor');
+ const el=$('#akpi-photo-review');el.textContent='Fotoğraf okunuyor; görüntü yönleri kontrol ediliyor…';
+ try{
+  if(!window.Tesseract)await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=resolve;sc.onerror=()=>reject(Error('OCR kütüphanesi yüklenemedi'));document.head.append(sc)});
+  const bitmap=await createImageBitmap(f);const worker=await Tesseract.createWorker('tur+eng');
+  let best=[],bestAngle=0;
+  try{
+   for(const angle of [0,90,270]){
+    el.textContent='Fotoğraf okunuyor… ('+(angle===0?'orijinal':angle+'°')+')';
+    const rotated=angle!==0;const scale=Math.min(2,2400/Math.max(bitmap.width,bitmap.height));
+    const w=Math.round((rotated?bitmap.height:bitmap.width)*scale),h=Math.round((rotated?bitmap.width:bitmap.height)*scale);
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+    ctx.translate(w/2,h/2);ctx.rotate(angle*Math.PI/180);ctx.drawImage(bitmap,-bitmap.width*scale/2,-bitmap.height*scale/2,bitmap.width*scale,bitmap.height*scale);
+    const out=await worker.recognize(canvas);const lines=out.data.text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    const rows=[];let pending='';
+    for(const line of lines){
+     const normalized=line.replace(/[|]/g,' ').replace(/(?<=\d)[Oo](?=\d)/g,'0');
+     const m=normalized.match(/(?:^|\s)([69]\d{6})\s*[-:;.,]?\s*(.*)/);
+     if(m){if(pending&&rows.length&&!rows[rows.length-1][1])rows[rows.length-1][1]=pending;rows.push([m[1],m[2].trim()]);pending='';}
+     else if(rows.length&&/^(PALET|KASA|YOĞURT|SEBZE|IFCO|TRENTO|KARPUZ)/i.test(line)&&!rows[rows.length-1][1])rows[rows.length-1][1]=line;
+     else pending=line;
+    }
+    const dedup=[...new Map(rows.map(r=>[r[0],r])).values()];
+    const score=x=>x.reduce((n,r)=>n+1+(r[1].length>7?1:0),0);
+    if(score(dedup)>score(best)){best=dedup;bestAngle=angle;}
+    if(best.length>=22)break;
+   }
+  }finally{await worker.terminate();bitmap.close?.()}
+  photoDraft=best;
+  if(!best.length){el.textContent='Kodlar okunamadı. Fotoğrafı daha yakından çekiniz veya CSV yükleyiniz.';return}
+  photoReview();const hint=document.createElement('p');hint.className='akpi-hint';hint.textContent='Fotoğraf '+bestAngle+'° yönünde okundu. '+best.length+' ürün bulundu. Fotoğraftaki tüm satırları karşılaştırın; eksik olanları elle ekleyin. Onay vermeden kayıt yapılmaz.';el.prepend(hint);
+ }catch(e){el.textContent='Fotoğraf okunamadı: '+e.message}
+}
 async function savePhotoRows(){const rows=photoDraft.map((r,i)=>[$(`[data-photo-code="${i}"]`)?.value.trim(),$(`[data-photo-name="${i}"]`)?.value.trim()]).filter(r=>r[0]||r[1]);if(!rows.length)return alert('Kaydedilecek ürün bulunamadı');if(rows.some(r=>!/^\d{7,10}$/.test(r[0])||!r[1]||r[1].length<3))return alert('Ürün kodlarını (7-10 rakam) ve adlarını kontrol ediniz');if(new Set(rows.map(r=>r[0])).size!==rows.length)return alert('Tekrarlanan ürün kodlarını düzeltiniz');if(!confirm(rows.length+' ürün Supabase kataloğuna kaydedilsin mi?'))return;let ok=0;try{for(const [code,name] of rows){await rpc('ak_palet_catalog_save',{p_code:code,p_name:name});ok++}photoDraft=[];await refresh();message=ok+' ürün fotoğraftan kontrol edilerek kaydedildi';draw()}catch(e){message=ok+' ürün kaydedildi; devamında hata: '+e.message;draw()}}
 async function complete(){const v=Number($('#akpi-total')?.value);if(!chosen.length)return alert('Önce en az bir ürün seçiniz');if(!Number.isSafeInteger(v)||v<1||v>999999)return alert('Toplam Yüklenen Palet Sayısını Giriniz');if(!confirm(chosen.length+' ürün ve toplam '+v+' palet kaydedilecek. Onaylıyor musunuz?'))return;try{await rpc('ak_palet_complete',{p_id:active,p_codes:chosen,p_total:v});chosen=[];search='';await refresh();page='detail';draw()}catch(e){message=e.message;draw()}}
 const encoder=new TextEncoder();const xml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

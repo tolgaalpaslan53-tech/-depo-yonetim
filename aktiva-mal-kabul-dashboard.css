@@ -139,3 +139,9 @@ body[data-role="count"].akd-home #aktivaSyncBadge{display:none!important}
 body[data-role="count"].akd-home #app > :not(#akd-dashboard):not(#aktivaCountUI):not(#message){display:none!important}
 #akd-dashboard .akd-records-head button{background:#152435!important;color:#f2f6fa!important;border:1px solid #3a5066!important;box-shadow:none!important}
 #akd-dashboard .akd-record{background:transparent!important;color:#f1f5fa!important;border-radius:0!important;box-shadow:none!important}
+
+body[data-role="count"].akd-home #akd-dashboard #aktivaCountUI{position:static!important;left:auto!important;top:auto!important;width:100%!important;height:auto!important;opacity:1!important;overflow:visible!important;pointer-events:auto!important;display:flex!important;padding:0!important}
+body[data-role="count"].akd-home #akd-dashboard #aktivaCountUI .ak-user,body[data-role="count"].akd-home #akd-dashboard #aktivaCountUI .ak-successes,body[data-role="count"].akd-home #akd-dashboard #aktivaCountUI .ak-heading{display:none!important}
+body[data-role="count"].akd-home #akd-dashboard #akd-create-mount{margin-top:16px;max-width:100%;min-width:0}
+body[data-role="count"].akd-home #akd-dashboard .akd-new-btn{background:linear-gradient(130deg,#bd001c,#e4002a)!important;border:1px solid #ff304a!important;color:white!important;border-radius:10px!important;padding:10px 13px!important;box-shadow:none!important;font-weight:700}
+body[data-role="count"].akd-home #akd-dashboard .akd-records-head{flex-wrap:wrap}

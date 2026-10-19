@@ -58,6 +58,7 @@ async function notifyForkliftAfterCount(delivery, products){
 }
 
 function build(){installStyle();if($a('aktivaCountUI'))return;const el=document.createElement('section');el.id='aktivaCountUI';el.className='hidden';$a('app').insertBefore(el,$a('message'));}
+window.addEventListener('aktiva:open-create',()=>{if(logged())nav('create')});
 function nav(to){if(to==='list')shipmentDate=today();
 view=to;opened=null;editId=null;msg='';render();}
 function options(arr,q){if(!q?.trim())return '';return [...arr].filter(x=>x.toLocaleLowerCase('tr').includes(q.toLocaleLowerCase('tr'))&&x.toLocaleLowerCase('tr')!==q.toLocaleLowerCase('tr')).slice(0,5).map(x=>`<button type="button" class="ak-suggestion" data-suggest="${safe(x)}">${safe(x)}</button>`).join('')}

@@ -40,3 +40,48 @@ body[data-role="count"].akd-home{overflow-x:hidden!important;background:#070c13!
 #akd-dashboard .akd-shipment{gap:5px;padding:9px 0}#akd-dashboard .akd-truck{font-size:15px}#akd-dashboard .akd-shipment-main strong{font-size:11px}#akd-dashboard .akd-shipment time{display:none}#akd-dashboard .akd-state{font-size:9px;padding:4px}
 }
 @media(max-width:360px){#akd-dashboard .akd-layout{grid-template-columns:65px minmax(0,1fr)}#akd-dashboard .akd-nav{font-size:8px}#akd-dashboard .akd-brand strong{font-size:17px}#akd-dashboard .akd-person strong{max-width:80px}}
+
+/* AKTİVA Mal Kabul — görsel onaylanan kırmızı/siyah tasarım, 2026-10-19 */
+/* Üstteki eski AKTİVA kartını ve eski senkronizasyon satırını sadece Mal Kabul ana sayfasında kaldır. */
+body[data-role="count"].akd-home .wrap>header,
+body[data-role="count"].akd-home #aktivaSyncBadge{display:none!important}
+body[data-role="count"].akd-home .wrap{max-width:100%!important;padding:0!important;margin:0!important}
+body[data-role="count"].akd-home #app{border:0!important}
+#akd-dashboard .akd-header{background:linear-gradient(125deg,#190b0e 0%,#0b1018 60%,#080e16 100%)!important;border-bottom:1px solid #3c151c!important;border-radius:0!important;box-shadow:none!important;margin:0!important}
+#akd-dashboard .akd-brand strong{font-size:clamp(23px,3.2vw,36px);font-weight:900}
+#akd-dashboard .akd-brand small{display:none}
+#akd-dashboard .akd-sidebar{background:linear-gradient(180deg,#0d131b,#080d14)!important;border-right:1px solid #481720!important}
+#akd-dashboard .akd-nav{background:#0d151e!important;border:1px solid #273542!important;border-radius:13px!important;box-shadow:none!important;color:#e9eef5!important;transition:background .15s,border-color .15s}
+#akd-dashboard .akd-nav.selected{background:linear-gradient(140deg,#a90016,#e50025)!important;border-color:#ff2847!important;color:#fff!important}
+#akd-dashboard .akd-nav:not(.selected):active{border-color:#ee1735!important}
+#akd-dashboard .akd-actions{margin-top:14px}
+#akd-dashboard .akd-action{background:linear-gradient(140deg,#c9001c 0%,#b40018 52%,#73000f 100%)!important;border:1px solid #ff3149!important;color:#fff!important;box-shadow:0 7px 19px #0005!important;min-height:143px}
+#akd-dashboard .akd-action:active{filter:brightness(1.14)}
+#akd-dashboard .akd-action-ico{display:grid;place-items:center;width:46px;height:46px;border-radius:12px;background:#3d0009a8;color:#fff}
+#akd-dashboard .akd-action strong{font-size:16px;color:#fff}
+#akd-dashboard .akd-action small{color:#f0d9dc;font-size:12px}
+#akd-dashboard .akd-action b{display:block;right:13px;top:45%;color:#fff}
+#akd-dashboard .akd-svg{display:block;width:25px;height:25px;flex-shrink:0}
+#akd-dashboard .akd-ico .akd-svg{margin:auto;width:25px;height:25px}
+#akd-dashboard .akd-action-ico .akd-svg{width:29px;height:29px}
+#akd-dashboard .akd-action b .akd-svg{width:19px;height:19px}
+#akd-dashboard .akd-kpi{border-left:2px solid #d90b2d}
+#akd-dashboard .akd-kpi>span .akd-svg{width:25px;height:25px;color:#ff304a}
+#akd-dashboard .akd-kpi:last-child>span .akd-svg{color:#35db83}
+#akd-dashboard .akd-truck .akd-svg{width:23px;height:23px;color:#ff304a}
+#akd-dashboard .akd-chevron .akd-svg{width:15px;height:15px;color:#93a6ba}
+#akd-dashboard .akd-greeting{margin-bottom:10px}
+#akd-dashboard .akd-panel{border-color:#26394b!important}
+#akd-dashboard .akd-person{border:1px solid #2c3d4c;background:#111c29;padding:9px 12px;border-radius:12px}
+@media(max-width:650px){
+#akd-dashboard .akd-header{height:77px;padding:12px!important}
+#akd-dashboard .akd-brand strong{font-size:22px}
+#akd-dashboard .akd-action{min-height:145px;padding:12px 10px}
+#akd-dashboard .akd-action strong{font-size:13px}
+#akd-dashboard .akd-action small{font-size:10px;line-height:1.35;padding-right:6px}
+#akd-dashboard .akd-action-ico{width:39px;height:39px;border-radius:10px}
+#akd-dashboard .akd-action-ico .akd-svg{width:24px;height:24px}
+#akd-dashboard .akd-action b{right:6px;top:52%}
+#akd-dashboard .akd-action b .akd-svg{width:14px;height:14px}
+#akd-dashboard .akd-person{padding:6px}
+}

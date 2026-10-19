@@ -145,3 +145,9 @@ body[data-role="count"].akd-home #akd-dashboard #aktivaCountUI .ak-user,body[dat
 body[data-role="count"].akd-home #akd-dashboard #akd-create-mount{margin-top:16px;max-width:100%;min-width:0}
 body[data-role="count"].akd-home #akd-dashboard .akd-new-btn{background:linear-gradient(130deg,#bd001c,#e4002a)!important;border:1px solid #ff304a!important;color:white!important;border-radius:10px!important;padding:10px 13px!important;box-shadow:none!important;font-weight:700}
 body[data-role="count"].akd-home #akd-dashboard .akd-records-head{flex-wrap:wrap}
+
+.akd-record-clickable{width:100%;display:flex;align-items:center;gap:10px;text-align:left;color:inherit;background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.12);padding:20px 0;cursor:pointer;font:inherit}
+.akd-record-clickable:focus-visible{outline:2px solid #f3314c;outline-offset:2px;border-radius:7px}
+.akd-record-clickable .akd-record-main{flex:1;min-width:0}
+.akd-record-clickable .akd-state{flex-shrink:0}
+.akd-record-clickable:hover{background:rgba(255,255,255,.035)}

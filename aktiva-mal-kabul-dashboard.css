@@ -181,3 +181,11 @@ body[data-role="count"].akd-home #akd-dashboard #akd-create-mount > #aktivaCount
 body[data-role="count"].akd-home #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-user,body[data-role="count"].akd-home #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-heading{display:none!important}
 body[data-role="count"].akd-home #akd-dashboard #akd-create-mount form#ak-form{display:block!important;width:100%!important;visibility:visible!important}
 body[data-role="count"].akd-home #akd-dashboard .akd-header-actions .akd-top-btn{position:static!important;transform:none!important;min-width:40px!important;max-width:48px!important;min-height:40px!important;max-height:44px!important}
+
+/* Mal Kabul: the legacy engine remains functional but cannot appear below dashboard. */
+body[data-role="count"] #app > #aktivaCountUI{display:none!important;visibility:hidden!important;position:absolute!important;left:-100000px!important;width:1px!important;height:1px!important;overflow:hidden!important;pointer-events:none!important}
+body[data-role="count"] #akd-dashboard #akd-create-mount > #aktivaCountUI{display:flex!important;visibility:visible!important;position:static!important;left:auto!important;width:100%!important;height:auto!important;overflow:visible!important;opacity:1!important;pointer-events:auto!important;flex-direction:column!important}
+body[data-role="count"] #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-user,
+body[data-role="count"] #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-heading,
+body[data-role="count"] #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-tile,
+body[data-role="count"] #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-successes{display:none!important}

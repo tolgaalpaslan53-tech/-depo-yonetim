@@ -13,6 +13,13 @@ function complete(d,p){const rows=p.filter(x=>x.delivery_id===d.id);return rows.
 function init(){if($('#akd-dashboard'))return;const el=document.createElement('section');el.id='akd-dashboard';el.setAttribute('aria-label','Mal Kabul ana ekranı');$('#app')?.prepend(el);
 el.addEventListener('click',e=>{const btn=e.target.closest('[data-akd]');if(!btn)return;const id=btn.dataset.akd;if(id==='menu'){el.classList.toggle('akd-menu-open');return}if(id==='close'){el.classList.remove('akd-menu-open');return}el.classList.remove('akd-menu-open');if(id==='new'){akdPage='create';window.dispatchEvent(new Event('aktiva:open-create'));update();return}if(id==='records'||id==='home'){const old=document.getElementById('aktivaCountUI');if(old&&old.parentElement?.id==='akd-create-mount')document.getElementById('app')?.appendChild(old);akdPage=id;document.body.classList.add('akd-home');update();return}click(id);setTimeout(update,100)});
 }
+window.addEventListener('aktiva:shipment-saved',()=>{
+  const old=document.getElementById('aktivaCountUI');
+  if(old&&old.parentElement?.id==='akd-create-mount')document.getElementById('app')?.appendChild(old);
+  akdPage='records';
+  document.body.classList.add('akd-home');
+  update();
+});
 function update(){if(busy)return;if(akdPage==='create'&&document.getElementById('ak-form')&&document.getElementById('akd-create-mount'))return;init();const on=active();document.body.classList.toggle('akd-home',!!on);if(!on)return;const root=$('#akd-dashboard');if(!root)return;busy=true;try{
 const {d,p}=getData(),t=today(),current=d.filter(x=>localDate(x.arrived_at||x.created_at)===t),ids=new Set(current.map(x=>x.id)),products=p.filter(x=>ids.has(x.delivery_id)),cartons=products.reduce((n,x)=>n+Number(x.received??x.expected??0),0),pallets=products.reduce((n,x)=>n+Number(x.pallet_count||0),0),done=current.filter(x=>complete(x,p)).length;
 const name=typeof profile!=='undefined'&&profile?.full_name?profile.full_name:'Mal Kabul Personeli';

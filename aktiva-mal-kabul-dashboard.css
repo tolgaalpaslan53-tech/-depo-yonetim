@@ -101,3 +101,15 @@ body[data-role="count"].akd-home #akd-dashboard .akd-section-head button:not(.al
 body[data-role="count"].akd-home #akd-dashboard button.akd-scrim {background:transparent!important;box-shadow:none!important;border:0!important}
 body[data-role="count"].akd-home #akd-dashboard .akd-person {background:#101b29!important;border:1px solid #2c3c4c!important}
 @media(max-width:650px){body[data-role="count"].akd-home #akd-dashboard .akd-header {min-height:69px!important;height:69px!important}}
+
+/* Sadece Mal Kabul ust baslik AKTIVA metni beyaz */
+body[data-role="count"] #akd-dashboard .akd-brand strong,body[data-role="count"] #akd-dashboard .akd-brand strong em{color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;background:none!important;text-shadow:none!important;}
+
+/* Mal Kabul: Yenile ve Çıkış üst sağda, personel bilgisinin yanında */
+body[data-role="count"].akd-home #akd-dashboard .akd-header{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:9px!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-person{margin-left:auto!important;flex:0 1 auto!important;min-width:0!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-header-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn{display:flex!important;align-items:center;justify-content:center;gap:5px;background:#172534!important;background-image:none!important;border:1px solid #35485a!important;border-radius:10px!important;box-shadow:none!important;color:#fff!important;padding:8px 9px!important;min-height:36px!important;font-size:12px!important;white-space:nowrap}
+body[data-role="count"].akd-home #akd-dashboard button.akd-exit-btn{border-color:#963047!important;color:#ffd8de!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn .akd-svg{width:16px;height:16px}
+@media(max-width:650px){body[data-role="count"].akd-home #akd-dashboard .akd-header{padding:7px!important;gap:5px!important}body[data-role="count"].akd-home #akd-dashboard .akd-brand strong{font-size:18px!important}body[data-role="count"].akd-home #akd-dashboard .akd-person{padding:5px!important}body[data-role="count"].akd-home #akd-dashboard .akd-person strong{max-width:80px!important;font-size:10px!important}body[data-role="count"].akd-home #akd-dashboard .akd-person small{font-size:8px!important}body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn{padding:7px!important;min-width:32px!important;min-height:34px!important}body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn span{display:none!important}}

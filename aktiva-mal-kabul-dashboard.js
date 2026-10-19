@@ -28,7 +28,7 @@ window.addEventListener('aktiva:shipment-saved',()=>{
   document.body.classList.add('akd-home');
   update();
 });
-function update(){if(busy)return;if((akdPage==='create'||akdPage==='detail')&&document.getElementById('akd-create-mount'))return;init();const on=active();document.body.classList.toggle('akd-home',!!on);if(!on)return;const root=$('#akd-dashboard');if(!root)return;busy=true;try{
+function update(){if(document.body.dataset.role==='count'&&document.getElementById('akd-dashboard'))document.body.classList.add('akd-home');if(busy)return;if((akdPage==='create'||akdPage==='detail')&&document.getElementById('akd-create-mount'))return;init();const on=active();document.body.classList.toggle('akd-home',!!on);if(!on)return;const root=$('#akd-dashboard');if(!root)return;busy=true;try{
 const {d,p}=getData(),t=today(),current=d.filter(x=>localDate(x.arrived_at||x.created_at)===t),ids=new Set(current.map(x=>x.id)),products=p.filter(x=>ids.has(x.delivery_id)),cartons=products.reduce((n,x)=>n+Number(x.received??x.expected??0),0),pallets=products.reduce((n,x)=>n+Number(x.pallet_count||0),0),done=current.filter(x=>complete(x,p)).length;
 const name=typeof profile!=='undefined'&&profile?.full_name?profile.full_name:'Mal Kabul Personeli';
 const nav=[['home','Ana Sayfa'],['barcode','Barkod İşlemleri'],['catalog','Ürün Kataloğu'],['records','Mal Kabul Kayıtları'],['reports','Raporlar'],['pallet','Palet Takibi']];

@@ -678,4 +678,19 @@ body[data-role="fork"] #ak-fork-host .afv-shell{display:grid!important;visibilit
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)repair()});
  setTimeout(repair,1500);setTimeout(repair,3500);
 })();
-</script></body></html> 
+</script><style id="akd-final-shell-guard">
+/* AKTIVA: Mal Kabul single-shell isolation (2026-10-19). */
+body[data-role="count"]:has(#akd-dashboard) .wrap > header,
+body[data-role="count"]:has(#akd-dashboard) #aktivaSyncBadge,
+body[data-role="count"]:has(#akd-dashboard) #aktiva-shell-top,
+body[data-role="count"]:has(#akd-dashboard) #aktiva-shell-sidebar{display:none!important;visibility:hidden!important}
+body[data-role="count"]:has(#akd-dashboard) #app > :not(#akd-dashboard):not(#aktivaCountUI):not(#message){display:none!important}
+body[data-role="count"]:has(#akd-dashboard) #akd-dashboard{display:block!important;visibility:visible!important}
+body[data-role="count"] #akd-dashboard .akd-header{position:relative!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0!important;overflow:hidden!important}
+body[data-role="count"] #akd-dashboard .akd-header-actions{position:static!important;display:flex!important;flex-shrink:0!important;align-items:center!important;gap:6px!important;transform:none!important}
+body[data-role="count"] #akd-dashboard .akd-top-btn{position:static!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 38px!important;width:38px!important;min-width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important;padding:0!important;transform:none!important;inset:auto!important;font-size:20px!important;line-height:1!important}
+body[data-role="count"] #akd-dashboard .akd-top-btn span{display:none!important}
+body[data-role="count"] #akd-dashboard .akd-top-btn svg{width:21px!important;height:21px!important;max-width:21px!important;max-height:21px!important}
+body[data-role="count"] #akd-dashboard .akd-records-head{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:10px!important;position:relative!important}
+body[data-role="count"] #akd-dashboard .akd-records-head h1{flex:1 1 180px!important;min-width:0!important;line-height:1.25!important}
+</style></body></html> 

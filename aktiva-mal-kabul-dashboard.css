@@ -132,3 +132,10 @@ body[data-role="count"].akd-home #app>#aktivaCountUI{position:absolute!important
 #akd-dashboard .akd-record-main strong{font-size:13px;overflow-wrap:anywhere}
 #akd-dashboard .akd-record-main small{font-size:11px;color:#aab9c9;overflow-wrap:anywhere}
 #akd-dashboard .akd-record .akd-state{flex-shrink:0}
+
+/* 2026-10-19 records navigation isolation */
+body[data-role="count"].akd-home .wrap>header,
+body[data-role="count"].akd-home #aktivaSyncBadge{display:none!important}
+body[data-role="count"].akd-home #app > :not(#akd-dashboard):not(#aktivaCountUI):not(#message){display:none!important}
+#akd-dashboard .akd-records-head button{background:#152435!important;color:#f2f6fa!important;border:1px solid #3a5066!important;box-shadow:none!important}
+#akd-dashboard .akd-record{background:transparent!important;color:#f1f5fa!important;border-radius:0!important;box-shadow:none!important}

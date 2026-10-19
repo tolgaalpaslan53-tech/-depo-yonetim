@@ -173,3 +173,11 @@ body[data-role="count"].akd-home #akd-dashboard .akd-single-detail{width:100%;ma
 body[data-role="count"].akd-home #akd-dashboard .akd-single-detail>.ak-shipment-head{cursor:default;pointer-events:none}
 body[data-role="count"].akd-home #akd-dashboard #akd-create-mount .ak-filter-card,body[data-role="count"].akd-home #akd-dashboard #akd-create-mount .ak-list-count{display:none!important}
 body[data-role="count"].akd-home #akd-dashboard #akd-create-mount .ak-shipment{margin-bottom:14px}
+
+/* Stable workspace mount and legacy toolbar suppression */
+body[data-role="count"].akd-home #akd-dashboard #akd-create-mount{display:block!important;visibility:visible!important;min-height:120px!important}
+body[data-role="count"].akd-home #akd-dashboard #akd-create-mount > #aktivaCountUI{display:flex!important;visibility:visible!important;position:relative!important;inset:auto!important;width:100%!important;height:auto!important;min-height:120px!important;max-height:none!important;opacity:1!important;pointer-events:auto!important;transform:none!important;overflow:visible!important;flex-direction:column!important;z-index:auto!important}
+body[data-role="count"].akd-home #akd-dashboard #akd-create-mount > #aktivaCountUI.hidden{display:flex!important}
+body[data-role="count"].akd-home #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-user,body[data-role="count"].akd-home #akd-dashboard #akd-create-mount > #aktivaCountUI > .ak-heading{display:none!important}
+body[data-role="count"].akd-home #akd-dashboard #akd-create-mount form#ak-form{display:block!important;width:100%!important;visibility:visible!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-header-actions .akd-top-btn{position:static!important;transform:none!important;min-width:40px!important;max-width:48px!important;min-height:40px!important;max-height:44px!important}

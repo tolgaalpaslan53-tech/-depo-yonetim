@@ -119,3 +119,16 @@ body[data-role="count"] #app:not(.hidden) > #akd-dashboard{display:block!importa
 body[data-role="count"].akd-home .wrap>header,
 body[data-role="count"].akd-home #aktivaSyncBadge{display:none!important}
 body[data-role="count"].akd-home #app>#aktivaCountUI{position:absolute!important;left:-99999px!important;top:0!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important}
+
+/* Mal Kabul Kayıtları: eski ekranı açmadan sağ ana panel içinde göster */
+#akd-dashboard .akd-records-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#akd-dashboard .akd-records-head h1{font-size:22px;margin:0}
+#akd-dashboard .akd-records-head button{background:#182533!important;border:1px solid #395066!important;color:#fff!important;border-radius:9px!important;padding:9px 12px!important;box-shadow:none!important;font-size:12px}
+#akd-dashboard .akd-records-desc{color:#aebccd;margin:8px 0 20px}
+#akd-dashboard .akd-records-list{border:1px solid #283c4e;border-radius:14px;padding:7px 14px;background:#101b28}
+#akd-dashboard .akd-record{display:flex;align-items:center;gap:10px;padding:15px 0;border-bottom:1px solid #2b3949;min-width:0}
+#akd-dashboard .akd-record:last-child{border-bottom:0}
+#akd-dashboard .akd-record-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+#akd-dashboard .akd-record-main strong{font-size:13px;overflow-wrap:anywhere}
+#akd-dashboard .akd-record-main small{font-size:11px;color:#aab9c9;overflow-wrap:anywhere}
+#akd-dashboard .akd-record .akd-state{flex-shrink:0}

@@ -88,6 +88,9 @@ if(view==='list'){
  for(const d of filtered){
   const ps=plist().filter(p=>p.delivery_id===d.id);
   html+=`<div class="ak-shipment ak-shipment-pro"><button class="ak-shipment-head" data-open="${safe(d.id)}"><span class="ak-ship-title">🚚 &nbsp;${safe(d.supplier)}</span><span class="ak-ship-meta"><span>${safe(d.vehicle||'Plakasız')}</span><span>◷ ${safe(timeOf(d.arrived_at))}</span></span><span class="ak-ship-detail">${ps.length} ürün · ${safe(displayDate(dateOf(d.arrived_at)))}</span></button>`;
+  if(ps.length&&ps.every(p=>p.count_completed===true||p.count_completed===1||p.count_completed==='true')){
+   html+=`<div class="ak-count-summary"><strong>✓ ${safe(d.supplier)} — Tüm ürünler sayıldı</strong><p>Forkliftçi sevkiyatı görüntüleyebilir. Telefon bildirimi isteğe bağlıdır.</p><button type="button" class="ak-submit" data-notify-fork="${safe(d.id)}" ${akSendingDelivery===d.id?'disabled':''}>🔔 Forkliftçiye Bildirim Gönder</button></div>`;
+  }
   if(opened===d.id){
    const done=ps.filter(p=>p.count_completed).length;
    const totals=ps.reduce((a,p)=>{const x=countInfo(p);a.expected+=x.expected;if(p.count_completed){a.received+=x.received;a.missing+=x.missing;a.excess+=x.excess;a.damaged+=x.damaged;}return a;},{expected:0,received:0,missing:0,excess:0,damaged:0});
@@ -97,9 +100,7 @@ if(view==='list'){
     if(editId===p.id)html+=`<form class="ak-edit-form" data-editform="${safe(p.id)}"><label>Gerçek gelen koli<input name="actual" type="number" min="0" step="1" value="${p.count_completed?Number(p.received||0):Number(p.expected||0)}" required></label><label>Hasarlı koli<input name="damaged" type="number" min="0" step="1" value="${Number(p.damaged||0)}" required></label><label>Sayım notu<input name="count_note" maxlength="500" placeholder="Açıklama (isteğe bağlı)" value="${safe(p.count_note||'')}"></label><label>Gerçek palet sayısı<input name="pallets" type="number" min="0" step="1" value="${Number(p.pallet_count||0)}" required></label><div class="ak-two"><button type="button" class="ak-outline" id="ak-cancel">İptal</button><button type="submit" class="ak-submit">Kaydet</button></div></form>`;
     html+='</div>';
    }
-   if(ps.length&&done===ps.length){
-    html+=`<div class="ak-count-summary"><strong>✓ Sevkiyatın bütün ürünleri sayıldı</strong><p>Sevkiyat forkliftçi ekranında görüntülenebilir. Telefon bildirimi göndermek isteğe bağlıdır.</p><button type="button" class="ak-submit" data-notify-fork="${safe(d.id)}" ${akSendingDelivery===d.id?'disabled':''}>🔔 Forkliftçiye Bildirim Gönder</button></div>`;
-   }
+
   }
   html+='</div>';
  }
@@ -124,7 +125,7 @@ toast('Sayım kaydedildi.'+(editId?' Sonraki ürün açıldı.':' Tüm ürünler
 el.querySelectorAll('[data-notify-fork]').forEach(b=>b.onclick=async()=>{
  const id=b.dataset.notifyFork;if(akSendingDelivery)return;
  const delivery=dlist().find(x=>x.id===id),products=plist().filter(x=>x.delivery_id===id);
- if(!delivery||!products.length||products.some(x=>!x.count_completed)){toast('Önce sevkiyattaki bütün ürünlerin sayımını tamamlayın.');return}
+ if(!delivery||!products.length||products.some(x=>!(x.count_completed===true||x.count_completed===1||x.count_completed==='true'))){toast('Önce sevkiyattaki bütün ürünlerin sayımını tamamlayın.');return}
  akSendingDelivery=id;b.disabled=true;
  try{await notifyForkliftAfterCount(delivery,products);toast('Forkliftçiye bildirim isteği gönderildi. Telefon teslimini kontrol edin.')}catch(err){toast('Bildirim gönderilemedi: '+err.message)}finally{akSendingDelivery=null}
 });

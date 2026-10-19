@@ -85,3 +85,19 @@ body[data-role="count"].akd-home #app{border:0!important}
 #akd-dashboard .akd-action b .akd-svg{width:14px;height:14px}
 #akd-dashboard .akd-person{padding:6px}
 }
+
+/* 2026-10-19: Global AKTİVA button:not(.alt) important override repair. Count home ONLY. */
+body[data-role="count"].akd-home .wrap > header,
+body[data-role="count"].akd-home .wrap > #aktivaSyncBadge,
+body[data-role="count"].akd-home #aktivaSyncBadge {display:none!important;visibility:hidden!important}
+body[data-role="count"].akd-home .wrap {padding:0!important;max-width:none!important;width:100%!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-header {margin:0!important;max-width:none!important;width:100%!important;min-height:76px!important;display:flex!important;background:linear-gradient(110deg,#180c10,#0a1119)!important;border:0!important;border-bottom:1px solid #3b1c26!important;border-radius:0!important;box-shadow:none!important;padding:10px 14px!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-nav:not(.alt) {background:#0c141e!important;background-image:none!important;border:1px solid #263746!important;box-shadow:none!important;color:#eaf0f8!important;border-radius:12px!important;filter:none!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-nav.selected:not(.alt) {background:linear-gradient(140deg,#ab001b,#df062b)!important;border-color:#fa2845!important;color:white!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-action:not(.alt) {background:linear-gradient(135deg,#c80020 0%,#aa0019 56%,#760010 100%)!important;border:1px solid #f02845!important;box-shadow:0 6px 20px #0005!important;color:white!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-shipment:not(.alt) {background:transparent!important;background-image:none!important;box-shadow:none!important;border:0!important;border-bottom:1px solid #273744!important;border-radius:0!important;color:#eaf0f7!important;padding:12px 2px!important;filter:none!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-shipment:last-child {border-bottom:0!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-section-head button:not(.alt) {background:transparent!important;background-image:none!important;box-shadow:none!important;color:#e9b8c1!important;padding:4px!important;border:0!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-scrim {background:transparent!important;box-shadow:none!important;border:0!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-person {background:#101b29!important;border:1px solid #2c3c4c!important}
+@media(max-width:650px){body[data-role="count"].akd-home #akd-dashboard .akd-header {min-height:69px!important;height:69px!important}}

@@ -113,3 +113,9 @@ body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn{display:flex!
 body[data-role="count"].akd-home #akd-dashboard button.akd-exit-btn{border-color:#963047!important;color:#ffd8de!important}
 body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn .akd-svg{width:16px;height:16px}
 @media(max-width:650px){body[data-role="count"].akd-home #akd-dashboard .akd-header{padding:7px!important;gap:5px!important}body[data-role="count"].akd-home #akd-dashboard .akd-brand strong{font-size:18px!important}body[data-role="count"].akd-home #akd-dashboard .akd-person{padding:5px!important}body[data-role="count"].akd-home #akd-dashboard .akd-person strong{max-width:80px!important;font-size:10px!important}body[data-role="count"].akd-home #akd-dashboard .akd-person small{font-size:8px!important}body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn{padding:7px!important;min-width:32px!important;min-height:34px!important}body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn span{display:none!important}}
+
+/* 2026-10-19: İlk açılışta eski Mal Kabul panelinin anlık görünmesini önle. */
+body[data-role="count"] #app:not(.hidden) > #akd-dashboard{display:block!important}
+body[data-role="count"].akd-home .wrap>header,
+body[data-role="count"].akd-home #aktivaSyncBadge{display:none!important}
+body[data-role="count"].akd-home #app>#aktivaCountUI{position:absolute!important;left:-99999px!important;top:0!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important}

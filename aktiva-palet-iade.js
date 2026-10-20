@@ -28,7 +28,27 @@ host.innerHTML=h;$('#akpi-create')?.addEventListener('submit',create);$('#akpi-a
 function productRows(){return catalog.filter(p=>(p.code+' '+p.name).toLocaleLowerCase('tr').includes(search.toLocaleLowerCase('tr'))).map(p=>`<button type="button" class="akpi-product ${chosen.includes(p.code)?'on':''}" data-pi="toggle" data-code="${esc(p.code)}"><span>${chosen.includes(p.code)?'☑':'☐'}</span><span><strong>${esc(p.name)}</strong><small>${esc(p.code)}</small></span></button>`).join('')||'<p>Ürün bulunamadı.</p>'}
 async function detailItems(id){try{const x=await api('/rest/v1/ak_palet_return_items?return_id=eq.'+encodeURIComponent(id));const el=$('#akpi-items');if(el&&active===id)el.innerHTML='<h3>Seçilen Ürünler</h3>'+x.map(p=>`<div class="akpi-item"><strong>${esc(p.name_snapshot)}</strong><small>${esc(p.code)}</small></div>`).join('')}catch(e){message=e.message}}
 async function loadForkStaff(){forkStaff=await rpc('ak_palet_fork_staff',{});if(!Array.isArray(forkStaff))forkStaff=[]}
-async function assignForklift(e){e.preventDefault();const b=e.target.querySelector('button'),person=e.target.elements.namedItem('forklift').value;if(!person||!assignId)return;b.disabled=true;try{await rpc('ak_palet_assign_fork',{p_return_id:assignId,p_fork_id:person});const selected=forkStaff.find(x=>x.id===person);page='list';assignId=null;await refresh();message='Görev '+(selected?.full_name||'seçilen personele')+' atandı. Push gönderimi için sunucu bildirimi kurulmalıdır.';draw()}catch(err){message='Görev atanamadı: '+err.message;draw()}}
+async function notifyAssignedForklift(returnId){
+ const base=String(window.MK_CONFIG?.url||localStorage.getItem('mk_supabase_url')||'').replace(/\/$/,'');
+ const key=window.MK_CONFIG?.key||'';
+ if(!base||!key||!session?.access_token)throw Error('Supabase bağlantısı veya oturum eksik');
+ const res=await fetch(base+'/functions/v1/send-push',{
+  method:'POST',headers:{'Content-Type':'application/json','apikey':key,'Authorization':'Bearer '+session.access_token},
+  body:JSON.stringify({event:'pallet_return_assigned',return_id:returnId})
+ });
+ const raw=await res.text();let result;try{result=JSON.parse(raw)}catch{result=null}
+ if(!res.ok||result?.error||result?.success===false)throw Error(String(result?.error||result?.message||raw||'Bildirim sunucusu hatası').slice(0,180)+' ('+res.status+')');
+ if(result?.sent===0||result?.sent_count===0||result?.delivered===0)throw Error('Seçilen forkliftçinin kayıtlı bildirim cihazı bulunamadı');
+ return result;
+}
+async function assignForklift(e){e.preventDefault();const b=e.target.querySelector('button'),person=e.target.elements.namedItem('forklift').value;if(!person||!assignId)return;b.disabled=true;const returnId=assignId;try{
+ await rpc('ak_palet_assign_fork',{p_return_id:returnId,p_fork_id:person});
+ const selected=forkStaff.find(x=>x.id===person);let notice='';
+ try{await notifyAssignedForklift(returnId);notice='Görev '+(selected?.full_name||'seçilen personele')+' atandı ve push bildirimi gönderildi.'}
+ catch(pushError){notice='Görev atandı ancak bildirim gönderilemedi: '+pushError.message}
+ page='list';assignId=null;await refresh();message=notice;draw();
+ }catch(err){message='Görev atanamadı: '+err.message;draw()}}
+
 async function create(e){e.preventDefault();const f=e.target,b=f.querySelector('button');b.disabled=true;try{const created=await rpc('ak_palet_create',{p_company:f.elements.namedItem('company').value.trim(),p_driver:f.elements.namedItem('driver').value.trim(),p_plate:f.elements.namedItem('plate').value.trim()});await load();const resultId=typeof created==='string'?created:Array.isArray(created)?(created[0]?.id||created[0]?.ak_palet_create||created[0]):created?.id||created?.ak_palet_create;const found=data.find(x=>x.id===resultId)||data.find(x=>x.created_by===uid()&&x.company===f.elements.namedItem('company').value.trim()&&x.plate===f.elements.namedItem('plate').value.trim());if(!found)throw Error('Kayıt oluşturuldu ancak yeni kayıt belirlenemedi. Görevler ekranından kontrol edin.');assignId=found.id;await loadForkStaff();page='assign';message='İade kaydı kaydedildi. Forkliftçi seçin.';draw()}catch(err){message=err.message;page='list';draw()}}
 async function saveProduct(e){e.preventDefault();const f=e.target;try{await rpc('ak_palet_catalog_save',{p_code:f.elements.namedItem("code").value.trim(),p_name:f.elements.namedItem("name").value.trim()});await refresh()}catch(e){message=e.message;draw()}}
 async function importFile(){

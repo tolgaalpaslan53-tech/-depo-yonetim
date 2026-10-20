@@ -177,11 +177,16 @@ const style=document.createElement('style');style.id='akpi-fork-corporate';style
 `;document.head.append(style)}
 function attach(){if(!uid()||!['count','fork'].includes(role()))return;mount();const target=role()==='count'?$('#akd-dashboard .akd-actions'):$('#ak-fork-host .afv-cards');if(!target||target.querySelector('.akpi-entry'))return;const b=document.createElement('button');b.type='button';b.className=(role()==='count'?'akd-action':'afv-card')+' akpi-entry';b.innerHTML=role()==='count'?'<span class="akd-action-ico">♻</span><strong>Palet İade Operasyonu</strong><small>İade görevi, katalog ve Excel raporu</small><b>›</b>':'<span class="afv-card-icon">♻</span><strong>Palet İade</strong><span class="afv-arrow">›</span>';b.addEventListener('click',open);target.append(b)}
 const start=()=>{mount();corporateForkStyle();attach();
- // Forklift ana ekranı 8 saniyede bir yeniden çizilir. Kartı aynı çizim döngüsünde
- // geri ekleyerek eski 1.2 saniyelik kaybolma/görünme gecikmesini kaldırırız.
- const host=document.getElementById('ak-fork-host');
- if(host){const observer=new MutationObserver(()=>{if(role()==='fork'&&$('#ak-fork-host .afv-cards')&&!$('#ak-fork-host .afv-cards .akpi-entry'))attach()});observer.observe(host,{childList:true,subtree:true})}
- // Mal kabul paneli daha sonra açılabildiği için mevcut kontrol korunur.
- setInterval(()=>{if(role()==='count'&&$('#akpi-modal')?.hidden)attach()},1200);
+ // Forklift paneli bazen ilk açılışta henüz yoktur ve her yenilemede yeniden oluşturulur.
+ // Tüm sayfadaki DOM değişimlerini izleyerek kartı aynı çizim turunda geri ekle.
+ const ensureEntry=()=>{
+  if(!uid()||!['count','fork'].includes(role()))return;
+  const target=role()==='fork'?$('#ak-fork-host .afv-cards'):$('#akd-dashboard .akd-actions');
+  if(target&&!target.querySelector('.akpi-entry'))attach();
+ };
+ const observer=new MutationObserver(ensureEntry);
+ observer.observe(document.body,{childList:true,subtree:true});
+ // Yalnızca gecikmeli oturum/rol yüklenmesine karşı yedek kontrol.
+ setInterval(ensureEntry,1000);
 };if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();

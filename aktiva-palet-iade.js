@@ -10,6 +10,7 @@ async function rpc(fn,body){const x=await api('/rest/v1/rpc/'+fn,{method:'POST',
 async function getAll(table,cols='*'){let a=[];for(let off=0;off<50000;off+=1000){const x=await api('/rest/v1/'+table+'?select='+encodeURIComponent(cols)+'&limit=1000&offset='+off);a.push(...x);if(x.length<1000)return a}throw Error('Rapor sınırı aşıldı; eksik rapor üretilmedi')}
 async function load(){[data,catalog]=await Promise.all([getAll('ak_palet_returns'),getAll('ak_palet_catalog')]);data.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))}
 function open(){if(!['count','fork'].includes(role()))return;page='list';message='';document.getElementById('akpi-modal').hidden=false;document.getElementById('akpi-modal').classList.toggle('akpi-receiving',role()==='count');refresh()}
+window.AKTIVA_OPEN_PALET_IADE=open;
 function close(){const modal=document.getElementById('akpi-modal');if(modal)modal.hidden=true}
 async function refresh(){busy=true;draw();try{await load();message=''}catch(e){message='Veri alınamadı: '+e.message}finally{busy=false;draw()}}
 function draw(){const host=$('#akpi-content');if(!host)return;const count=role()==='count',fork=role()==='fork';if(!count&&!fork){close();return}
@@ -175,18 +176,6 @@ const style=document.createElement('style');style.id='akpi-fork-corporate';style
 #akpi-modal:not(.akpi-receiving) .akpi-refresh-wrap{display:flex;justify-content:flex-end;margin-top:15px}
 #akpi-modal:not(.akpi-receiving) .akpi-refresh{font-size:12px;padding:9px 12px}
 `;document.head.append(style)}
-function attach(){if(!uid()||!['count','fork'].includes(role()))return;mount();const target=role()==='count'?$('#akd-dashboard .akd-actions'):$('#ak-fork-host .afv-cards');if(!target||target.querySelector('.akpi-entry'))return;const b=document.createElement('button');b.type='button';b.className=(role()==='count'?'akd-action':'afv-card')+' akpi-entry';b.innerHTML=role()==='count'?'<span class="akd-action-ico">♻</span><strong>Palet İade Operasyonu</strong><small>İade görevi, katalog ve Excel raporu</small><b>›</b>':'<span class="afv-card-icon">♻</span><strong>Palet İade</strong><span class="afv-arrow">›</span>';b.addEventListener('click',open);target.append(b)}
-const start=()=>{mount();corporateForkStyle();attach();
- // Forklift paneli bazen ilk açılışta henüz yoktur ve her yenilemede yeniden oluşturulur.
- // Tüm sayfadaki DOM değişimlerini izleyerek kartı aynı çizim turunda geri ekle.
- const ensureEntry=()=>{
-  if(!uid()||!['count','fork'].includes(role()))return;
-  const target=role()==='fork'?$('#ak-fork-host .afv-cards'):$('#akd-dashboard .akd-actions');
-  if(target&&!target.querySelector('.akpi-entry'))attach();
- };
- const observer=new MutationObserver(ensureEntry);
- observer.observe(document.body,{childList:true,subtree:true});
- // Yalnızca gecikmeli oturum/rol yüklenmesine karşı yedek kontrol.
- setInterval(ensureEntry,1000);
-};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+function attach(){if(!uid()||!['count','fork'].includes(role()))return;mount();if(role()==='fork')return;const target=$('#akd-dashboard .akd-actions');if(!target||target.querySelector('.akpi-entry'))return;const b=document.createElement('button');b.type='button';b.className=(role()==='count'?'akd-action':'afv-card')+' akpi-entry';b.innerHTML=role()==='count'?'<span class="akd-action-ico">♻</span><strong>Palet İade Operasyonu</strong><small>İade görevi, katalog ve Excel raporu</small><b>›</b>':'<span class="afv-card-icon">♻</span><strong>Palet İade</strong><span class="afv-arrow">›</span>';b.addEventListener('click',open);target.append(b)}
+const start=()=>{mount();corporateForkStyle();attach();setInterval(()=>{if(role()==='count'&&$('#akpi-modal')?.hidden)attach()},1200)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();

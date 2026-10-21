@@ -168,48 +168,103 @@ const files=[['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8"?><Type
 
 // Standart ExcelJS XLSX yazıcısı: elle ZIP/XML üretmek yerine uyumlu dosya.
 async function compatibleWorkbook(tabs){
- if(!window.ExcelJS)await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';sc.onload=resolve;sc.onerror=()=>reject(Error('Excel oluşturucu yüklenemedi. İnternet bağlantısını kontrol edin.'));document.head.appendChild(sc)});
- const wb=new window.ExcelJS.Workbook();wb.creator='AKTİVA';
+ if(!window.ExcelJS)await new Promise((resolve,reject)=>{
+  const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+  sc.onload=resolve;sc.onerror=()=>reject(Error('Excel oluşturucu yüklenemedi. İnternet bağlantısını kontrol edin.'));
+  document.head.appendChild(sc);
+ });
+ const wb=new window.ExcelJS.Workbook();wb.creator='AKTİVA';wb.modified=new Date();
+ const navy='172338',light='EDF2F8',ink='233046',line='D8E1EC';
+ const footer='Bu belge, tamamlanan operasyonların kayıt ve kontrol amacıyla raporlanması için düzenlenmiştir.';
  for(const [name,rows] of tabs){
-  const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:1}],pageSetup:{paperSize:9,orientation:name==='Özet'?'portrait':'landscape',fitToPage:true,fitToWidth:1,fitToHeight:name==='Özet'?1:0,margins:{left:.3,right:.3,top:.5,bottom:.5,header:.2,footer:.2}}});
-  const n=Math.max(1,...rows.map(r=>r.length));
-  ws.columns=Array.from({length:n},(_,i)=>({width:Math.min(42,Math.max(15,...rows.slice(0,60).map(r=>String(r[i]??'').length+3)))}));
-  for(const values of rows){const row=ws.addRow(values);row.height=row.number===1?36:27;row.alignment={vertical:'middle',wrapText:true};
-   row.eachCell({includeEmpty:false},cell=>{cell.font={name:'Aptos',size:10,color:{argb:row.number===1?'FFFFFFFF':'FF233046'},bold:row.number===1};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:row.number===1?'FF172338':row.number%2===0?'FFFFFFFF':'FFF0F4FA'}};cell.border={bottom:{style:'hair',color:{argb:'FFD8E1EC'}}};});
+  const summary=name==='Özet';
+  const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:summary?8:1}],pageSetup:{paperSize:9,orientation:summary?'landscape':'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:.25,right:.25,top:.4,bottom:.55,header:.15,footer:.25}}});
+  const width=Math.max(1,...rows.map(r=>r.length));
+  const widths=summary?[15,24,19,19,20,15,13,13]:name==='İşlem Detayları'?[20,18,17,20,21,21,15,40,12,12,15]:name==='Personel Raporu'?[17,27,17,15,15]:[20,18,16,16];
+  ws.columns=Array.from({length:width},(_,i)=>({width:widths[i]||18}));
+  rows.forEach((values,ri)=>{
+   const row=ws.addRow(values);row.height=ri===0?32:25;
+   row.alignment={vertical:'middle',wrapText:true};
+   row.eachCell({includeEmpty:false},cell=>{
+    const heading=summary?(ri===0||ri===7):(ri===0);
+    cell.font={name:'Aptos',size:heading?10:10,bold:heading,color:{argb:heading?'FFFFFFFF':'FF'+ink}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:heading?'FF'+navy:'FF'+(ri%2===0?'FFFFFF':light)}};
+    cell.border={bottom:{style:'hair',color:{argb:'FF'+line}}};
+   });
+  });
+  if(summary){
+   ws.mergeCells('A1:H1');ws.getCell('A1').font={name:'Aptos Display',size:17,bold:true,color:{argb:'FFFFFFFF'}};
+   ws.getRow(1).height=43;
+   ws.mergeCells('A2:H2');ws.getRow(2).height=29;
+   ws.mergeCells('A4:B4');ws.mergeCells('C4:D4');ws.mergeCells('E4:F4');ws.mergeCells('G4:H4');
+   ws.mergeCells('A5:B5');ws.mergeCells('C5:D5');ws.mergeCells('E5:F5');ws.mergeCells('G5:H5');
+   for(const ref of ['A4','C4','E4','G4']){
+    const c=ws.getCell(ref);c.font={name:'Aptos',size:10,bold:true,color:{argb:'FF'+ink}};
+    c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF'+light}};
+    c.alignment={horizontal:'center',vertical:'middle'};
+   }
+   for(const ref of ['A5','C5','E5','G5']){
+    const c=ws.getCell(ref);c.font={name:'Aptos Display',size:17,bold:true,color:{argb:'FF'+navy}};
+    c.alignment={horizontal:'center',vertical:'middle'};
+   }
+   ws.getRow(5).height=39;
+   ws.getRow(7).height=23;ws.getRow(8).height=32;
+   ws.autoFilter={from:'A8',to:'H'+Math.max(8,rows.length)};
+   ws.pageSetup.printTitlesRow='1:8';
+  }else{
+   if(rows.length>1)ws.autoFilter={from:{row:1,column:1},to:{row:rows.length,column:width}};
+   ws.pageSetup.printTitlesRow='1:1';
   }
-  if(name!=='Özet'&&rows.length>1&&rows[0].length===n)ws.autoFilter={from:{row:1,column:1},to:{row:rows.length,column:n}};
-  ws.pageSetup.printTitlesRow='1:1';
-  ws.headerFooter.oddFooter='Bu belge tamamlanan operasyonların kayıt ve kontrol amacıyla raporlanması için düzenlenmiştir.  -  Sayfa &P / &N';
+  ws.headerFooter.oddFooter='&L'+footer+'&RSayfa &P / &N';
+  ws.headerFooter.oddHeader='&CAKTİVA - '+name;
+  ws.printOptions={horizontalCentered:true};
+  ws.pageSetup.printArea='A1:'+String.fromCharCode(64+width)+Math.max(1,rows.length);
  }
  return new Blob([await wb.xlsx.writeBuffer()],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
 }
 async function exportReport(){
  const a=$('#akpi-start')?.value,b=$('#akpi-end')?.value;
  if(!a||!b||a>b)return alert('Geçerli tarih aralığı seçiniz');
+ const exportButton=document.querySelector('[data-pi="export"]');
+ if(exportButton?.disabled)return;
+ if(exportButton)exportButton.disabled=true;
  try{
   message='Excel hazırlanıyor…';
   const [returns,items,people]=await Promise.all([getAll('ak_palet_returns'),getAll('ak_palet_return_items'),rpc('ak_palet_report_person_names',{})]);
   const names=Object.fromEntries((people||[]).filter(p=>p.person_id&&p.full_name).map(p=>[p.person_id,p.full_name]));
   const who=id=>id?(names[id]||'Ad soyad kayıtlı değil'):'—';
-  const selected=returns.filter(r=>r.status==='completed'&&r.completed_at&&date(r.completed_at)>=a&&date(r.completed_at)<=b&&(role()==='count'||r.completed_by===uid())).sort((x,y)=>String(x.completed_at).localeCompare(String(y.completed_at)));
+  const selected=returns.filter(r=>r.status==='completed'&&r.completed_at&&date(r.completed_at)>=a&&date(r.completed_at)<=b&&(role()==='count'||r.completed_by===uid())).sort((x,y)=>String(x.completed_at).localeCompare(String(y.completed_at))||String(x.id).localeCompare(String(y.id)));
   const ids=new Set(selected.map(r=>r.id));
-  const lines=items.filter(x=>ids.has(x.return_id));
-  const byId=new Map();for(const x of lines){if(!byId.has(x.return_id))byId.set(x.return_id,[]);byId.get(x.return_id).push(x)}
-  const totals=r=>{const xs=byId.get(r.id)||[];return [xs.reduce((n,x)=>n+(x.unit==='kasa'?0:Number(x.quantity)||0),0),xs.reduce((n,x)=>n+(x.unit==='kasa'?(Number(x.quantity)||0):0),0)]};
-  const daily=new Map();const fork=new Map(),receive=new Map();
+  const byId=new Map();
+  for(const x of items){if(!ids.has(x.return_id))continue;if(!byId.has(x.return_id))byId.set(x.return_id,[]);byId.get(x.return_id).push(x)}
+  const shortId=new Map(selected.map((r,i)=>[r.id,'İAD-'+String(i+1).padStart(4,'0')]));
+  const amount=x=>{const n=Number(x?.quantity);return Number.isFinite(n)&&n>0?n:0};
+  const totals=r=>{let pallet=0,caseCount=0;for(const x of byId.get(r.id)||[]){if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='kasa')caseCount+=amount(x);else if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='palet')pallet+=amount(x)}return [pallet,caseCount]};
+  const daily=new Map(),fork=new Map(),receive=new Map();
   const addPerson=(map,id,p,k)=>{const key=id||'bilinmiyor';if(!map.has(key))map.set(key,{name:who(id),count:0,pallet:0,caseCount:0});const v=map.get(key);v.count++;v.pallet+=p;v.caseCount+=k};
   for(const r of selected){const d=date(r.completed_at),[p,k]=totals(r);if(!daily.has(d))daily.set(d,{count:0,pallet:0,caseCount:0});const v=daily.get(d);v.count++;v.pallet+=p;v.caseCount+=k;addPerson(fork,r.completed_by,p,k);addPerson(receive,r.created_by,p,k)}
   const totalP=[...daily.values()].reduce((n,v)=>n+v.pallet,0),totalK=[...daily.values()].reduce((n,v)=>n+v.caseCount,0);
-  const period=a+' / '+b;
-  const summary=[['AKTİVA — OPERASYON ÖZETİ','Dönem','Tamamlanan İşlem','Toplam Palet','Toplam Kasa'],['Palet ve Kasa İade Raporu',period,selected.length,totalP,totalK],[],['Tarih','Tamamlanan İşlem','Palet','Kasa'],...[...daily.entries()].sort((x,y)=>x[0].localeCompare(y[0])).map(([d,v])=>[d,v.count,v.pallet,v.caseCount]),[],['Açıklama','Bu belge tamamlanan operasyonların kayıt ve kontrol amacıyla raporlanması için düzenlenmiştir.']];
+  const summary=[
+   ['AKTİVA  |  OPERASYON ÖZETİ'],
+   ['Palet ve Kasa İade Raporu  •  '+a+' / '+b],
+   [],
+   ['RAPOR DÖNEMİ','','TAMAMLANAN İŞLEM','','TOPLAM PALET','','TOPLAM KASA'],
+   [a+' / '+b,'',selected.length,'',totalP,'',totalK],
+   [],
+   ['TAMAMLANAN İADE KAYITLARI'],
+   ['İade No','Tamamlanma','Firma','Araç Plakası','Forkliftçi','Mal Kabul','Palet','Kasa']
+  ];
+  for(const r of selected){const [p,k]=totals(r);summary.push([shortId.get(r.id),fmt(r.completed_at),r.company,r.plate,who(r.completed_by),who(r.created_by),p,k])}
+  if(!selected.length)summary.push(['Seçilen dönemde tamamlanan iade bulunamadı.']);
   const dayRows=[['Tarih','İşlem Sayısı','Palet','Kasa'],...[...daily.entries()].sort((x,y)=>x[0].localeCompare(y[0])).map(([d,v])=>[d,v.count,v.pallet,v.caseCount]),['TOPLAM',selected.length,totalP,totalK]];
   const personRows=[['Görev','Personel Ad Soyad','İşlem Sayısı','Palet','Kasa'],...[...fork.values()].sort((x,y)=>x.name.localeCompare(y.name,'tr')).map(x=>['Forkliftçi',x.name,x.count,x.pallet,x.caseCount]),...[...receive.values()].sort((x,y)=>x.name.localeCompare(y.name,'tr')).map(x=>['Mal Kabul',x.name,x.count,x.pallet,x.caseCount])];
-  const detailRows=[['Tamamlanma Tarihi','Firma','Plaka','Şoför','Forkliftçi','Mal Kabul Personeli','Ürün Kodu','Ürün Adı','Miktar','Birim','Kayıt No']];
-  for(const r of selected){const xs=byId.get(r.id)||[];for(const x of (xs.length?xs:[null]))detailRows.push([fmt(r.completed_at),r.company,r.plate,r.driver,who(r.completed_by),who(r.created_by),x?.code||'—',x?.name_snapshot||'Ürün bilgisi yok',x?.quantity??'—',x?.unit==='kasa'?'Kasa':x?.unit==='palet'?'Palet':'—',r.id]);}
+  const detailRows=[['Tamamlanma Tarihi','Firma','Plaka','Şoför','Forkliftçi','Mal Kabul Personeli','Ürün Kodu','Ürün Adı','Miktar','Birim','İade No']];
+  for(const r of selected){const xs=byId.get(r.id)||[];for(const x of (xs.length?xs:[null]))detailRows.push([fmt(r.completed_at),r.company,r.plate,r.driver,who(r.completed_by),who(r.created_by),x?.code||'—',x?.name_snapshot||'Ürün bilgisi yok',x?.quantity??'—',x?.unit==='kasa'?'Kasa':x?.unit==='palet'?'Palet':'—',shortId.get(r.id)]);}
   const blob=await compatibleWorkbook([['Özet',summary],['Günlük Döküm',dayRows],['Personel Raporu',personRows],['İşlem Detayları',detailRows]]);
   const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='AKTIVA_Rapor_'+a+'_'+b+'.xlsx';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
   message=selected.length+' tamamlanan işlem rapora aktarıldı';draw();
  }catch(e){message='Excel oluşturulamadı: '+e.message;draw()}
+ finally{const b=document.querySelector('[data-pi="export"]');if(b)b.disabled=false}
 }
 function mount(){if($('#akpi-modal'))return;const s=document.createElement('style');s.textContent=`#akpi-modal[hidden]{display:none!important}#akpi-modal{position:fixed;inset:0;z-index:2147483000;background:#090e18f5;color:#f3f6fc;overflow:auto;padding:20px 12px 65px;font:15px system-ui}#akpi-content{max-width:860px;margin:auto;background:#151d2a;border:1px solid #354154;border-radius:18px;padding:18px}#akpi-modal *{box-sizing:border-box}#akpi-modal button{background:#b91632;border:1px solid #df3a50;border-radius:10px;color:white;padding:12px;font:600 14px system-ui;cursor:pointer}#akpi-modal .akpi-outline{background:#263348;border-color:#495771}#akpi-modal .akpi-top,#akpi-modal .akpi-item{display:flex;justify-content:space-between;align-items:center;gap:12px}#akpi-modal .akpi-top h2{margin:4px 0}#akpi-modal .akpi-top small,#akpi-modal small{color:#abb8c9;display:block;font-size:12px}#akpi-modal .akpi-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}#akpi-modal .akpi-tabs button{background:#2a3547}#akpi-modal .akpi-item{border:1px solid #39485d;padding:12px;border-radius:12px;margin:8px 0;overflow-wrap:anywhere}#akpi-modal label{display:block;margin:14px 0;color:#d7e1ef;font-weight:600}#akpi-modal select{display:block;width:100%;margin:7px 0;padding:13px;border-radius:10px;background:#101723;color:white;border:1px solid #59677c;font:16px system-ui}#akpi-modal input{display:block;width:100%;margin:7px 0;padding:13px;border-radius:10px;background:#101723;color:white;border:1px solid #59677c;font:16px system-ui}#akpi-modal .akpi-product{display:flex;gap:10px;width:100%;text-align:left;margin:5px 0;background:#222d3d}#akpi-modal .akpi-product.on{border-color:#f2cb40;background:#3c3040}#akpi-modal .akpi-products{max-height:320px;overflow:auto}#akpi-modal .akpi-hint{font-size:13px;color:#b6c3d4;line-height:1.5}#akpi-modal .akpi-msg{padding:10px;background:#46301e;border-radius:8px}#akpi-modal .akpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:550px){#akpi-modal .akpi-grid{grid-template-columns:1fr}#akpi-modal .akpi-top h2{font-size:19px}}`;s.textContent+='#akpi-modal.akpi-receiving{background:rgba(5,10,19,.91);padding:clamp(14px,4vw,28px) 12px 50px}#akpi-modal.akpi-receiving #akpi-content{max-width:720px;background:#151e2d;border:1px solid #35445a;border-radius:20px;padding:clamp(16px,4vw,25px);box-shadow:0 22px 65px #0005}#akpi-modal.akpi-receiving .akpi-top{align-items:flex-start}#akpi-modal.akpi-receiving .akpi-top small{font-size:11px;letter-spacing:1.1px;color:#99abc3}#akpi-modal.akpi-receiving .akpi-top h2{font-size:clamp(19px,5vw,25px);letter-spacing:-.6px;margin:6px 0 0}#akpi-modal.akpi-receiving .akpi-close{padding:0;width:36px;height:36px;min-width:36px;border:1px solid #38475a;background:#263143;font-size:18px}#akpi-modal.akpi-receiving .akpi-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:22px 0 25px}#akpi-modal.akpi-receiving .akpi-tabs button{min-height:64px;display:flex;align-items:center;justify-content:center;gap:8px;background:#1d2a3c;border:1px solid #39495f;color:#e8edf5;padding:11px 8px;font-size:13px;line-height:1.25}#akpi-modal.akpi-receiving .akpi-tabs button.active{background:#c7091b;border-color:#e3384c;color:#fff}#akpi-modal.akpi-receiving .akpi-tab-icon{font-size:20px;line-height:1}#akpi-modal.akpi-receiving .akpi-section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 13px}#akpi-modal.akpi-receiving .akpi-section-title h3{font-size:17px;margin:0}#akpi-modal.akpi-receiving .akpi-count{font-size:11px;color:#c4cfdf;background:#283549;padding:6px 9px;border-radius:99px;white-space:nowrap}#akpi-modal.akpi-receiving .akpi-task{display:block;background:#192436;border:1px solid #35465c;padding:13px 14px;margin:8px 0;border-radius:12px}#akpi-modal.akpi-receiving .akpi-task-main{width:100%;min-width:0}#akpi-modal.akpi-receiving .akpi-task-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px}#akpi-modal.akpi-receiving .akpi-task-head strong{font-size:15px;overflow-wrap:anywhere}#akpi-modal.akpi-receiving .akpi-status{font-size:10px;padding:5px 7px;border-radius:6px;background:#2b394a;color:#d9e5f4;white-space:nowrap}#akpi-modal.akpi-receiving .akpi-status.completed{background:#1c3b32;color:#9ce7c2}#akpi-modal.akpi-receiving .akpi-status.active{background:#46391d;color:#ffe09a}#akpi-modal.akpi-receiving .akpi-task-foot{border-top:1px solid #314055;margin-top:10px;padding-top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}#akpi-modal.akpi-receiving .akpi-task-foot small{min-width:0;overflow-wrap:anywhere;font-size:11px}#akpi-modal.akpi-receiving .akpi-detail{background:transparent;border:0;color:#ff6574;padding:4px 0 4px 8px;white-space:nowrap;font-size:13px}#akpi-modal.akpi-receiving .akpi-refresh-wrap{text-align:center;margin-top:14px}#akpi-modal.akpi-receiving .akpi-refresh{padding:9px 15px;background:#263348;border-color:#465670;font-size:12px}#akpi-modal.akpi-receiving .akpi-back{background:transparent;border:0;color:#e4afba;padding:7px 0;font-size:13px}#akpi-modal.akpi-receiving button:focus-visible{outline:2px solid #f5c94d;outline-offset:3px}@media(max-width:370px){#akpi-modal.akpi-receiving .akpi-tabs button{font-size:12px;gap:4px}#akpi-modal.akpi-receiving .akpi-task-foot{align-items:flex-start}}';document.head.append(s);const el=document.createElement('section');el.id='akpi-modal';el.hidden=true;el.innerHTML='<div id="akpi-content"></div>';document.body.append(el);el.addEventListener('input',e=>{if(e.target.id==='akpi-quantity-value')updateQuantityPreview();const code=e.target.dataset.akpiQty;if(code&&quantities[code]){quantities[code].qty=e.target.value;const total=$('.akpi-totals');if(total){const t=chosen.reduce((a,c)=>{const q=quantities[c]||{},n=Number(q.qty);if(Number.isSafeInteger(n)&&n>0&&n<=999999)a[q.unit==='kasa'?'kasa':'palet']+=n;return a},{palet:0,kasa:0});total.querySelector('span').textContent=t.palet+' palet · '+t.kasa+' kasa'}}});el.addEventListener('change',e=>{const code=e.target.dataset.akpiUnit;if(code&&quantities[code]){quantities[code].unit=e.target.value;const selectedHost=$('#akpi-selected');if(selectedHost)selectedHost.innerHTML=selectedRows()}if(e.target.id==='akpi-photo-camera'&&e.target.files?.length){selectedPhotoSource='camera';const other=$('#akpi-photo-gallery');if(other)other.value=''}else if(e.target.id==='akpi-photo-gallery'&&e.target.files?.length){selectedPhotoSource='gallery';const other=$('#akpi-photo-camera');if(other)other.value=''}});el.addEventListener('click',async e=>{const b=e.target.closest('[data-pi]');if(!b)return;const act=b.dataset.pi;if(act==='close')return close();if(act==='filter-products'){productFilter=b.dataset.filter;el.querySelectorAll('.akpi-filter-tabs button').forEach(x=>x.classList.toggle('selected',x.dataset.filter===productFilter));const list=$('#akpi-products');if(list)list.innerHTML=productRows();return}if(act==='add-product'){pickerOpen=true;search='';const picker=$('#akpi-picker');if(picker)picker.hidden=false;const field=$('#akpi-search');if(field){field.value='';field.focus()}const products=$('#akpi-products');if(products)products.innerHTML=productRows();return}if(act==='pick-product'||act==='edit-line'){openQuantity(b.dataset.code);return}
 if(act==='cancel-quantity'){editingCode=null;$('#akpi-quantity-dialog')?.remove();return}

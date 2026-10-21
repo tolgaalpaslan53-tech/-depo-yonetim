@@ -2,13 +2,6 @@ self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; }
   catch { data = { title: 'AKTİVA', body: event.data ? event.data.text() : 'Yeni bildirim' }; }
-  // Notify only currently visible forklift screens; the existing Web Push notification remains unchanged.
-  event.waitUntil((async () => {
-    const pages = await clients.matchAll({type:'window',includeUncontrolled:true});
-    for (const page of pages) {
-      if (page.visibilityState === 'visible') page.postMessage({type:'AKTIVA_FORKLIFT_PUSH_SOUND',title:String(data.title || ''),body:String(data.body || ''),tag:String(data.tag || '')});
-    }
-  })());
   event.waitUntil(self.registration.showNotification(String(data.title || 'AKTİVA'), {
     body: String(data.body || 'Yeni görev'), tag: String(data.tag || 'aktiva'),
     data: { url: './' }

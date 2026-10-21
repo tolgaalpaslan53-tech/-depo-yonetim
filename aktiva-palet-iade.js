@@ -26,7 +26,7 @@ if(r.status==='completed'){h+=`<p><strong>Toplam ${r.total_pallets} palet</stron
 else if(fork){h+=`<h3>Yükleme Kalemleri</h3><p class="akpi-hint">Her ürünün miktarını ve birimini ayrı giriniz.</p><div id="akpi-selected">${selectedRows()}</div><button type="button" class="akpi-add-product" data-pi="add-product">＋ ${chosen.length?'Başka Ürün Ekle':'Katalogdan Ürün Seç'}</button><div id="akpi-picker" ${pickerOpen?'':'hidden'}><label>Ürün ara<input id="akpi-search" placeholder="Ürün adı veya malzeme kodu" value="${esc(search)}" autocomplete="off"></label><div class="akpi-filter-tabs" role="group" aria-label="Ürün türü"><button type="button" data-pi="filter-products" data-filter="all" class="${productFilter==='all'?'selected':''}">Tüm Ürünler</button><button type="button" data-pi="filter-products" data-filter="palet" class="${productFilter==='palet'?'selected':''}">Paletler</button><button type="button" data-pi="filter-products" data-filter="kasa" class="${productFilter==='kasa'?'selected':''}">Kasalar</button></div><div class="akpi-products" id="akpi-products">${productRows()}</div></div><button data-pi="complete" class="akpi-complete">Yüklemeyi Tamamla</button>`}
 else h+='<p>Forklift personelinin yüklemeyi tamamlaması bekleniyor.</p>'}
 if(page==='completion-notify'&&fork){const r=data.find(x=>x.id===completionReturnId);h+=`<div class="akpi-notify-card"><h3>✓ Yükleme Tamamlandı</h3><p class="akpi-hint">Yükleme kaydedildi. Bildirimin gönderileceği mal kabul personelini seçin.</p><div class="akpi-notify-detail"><div><small>Firma</small><strong>${esc(r?.company||'—')}</strong></div><div><small>Plaka</small><strong>${esc(r?.plate||'—')}</strong></div><div><small>Şoför</small><strong>${esc(r?.driver||'—')}</strong></div></div><form id="akpi-notify-form"><label>Mal Kabul Personeli<select name="receiver" required><option value="">Personel seçiniz</option>${receivingStaff.map(x=>`<option value="${esc(x.id)}">${esc(x.full_name||'İsimsiz personel')}</option>`).join('')}</select></label><button type="submit" ${receivingStaff.length?'':'disabled'}>↗ Bildirimi Gönder</button></form>${receivingStaff.length?'':'<p class="akpi-hint">Mal kabul personel listesi alınamadı. Tekrar deneyin.</p>'}<button type="button" class="akpi-outline" data-pi="retry-receivers">↻ Personelleri Yenile</button><button type="button" class="akpi-outline" data-pi="list">Görevlere Dön</button></div>`;}
-if(page==='report'){h+=`<h3>Palet İade Excel Raporu</h3><div class="akpi-grid akpi-report-dates" style="width:100%;max-width:100%;min-width:0;padding-right:16px;box-sizing:border-box"><label>Başlangıç tarihi<input type="date" id="akpi-start" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;position:relative;left:0;margin:8px 0 0;" value="${date(new Date(Date.now()-30*86400000))}"></label><label>Bitiş tarihi<input type="date" id="akpi-end" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;position:relative;left:0;margin:8px 0 0;" value="${today()}"></label></div><button data-pi="export">📥 Seçilen Tarih Aralığını Excel İndir</button><p class="akpi-hint">Özet, Günlük Döküm, Personel Raporu ve İşlem Detayları. Tamamlanma tarihine göre hazırlanır. Forkliftçi yalnızca kendi tamamladığı işlemleri indirebilir.</p>`}
+if(page==='report'){h+=`<h3>Palet İade Excel Raporu</h3><div class="akpi-grid akpi-report-dates" style="width:100%;max-width:100%;min-width:0;padding-right:16px;box-sizing:border-box"><label>Başlangıç tarihi<input type="date" id="akpi-start" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;position:relative;left:0;margin:8px 0 0;" value="${date(new Date(Date.now()-30*86400000))}"></label><label>Bitiş tarihi<input type="date" id="akpi-end" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;position:relative;left:0;margin:8px 0 0;" value="${today()}"></label></div><button data-pi="export">📥 Seçilen Tarih Aralığını Excel İndir</button><p class="akpi-hint">Özet, Günlük Döküm, Personel Raporu ve İşlem Detayları. Kayıt tarihine göre hazırlanır. Bekleyen ve işlemdeki görevler de rapora dahil edilir; tamamlananların bilgileri güncel gösterilir.</p>`}
 host.innerHTML=h;$('#akpi-create')?.addEventListener('submit',create);$('#akpi-assign')?.addEventListener('submit',assignForklift);$('#akpi-notify-form')?.addEventListener('submit',sendCompletionNotification);$('#akpi-product')?.addEventListener('submit',saveProduct);$('#akpi-search')?.addEventListener('input',e=>{search=e.target.value;$('#akpi-products').innerHTML=productRows()});}
 function selectedRows(){
  const lines=chosen.map(code=>{const p=catalog.find(x=>x.code===code),q=quantities[code]||{qty:'',unit:'palet'};return `<div class="akpi-line akpi-line-card"><div class="akpi-line-title"><img class="akpi-illustration" src="${productImage(p?.name)}" alt="" loading="lazy"><div class="akpi-line-info"><strong>${esc(p?.name||code)}</strong><small>Malzeme kodu: ${esc(code)}</small></div><span class="akpi-line-amount">${esc(q.qty)} ${q.unit==='kasa'?'kasa':'palet'}</span></div><div class="akpi-line-actions"><button type="button" data-pi="edit-line" data-code="${esc(code)}">✎ Düzenle</button><button type="button" class="akpi-remove" data-pi="remove-line" data-code="${esc(code)}">Sil</button></div></div>`}).join('');
@@ -176,7 +176,7 @@ async function compatibleWorkbook(tabs){
  });
  const wb=new window.ExcelJS.Workbook();wb.creator='AKTİVA';wb.modified=new Date();
  const navy='172338',light='EDF2F8',ink='233046',line='D8E1EC';
- const footer='Bu belge, tamamlanan operasyonların kayıt ve kontrol amacıyla raporlanması için düzenlenmiştir.';
+ const footer='Bu belge, bekleyen, işlemdeki ve tamamlanan operasyonların kayıt ve kontrol amacıyla raporlanması için düzenlenmiştir.';
  for(const [name,rows] of tabs){
   const summary=name==='Özet';
   const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:summary?8:1}],pageSetup:{paperSize:9,orientation:summary?'landscape':'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:.25,right:.25,top:.4,bottom:.55,header:.15,footer:.25}}});
@@ -234,7 +234,9 @@ async function exportReport(){
   const [returns,items,people]=await Promise.all([getAll('ak_palet_returns'),getAll('ak_palet_return_items'),rpc('ak_palet_report_person_names',{})]);
   const names=Object.fromEntries((people||[]).filter(p=>p.person_id&&p.full_name).map(p=>[p.person_id,p.full_name]));
   const who=id=>id?(names[id]||'Ad soyad kayıtlı değil'):'—';
-  const selected=returns.filter(r=>r.status==='completed'&&r.completed_at&&date(r.completed_at)>=a&&date(r.completed_at)<=b&&(role()==='count'||r.completed_by===uid())).sort((x,y)=>String(x.completed_at).localeCompare(String(y.completed_at))||String(x.id).localeCompare(String(y.id)));
+  const selected=returns.filter(r=>r.created_at&&date(r.created_at)>=a&&date(r.created_at)<=b&&(role()==='count'||r.completed_by===uid()||r.status!=='completed')).sort((x,y)=>String(x.created_at).localeCompare(String(y.created_at))||String(x.id).localeCompare(String(y.id)));
+  const statusOf=r=>r.status==='completed'?'Tamamlandı':r.status==='active'?'İşlemde':'Bekliyor';
+  const statusDate=r=>statusOf(r)+(r.completed_at?' · '+fmt(r.completed_at):'');
   const ids=new Set(selected.map(r=>r.id));
   const byId=new Map();
   for(const x of items){if(!ids.has(x.return_id))continue;if(!byId.has(x.return_id))byId.set(x.return_id,[]);byId.get(x.return_id).push(x)}
@@ -243,27 +245,27 @@ async function exportReport(){
   const totals=r=>{let pallet=0,caseCount=0;for(const x of byId.get(r.id)||[]){if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='kasa')caseCount+=amount(x);else if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='palet')pallet+=amount(x)}return [pallet,caseCount]};
   const daily=new Map(),fork=new Map(),receive=new Map();
   const addPerson=(map,id,p,k)=>{const key=id||'bilinmiyor';if(!map.has(key))map.set(key,{name:who(id),count:0,pallet:0,caseCount:0});const v=map.get(key);v.count++;v.pallet+=p;v.caseCount+=k};
-  for(const r of selected){const d=date(r.completed_at),[p,k]=totals(r);if(!daily.has(d))daily.set(d,{count:0,pallet:0,caseCount:0});const v=daily.get(d);v.count++;v.pallet+=p;v.caseCount+=k;addPerson(fork,r.completed_by,p,k);addPerson(receive,r.created_by,p,k)}
+  for(const r of selected){const d=date(r.created_at),[p,k]=totals(r);if(!daily.has(d))daily.set(d,{count:0,pallet:0,caseCount:0});const v=daily.get(d);v.count++;v.pallet+=p;v.caseCount+=k;if(r.completed_by)addPerson(fork,r.completed_by,p,k);addPerson(receive,r.created_by,p,k)}
   const totalP=[...daily.values()].reduce((n,v)=>n+v.pallet,0),totalK=[...daily.values()].reduce((n,v)=>n+v.caseCount,0);
   const summary=[
    ['AKTİVA  |  OPERASYON ÖZETİ'],
    ['Palet ve Kasa İade Raporu  •  '+a+' / '+b],
    [],
-   ['RAPOR DÖNEMİ','','TAMAMLANAN İŞLEM','','TOPLAM PALET','','TOPLAM KASA'],
+   ['RAPOR DÖNEMİ','','TOPLAM KAYIT','','TOPLAM PALET','','TOPLAM KASA'],
    [a+' / '+b,'',selected.length,'',totalP,'',totalK],
    [],
-   ['TAMAMLANAN İADE KAYITLARI'],
-   ['İade No','Tamamlanma','Firma','Araç Plakası','Forkliftçi','Mal Kabul','Palet','Kasa']
+   ['İADE KAYITLARI · BEKLEYEN / İŞLEMDE / TAMAMLANAN'],
+   ['İade No','Durum / Tamamlanma','Firma','Araç Plakası','Forkliftçi','Mal Kabul','Palet','Kasa']
   ];
-  for(const r of selected){const [p,k]=totals(r);summary.push([shortId.get(r.id),fmt(r.completed_at),r.company,r.plate,who(r.completed_by),who(r.created_by),p,k])}
-  if(!selected.length)summary.push(['Seçilen dönemde tamamlanan iade bulunamadı.']);
+  for(const r of selected){const [p,k]=totals(r);summary.push([shortId.get(r.id),statusDate(r),r.company,r.plate,who(r.completed_by),who(r.created_by),p,k])}
+  if(!selected.length)summary.push(['Seçilen dönemde iade kaydı bulunamadı.']);
   const dayRows=[['Tarih','İşlem Sayısı','Palet','Kasa'],...[...daily.entries()].sort((x,y)=>x[0].localeCompare(y[0])).map(([d,v])=>[d,v.count,v.pallet,v.caseCount]),['TOPLAM',selected.length,totalP,totalK]];
   const personRows=[['Görev','Personel Ad Soyad','İşlem Sayısı','Palet','Kasa'],...[...fork.values()].sort((x,y)=>x.name.localeCompare(y.name,'tr')).map(x=>['Forkliftçi',x.name,x.count,x.pallet,x.caseCount]),...[...receive.values()].sort((x,y)=>x.name.localeCompare(y.name,'tr')).map(x=>['Mal Kabul',x.name,x.count,x.pallet,x.caseCount])];
-  const detailRows=[['Tamamlanma Tarihi','Firma','Plaka','Şoför','Forkliftçi','Mal Kabul Personeli','Ürün Kodu','Ürün Adı','Miktar','Birim','İade No']];
-  for(const r of selected){const xs=byId.get(r.id)||[];for(const x of (xs.length?xs:[null]))detailRows.push([fmt(r.completed_at),r.company,r.plate,r.driver,who(r.completed_by),who(r.created_by),x?.code||'—',x?.name_snapshot||'Ürün bilgisi yok',x?.quantity??'—',x?.unit==='kasa'?'Kasa':x?.unit==='palet'?'Palet':'—',shortId.get(r.id)]);}
+  const detailRows=[['Kayıt Tarihi','Firma','Plaka','Şoför','Forkliftçi','Mal Kabul Personeli','Ürün Kodu','Ürün Adı','Miktar','Birim','İade No','Durum / Tamamlanma']];
+  for(const r of selected){const xs=byId.get(r.id)||[];for(const x of (xs.length?xs:[null]))detailRows.push([fmt(r.created_at),r.company,r.plate,r.driver,who(r.completed_by),who(r.created_by),x?.code||'—',x?.name_snapshot||'Henüz ürün girilmedi',x?.quantity??'—',x?.unit==='kasa'?'Kasa':x?.unit==='palet'?'Palet':'—',shortId.get(r.id),statusDate(r)]);}
   const blob=await compatibleWorkbook([['Özet',summary],['Günlük Döküm',dayRows],['Personel Raporu',personRows],['İşlem Detayları',detailRows]]);
   const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='AKTIVA_Rapor_'+a+'_'+b+'.xlsx';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  message=selected.length+' tamamlanan işlem rapora aktarıldı';draw();
+  message=selected.length+' kayıt (bekleyen, işlemde ve tamamlanan) rapora aktarıldı';draw();
  }catch(e){message='Excel oluşturulamadı: '+e.message;draw()}
  finally{const b=document.querySelector('[data-pi="export"]');if(b)b.disabled=false}
 }

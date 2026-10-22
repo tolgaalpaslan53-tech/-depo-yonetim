@@ -84,6 +84,6 @@ if(akdPage==='create'||akdPage==='detail'){
  if(old)body.querySelector('#akd-create-mount').appendChild(old);
 }
 }finally{busy=false}}
-function watch(){init();const ui=$('#aktivaCountUI');if(ui)new MutationObserver(update).observe(ui,{attributes:true,attributeFilter:['class'],childList:true});new MutationObserver(update).observe(document.body,{attributes:true,attributeFilter:['data-role']});const app=$('#app');if(app)new MutationObserver(update).observe(app,{attributes:true,attributeFilter:['class']});update();setInterval(()=>{if(!document.hidden&&active())update()},12000)}
+function watch(){if(!document.querySelector('script[data-aktiva-daily]')){const script=document.createElement('script');script.src='aktiva-gunluk-bilgi.js';script.dataset.aktivaDaily='1';document.head.appendChild(script)}init();const ui=$('#aktivaCountUI');if(ui)new MutationObserver(update).observe(ui,{attributes:true,attributeFilter:['class'],childList:true});new MutationObserver(update).observe(document.body,{attributes:true,attributeFilter:['data-role']});const app=$('#app');if(app)new MutationObserver(update).observe(app,{attributes:true,attributeFilter:['class']});update();setInterval(()=>{if(!document.hidden&&active())update()},12000)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch,{once:true});else watch();
 })();

@@ -280,3 +280,11 @@ body[data-role="count"].akd-home #akd-dashboard #akd-create-mount .ak-line{backg
 #aktivaCountUI #ak-seven-tools button:hover,#aktivaCountUI #ak-seven-launch:hover{background:#34526e!important}
 #aktivaCountUI #ak-seven-scan{background:#205c66!important;border-color:#38858e!important}
 #aktivaCountUI #ak-seven-tools button:focus-visible,#aktivaCountUI #ak-seven-launch:focus-visible{outline:2px solid #8bc9db;outline-offset:2px}
+/* AKTİVA - Mal Kabul günlük bilgi kartı */
+#akd-dashboard .akd-daily-tip{background:linear-gradient(110deg,#fffdf6,#fff);border:1px solid #e6dcc1;border-radius:16px;padding:17px 19px;margin:12px 0 18px;box-shadow:0 3px 12px rgba(27,40,55,.045);color:#27364b}
+#akd-dashboard .akd-daily-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:750;color:#33465d}
+#akd-dashboard .akd-daily-category{font-size:11px;font-weight:700;color:#886b37;background:#f6edd9;padding:5px 9px;border-radius:20px}
+#akd-dashboard .akd-daily-title{font-size:17px;line-height:1.35;margin:12px 0 6px;color:#22334b}
+#akd-dashboard .akd-daily-short,#akd-dashboard .akd-daily-detail{font-size:13px;line-height:1.65;margin:0 0 10px;color:#4a5b6f}
+#akd-dashboard .akd-daily-toggle{font:inherit;font-size:12px;font-weight:700;color:#35577d;border:1px solid #d5dfe9;border-radius:9px;padding:8px 11px;background:#fff;cursor:pointer}
+#akd-dashboard .akd-daily-detail[hidden]{display:none!important}

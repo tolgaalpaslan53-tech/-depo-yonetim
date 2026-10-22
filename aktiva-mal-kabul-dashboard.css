@@ -269,3 +269,14 @@ body[data-role="count"].akd-home #akd-dashboard #akd-create-mount #ak-form #ak-s
 body[data-role="count"].akd-home #akd-dashboard #akd-create-mount #ak-mini-open{background:linear-gradient(135deg,#145fc8,#1684ed)!important;border:1px solid #4898eb!important;color:#fff!important;border-radius:12px!important;min-height:53px;font-weight:600!important;box-shadow:none!important}
 body[data-role="count"].akd-home #akd-dashboard #akd-create-mount .ak-line{background:#1b2c40!important;border:1px solid #344b64!important;border-radius:12px!important}
 @media(min-width:530px){#akd-dashboard .akd-record-filters{grid-template-columns:repeat(3,minmax(0,1fr))}#akd-dashboard .akd-record-filters label:last-child{grid-column:auto}}
+
+/* AKTİVA – Mal Kabul kayıtları: 10'lu sayfalama ve sakin barkod aksiyonları */
+#akd-dashboard .akd-record-pager{display:flex;justify-content:center;align-items:center;gap:12px;margin:16px 0 4px;color:#dbe6f3}
+#akd-dashboard .akd-record-pager[hidden]{display:none!important}
+#akd-dashboard .akd-record-pager button{background:#263d55!important;color:#f0f5fc!important;border:1px solid #4a617a!important;border-radius:10px;padding:10px 15px;font-weight:650;min-height:42px}
+#akd-dashboard .akd-record-pager button:disabled{opacity:.4;cursor:default}
+#akd-dashboard .akd-record-pager button:not(:disabled):hover{background:#34516e!important}
+#aktivaCountUI #ak-seven-tools button,#aktivaCountUI #ak-seven-launch,#aktivaCountUI #ak-barcode-home{background:#263d55!important;background-image:none!important;color:#f2f6fd!important;border:1px solid #526b85!important;border-radius:11px!important;box-shadow:none!important;min-height:42px;font-weight:600!important}
+#aktivaCountUI #ak-seven-tools button:hover,#aktivaCountUI #ak-seven-launch:hover{background:#34526e!important}
+#aktivaCountUI #ak-seven-scan{background:#205c66!important;border-color:#38858e!important}
+#aktivaCountUI #ak-seven-tools button:focus-visible,#aktivaCountUI #ak-seven-launch:focus-visible{outline:2px solid #8bc9db;outline-offset:2px}

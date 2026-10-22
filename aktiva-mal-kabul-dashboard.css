@@ -288,3 +288,14 @@ body[data-role="count"].akd-home #akd-dashboard #akd-create-mount .ak-line{backg
 #akd-dashboard .akd-daily-short,#akd-dashboard .akd-daily-detail{font-size:13px;line-height:1.65;margin:0 0 10px;color:#4a5b6f}
 #akd-dashboard .akd-daily-toggle{font:inherit;font-size:12px;font-weight:700;color:#35577d;border:1px solid #d5dfe9;border-radius:9px;padding:8px 11px;background:#fff;cursor:pointer}
 #akd-dashboard .akd-daily-detail[hidden]{display:none!important}
+
+/* AKTİVA - Günün Depo Bilgisi: koyu panel tasarımı, kırmızı buton baskısını önleme */
+#akd-dashboard .akd-daily-tip{background:linear-gradient(135deg,#1b2d40 0%,#121e2d 100%)!important;border:1px solid #34495e!important;box-shadow:0 8px 22px rgba(0,0,0,.18)!important;color:#f0f5fa!important;border-radius:17px!important;padding:17px 18px!important}
+#akd-dashboard .akd-daily-head{color:#e6eef7!important}
+#akd-dashboard .akd-daily-category{color:#b8d1e6!important;background:#283d52!important;border:1px solid #40576d!important}
+#akd-dashboard .akd-daily-title{color:#f5f8fc!important}
+#akd-dashboard .akd-daily-short,#akd-dashboard .akd-daily-detail{color:#c5d0de!important}
+#akd-dashboard button.akd-daily-toggle{appearance:none!important;background:#24394e!important;background-image:none!important;color:#e7f1fb!important;border:1px solid #536b81!important;box-shadow:none!important;text-shadow:none!important;border-radius:10px!important;padding:10px 14px!important;font-size:13px!important;font-weight:650!important;line-height:1.3!important;min-height:38px!important;width:auto!important;transform:none!important}
+#akd-dashboard button.akd-daily-toggle:hover,#akd-dashboard button.akd-daily-toggle:focus-visible{background:#304c65!important;color:#fff!important;border-color:#83a6c4!important}
+#akd-dashboard .akd-daily-detail:not([hidden]){border-top:1px solid #3a4f63;padding-top:12px;margin-top:8px}
+#akd-dashboard .akd-daily-detail[hidden]{display:none!important}

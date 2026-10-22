@@ -147,6 +147,7 @@ function closeCountPanel(){
  const el=document.getElementById('ak-fork-host');
  if(!el)return;
  el.classList.remove('af-count-visible');
+ // Açılıştaki inline !important görünürlüğünü kaldır; panel kapalıyken ana ekranın üstünde kalmasın.
  el.style.removeProperty('display');
  document.body.style.overflow='';
 }
@@ -161,7 +162,7 @@ function countLaunchers(){
  box.querySelectorAll('[data-count-panel]').forEach(b=>b.addEventListener('click',()=>{
   view=b.dataset.countPanel;expanded=null;movementSearch='';movementLimit=50;
   const pane=root();document.body.appendChild(pane);pane.classList.add('af-count-visible');document.body.style.overflow='hidden';
-  render();pane.style.setProperty('display','block','important');load();loadStaffNames();
+  render();load();loadStaffNames();
  }));
 }
 function installCountUI(){

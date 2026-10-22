@@ -242,16 +242,19 @@ async function exportReport(){
   const ids=new Set(selected.map(r=>r.id));
   const byId=new Map();
   for(const x of items){if(!ids.has(x.return_id))continue;if(!byId.has(x.return_id))byId.set(x.return_id,[]);byId.get(x.return_id).push(x)}
-  // Kalıcı iade numarası: rapor sırasından değil, Supabase kayıt kimliğinden türetilir.
-  // UUID'nin 128 bitinin tamamı base36 biçiminde korunur; tarih filtresi numarayı değiştirmez.
-  const returnNumber=id=>{
+  // Sabit gorunen iade numarasi: IAD-YYNNNNNN (12 karakter).
+  // UUID asil benzersiz kimliktir; 6 haneli gorunen kisimda teorik cakisma riski vardir.
+  const returnNumber=(id,createdAt)=>{
+   const yearMatch=String(createdAt??'').match(/^(\d{4})/);
+   const yy=yearMatch?yearMatch[1].slice(-2):'00';
    const raw=String(id??'');
-   const hex=raw.replace(/-/g,'');
-   return /^[0-9a-f]{32}$/i.test(hex)
-    ?'İAD-'+BigInt('0x'+hex).toString(36).toUpperCase().padStart(25,'0')
-    :'İAD-'+raw;
+   let hash=14695981039346656037n;
+   for(let i=0;i<raw.length;i++){
+    hash=BigInt.asUintN(64,(hash^BigInt(raw.charCodeAt(i)))*1099511628211n);
+   }
+   return 'IAD-'+yy+String(hash%1000000n).padStart(6,'0');
   };
-  const shortId=new Map(selected.map(r=>[r.id,returnNumber(r.id)]));
+  const shortId=new Map(selected.map(r=>[r.id,returnNumber(r.id,r.created_at)]));
   const amount=x=>{const n=Number(x?.quantity);return Number.isFinite(n)&&n>0?n:0};
   const totals=r=>{let pallet=0,caseCount=0;for(const x of byId.get(r.id)||[]){if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='kasa')caseCount+=amount(x);else if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='palet')pallet+=amount(x)}return [pallet,caseCount]};
   const daily=new Map(),fork=new Map(),receive=new Map();

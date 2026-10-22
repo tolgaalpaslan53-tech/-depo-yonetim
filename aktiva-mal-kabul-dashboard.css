@@ -222,3 +222,24 @@ body[data-role="count"] #akd-dashboard .akpi-entry .akd-action-ico{
  body[data-role="count"] #akd-dashboard .akd-action-ico{width:42px!important;height:42px!important;font-size:25px!important;border-radius:12px!important}
  body[data-role="count"] #akd-dashboard .akpi-entry .akd-action-ico{font-size:25px!important}
 }
+
+/* AKTIVA — Mal Kabul aksiyon kartlari: koyu kurumsal palet, kirmizi yalnizca vurgu.
+   Onceki kirmizi !important kurallarindan daha spesifik secici. */
+body[data-role="count"].akd-home #akd-dashboard button.akd-action:not(.alt),
+body[data-role="count"].akd-home #akd-dashboard .akd-action:not(.alt) {
+ background:linear-gradient(150deg,#1c2b3d 0%,#152334 55%,#111c2a 100%)!important;
+ border:1px solid #34495e!important;
+ color:#f5f7fb!important;
+ box-shadow:0 7px 18px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.055)!important;
+ border-radius:17px!important;
+ position:relative!important;
+ overflow:hidden!important;
+}
+body[data-role="count"].akd-home #akd-dashboard button.akd-action:not(.alt)::after,
+body[data-role="count"].akd-home #akd-dashboard .akd-action:not(.alt)::after {
+ content:"";position:absolute;left:13px;bottom:10px;width:31px;height:3px;
+ background:#e11d48;border-radius:99px;pointer-events:none;
+}
+body[data-role="count"].akd-home #akd-dashboard button.akd-action:not(.alt):hover,
+body[data-role="count"].akd-home #akd-dashboard .akd-action:not(.alt):hover{border-color:#536a81!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-action:not(.alt):active{transform:scale(.985)!important}

@@ -189,6 +189,15 @@ function countLaunchers(){
   render();load();loadStaffNames();
  }));
 }
+// Mal Kabul panelindeki Palet Takibi icin dogrudan acilis; iade operasyonundan bagimsiz.
+window.addEventListener('aktiva:open-pallet-tracking',()=>{
+ if(role()!=='count')return;
+ view='remaining';expanded=null;movementSearch='';movementLimit=50;
+ const pane=root();document.body.appendChild(pane);pane.hidden=false;
+ pane.classList.add('af-count-visible');pane.style.removeProperty('display');
+ document.body.style.overflow='hidden';
+ render();load();loadStaffNames();
+});
 function installCountUI(){
  if($('#ak-count-fork-integration'))return;
  const sheet=document.createElement('style');sheet.id='ak-count-fork-integration';

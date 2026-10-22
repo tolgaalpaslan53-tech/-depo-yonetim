@@ -8,9 +8,11 @@ function click(id){for(const s of actions[id]||[]){const b=$(s);if(b){b.click();
 function active(){if(document.body.dataset.role!=='count'||$('#app')?.classList.contains('hidden')||!$('#app'))return false;return true}
 function getData(){return {d:typeof deliveries!=='undefined'&&Array.isArray(deliveries)?deliveries:[],p:typeof items!=='undefined'&&Array.isArray(items)?items:[]}}
 function localDate(v){if(!v)return '';try{return new Date(v).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'})}catch{return ''}}
+let reportStart='2026-10-01',reportEnd='';
 function today(){return new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'})}
 function complete(d,p){const rows=p.filter(x=>x.delivery_id===d.id);return rows.length>0&&rows.every(x=>x.count_completed===true||x.count_completed===1||x.count_completed==='true')}
 function init(){if($('#akd-dashboard'))return;const el=document.createElement('section');el.id='akd-dashboard';el.setAttribute('aria-label','Mal Kabul ana ekranı');$('#app')?.prepend(el);
+el.addEventListener('change',e=>{if(e.target.id==='akmr-start')reportStart=e.target.value;if(e.target.id==='akmr-end')reportEnd=e.target.value;});
 el.addEventListener('click',e=>{const btn=e.target.closest('[data-akd]');if(!btn)return;const id=btn.dataset.akd;if(id==='reports'){akdPage='reports';update();return}if(id==='export-mal-kabul'){window.AKTIVA_MAL_KABUL_RAPORU?.();return}if(id==='palet-iade'){if(typeof window.AKTIVA_OPEN_PALET_IADE==='function')window.AKTIVA_OPEN_PALET_IADE();else alert('Palet İade modülü henüz yüklenmedi.');return}if(id==='menu'){el.classList.toggle('akd-menu-open');return}if(id==='close'){el.classList.remove('akd-menu-open');return}el.classList.remove('akd-menu-open');if(id==='open-record'){
   const recordId=btn.dataset.id;
   if(!recordId)return;
@@ -28,7 +30,9 @@ window.addEventListener('aktiva:shipment-saved',()=>{
   document.body.classList.add('akd-home');
   update();
 });
-function update(){if(document.body.dataset.role==='count'&&document.getElementById('akd-dashboard'))document.body.classList.add('akd-home');if(busy)return;init();const on=active();document.body.classList.toggle('akd-home',!!on);if(!on)return;const root=$('#akd-dashboard');if(!root)return;busy=true;try{
+function update(){if(document.body.dataset.role==='count'&&document.getElementById('akd-dashboard'))document.body.classList.add('akd-home');if(busy)return;init();const on=active();document.body.classList.toggle('akd-home',!!on);if(!on)return;const root=$('#akd-dashboard');if(!root)return;
+if(akdPage==='reports' && root.querySelector('#akmr-start') && root.querySelector('#akmr-end'))return;
+busy=true;try{
 const {d,p}=getData(),t=today(),current=d.filter(x=>localDate(x.arrived_at||x.created_at)===t),ids=new Set(current.map(x=>x.id)),products=p.filter(x=>ids.has(x.delivery_id)),cartons=products.reduce((n,x)=>n+Number(x.received??x.expected??0),0),pallets=products.reduce((n,x)=>n+Number(x.pallet_count||0),0),done=current.filter(x=>complete(x,p)).length;
 const name=typeof profile!=='undefined'&&profile?.full_name?profile.full_name:'Mal Kabul Personeli';
 const nav=[['home','Ana Sayfa'],['barcode','Barkod İşlemleri'],['catalog','Ürün Kataloğu'],['records','Mal Kabul Kayıtları'],['reports','Raporlar'],['pallet','Palet Takibi']];
@@ -40,9 +44,18 @@ const preserved=document.getElementById('aktivaCountUI');if(preserved&&root.cont
 root.innerHTML=`<div class="akd-layout"><aside class="akd-sidebar"><div class="akd-sidebar-brand"><img src="aktiva-logo.png" alt="AKTİVA"></div>${side}<div class="akd-side-spacer"></div></aside><div class="akd-content"><header class="akd-header"><button class="akd-menu" data-akd="menu" aria-label="Menüyü aç">☰</button><div class="akd-brand"><strong><em>AK</em>TİVA</strong><small>Depoda Akıllı Yönetim</small></div><div class="akd-person"><strong>${escape(name)}</strong><small>Mal Kabul Personeli</small></div><div class="akd-header-actions"><button type="button" class="akd-top-btn" data-akd="refresh" aria-label="Yenile" title="Yenile">↻<span>Yenile</span></button><button type="button" class="akd-top-btn akd-exit-btn" data-akd="logout" aria-label="Çıkış" title="Çıkış"><svg class="akd-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></svg><span>Çıkış</span></button></div></header><div class="akd-body"><div class="akd-greeting"><h1>Mal Kabul</h1><p>İşlemlerinize hızlıca ulaşın ve sevkiyatları takip edin.</p></div><section class="akd-actions">${cards}</section><section class="akd-panel"><div class="akd-section-head"><h2>Bugünkü Durum</h2><span>${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Istanbul'})}</span></div><div class="akd-kpis">${kpis}</div></section><section class="akd-panel"><div class="akd-section-head"><h2>Son Gelen Sevkiyatlar</h2><button data-akd="records">Tümünü Gör ›</button></div><div class="akd-shipments">${recent||'<p class="akd-empty">Henüz sevkiyat kaydı bulunmuyor.</p>'}</div></section></div></div><button class="akd-scrim" data-akd="close" aria-label="Menüyü kapat"></button></div>`;
 if(akdPage==='reports'){
  const body=root.querySelector('.akd-body');
- const previousStart=document.getElementById('akmr-start')?.value||'2026-10-22';
- const previousEnd=document.getElementById('akmr-end')?.value||today();
- body.innerHTML=`<div class="akd-records-head"><h1>📊 Mal Kabul Raporları</h1><button type="button" data-akd="home">← Ana Sayfa</button></div><p class="akd-records-desc">Yeni sevkiyat kayıtlarından tarih aralığına göre ayrıntılı Excel raporu oluşturun.</p><section class="akd-panel" style="max-width:680px"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px"><label>Başlangıç tarihi<input id="akmr-start" type="date" min="2026-10-22" value="${previousStart}" style="display:block;width:100%;margin-top:8px"></label><label>Bitiş tarihi<input id="akmr-end" type="date" min="2026-10-22" value="${previousEnd}" style="display:block;width:100%;margin-top:8px"></label></div><button type="button" class="akd-new-btn" data-akd="export-mal-kabul">📥 Excel Raporu Oluştur</button><p id="akmr-status" role="status" style="margin-top:12px;color:#aebed2;font-size:13px">Genel Özet · Günlük Döküm · Ürün Raporu · Sevkiyat Detayları</p></section>`;
+ const previousStart=reportStart;
+ const previousEnd=reportEnd||today();
+ body.innerHTML=`<style>
+#akd-dashboard .akmr-panel{max-width:680px;width:100%;min-width:0;box-sizing:border-box;overflow:hidden;padding:clamp(14px,3vw,22px)}
+#akd-dashboard .akmr-date-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:17px;margin-bottom:20px;width:100%;min-width:0}
+#akd-dashboard .akmr-date-label{display:block;min-width:0;width:100%;box-sizing:border-box;font-weight:600;color:#dbe5f1}
+#akd-dashboard .akmr-date-input{display:block;box-sizing:border-box;max-width:100%;min-width:0;width:100%;margin-top:9px;background:#101d2e!important;border:1px solid #425773!important;color:#f1f5f9!important;border-radius:12px;padding:12px 10px;font:inherit;min-height:51px;appearance:auto;-webkit-appearance:auto;color-scheme:dark}
+#akd-dashboard .akmr-export{display:flex;align-items:center;justify-content:center;gap:10px;box-sizing:border-box;width:100%;max-width:100%;min-height:53px;border:1px solid #52677e!important;border-radius:12px!important;background:#26394e!important;color:#f8fafc!important;font:inherit;font-weight:700;box-shadow:none!important;padding:12px 10px;cursor:pointer;white-space:normal;text-align:center}
+#akd-dashboard .akmr-export:hover{background:#304962!important}
+#akd-dashboard .akmr-export:active{transform:scale(.99)}
+#akd-dashboard .akmr-note{overflow-wrap:anywhere;line-height:1.55;text-align:center}
+</style><div class="akd-records-head"><h1>📊 Mal Kabul Raporları</h1><button type="button" data-akd="home">← Ana Sayfa</button></div><p class="akd-records-desc">Yeni sevkiyat kayıtlarından tarih aralığına göre ayrıntılı Excel raporu oluşturun.</p><section class="akd-panel akmr-panel"><div class="akmr-date-grid"><label class="akmr-date-label">Başlangıç tarihi<input class="akmr-date-input" id="akmr-start" type="date" value="${previousStart}"></label><label class="akmr-date-label">Bitiş tarihi<input class="akmr-date-input" id="akmr-end" type="date" value="${previousEnd}"></label></div><button type="button" class="akmr-export" data-akd="export-mal-kabul"><span aria-hidden="true">📗</span><span>Excel Raporu Oluştur</span></button><p class="akmr-note" id="akmr-status" role="status" style="margin-top:14px;color:#aebed2;font-size:13px">Genel Özet · Günlük Döküm · Ürün Raporu · Sevkiyat Detayları</p></section>`;
  root.querySelectorAll('.akd-nav').forEach(n=>n.classList.toggle('selected',n.dataset.akd==='reports'));
 }
 if(akdPage==='records'){

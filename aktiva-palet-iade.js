@@ -242,7 +242,16 @@ async function exportReport(){
   const ids=new Set(selected.map(r=>r.id));
   const byId=new Map();
   for(const x of items){if(!ids.has(x.return_id))continue;if(!byId.has(x.return_id))byId.set(x.return_id,[]);byId.get(x.return_id).push(x)}
-  const shortId=new Map(selected.map((r,i)=>[r.id,'İAD-'+String(i+1).padStart(4,'0')]));
+  // Kalıcı iade numarası: rapor sırasından değil, Supabase kayıt kimliğinden türetilir.
+  // UUID'nin 128 bitinin tamamı base36 biçiminde korunur; tarih filtresi numarayı değiştirmez.
+  const returnNumber=id=>{
+   const raw=String(id??'');
+   const hex=raw.replace(/-/g,'');
+   return /^[0-9a-f]{32}$/i.test(hex)
+    ?'İAD-'+BigInt('0x'+hex).toString(36).toUpperCase().padStart(25,'0')
+    :'İAD-'+raw;
+  };
+  const shortId=new Map(selected.map(r=>[r.id,returnNumber(r.id)]));
   const amount=x=>{const n=Number(x?.quantity);return Number.isFinite(n)&&n>0?n:0};
   const totals=r=>{let pallet=0,caseCount=0;for(const x of byId.get(r.id)||[]){if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='kasa')caseCount+=amount(x);else if(String(x.unit||'').toLocaleLowerCase('tr-TR')==='palet')pallet+=amount(x)}return [pallet,caseCount]};
   const daily=new Map(),fork=new Map(),receive=new Map();

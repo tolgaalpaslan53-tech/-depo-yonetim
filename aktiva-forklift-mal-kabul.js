@@ -205,5 +205,7 @@ function installCountUI(){
  document.head.appendChild(sheet);
  const app=$('#app');if(app){new MutationObserver(()=>countLaunchers()).observe(app,{childList:true,subtree:true});countLaunchers()}const countUI=$('#aktivaCountUI');if(countUI)new MutationObserver(()=>countLaunchers()).observe(countUI,{attributes:true,attributeFilter:['class','style']});new MutationObserver(()=>{if(role()!=='count')closeCountPanel()}).observe(document.body,{attributes:true,attributeFilter:['data-role']});
 }
+// Forklift oturumu açıldığında paneli ilk veri sorgusunu beklemeden çiz.
+window.addEventListener('aktiva:forklift-ready',()=>{if(role()!=='fork')return;render();void load();void loadCatalog();void loadStaffNames();});
 window.addEventListener('aktiva:catalog-updated',()=>loadCatalog(true));window.addEventListener('load',()=>{root();installCountUI();render();setInterval(()=>{if(!document.hidden&&['fork','count'].includes(role()))load()},8000);setInterval(()=>{if(!document.hidden&&['fork','count'].includes(role()))loadCatalog()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&['fork','count'].includes(role()))loadCatalog(true)});window.addEventListener('online',()=>loadCatalog(true));document.addEventListener('click',()=>{alertOn=true},{once:true});setTimeout(()=>{load();loadCatalog();loadStaffNames()},1000)});
 })();

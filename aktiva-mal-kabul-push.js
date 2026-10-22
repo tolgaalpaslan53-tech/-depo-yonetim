@@ -20,15 +20,17 @@ function render(){
  document.body.appendChild(panel);const hr=header.getBoundingClientRect();panel.style.top=(hr.top+(hr.height-38)/2)+'px';panel.style.left=(hr.left-44)+'px';
  const bell=panel.querySelector('#akRecBell'),menu=panel.querySelector('#akRecMenu'),msg=panel.querySelector('#akRecMsg'),dot=panel.querySelector('#akRecDot');
  document.body.appendChild(menu);menu.style.position='fixed';
- const toggle=(open)=>{menu.hidden=!open;menu.style.setProperty('display',open?'block':'none','important');if(open){const r=bell.getBoundingClientRect();menu.style.top=Math.min(window.innerHeight-40,r.bottom+10)+'px';menu.style.right=Math.max(12,window.innerWidth-r.right)+'px'}bell.setAttribute('aria-expanded',String(open))};toggle(false);
+ let menuOpen=false;const toggle=(open)=>{menuOpen=!!open;menu.hidden=!menuOpen;menu.style.setProperty('display',menuOpen?'block':'none','important');if(menuOpen){const r=bell.getBoundingClientRect();menu.style.top=Math.min(window.innerHeight-40,r.bottom+10)+'px';menu.style.right=Math.max(12,window.innerWidth-r.right)+'px'}bell.setAttribute('aria-expanded',String(menuOpen))};toggle(false);
  const paint=(active)=>{dot.style.background=active?'#41ce99':'#9aa8b8';bell.style.background=active?'#123d32':'#182637';bell.style.borderColor=active?'#2fae7b':'#46546a';bell.style.color=active?'#7cf0bd':'#f0f5fc'};
  async function refreshState(){try{if(!supported()||Notification.permission!=='granted'){paint(false);return}const reg=await navigator.serviceWorker.ready;const existing=await reg.pushManager.getSubscription();if(!panel.isConnected)return;paint(!!existing);msg.textContent=existing?'Bildirimler açık · Cihaz aboneliği mevcut':'Bildirim izni var · Abonelik etkin değil'}catch{if(panel.isConnected)paint(false)}}
- bell.onclick=(e)=>{e.stopPropagation();toggle(menu.hidden)};
- document.addEventListener('click',e=>{if(panel.isConnected&&!panel.contains(e.target)&&!menu.contains(e.target))toggle(false)});
+ bell.addEventListener('pointerdown',e=>e.stopPropagation());
+ bell.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();toggle(!menuOpen)});
+ menu.addEventListener('pointerdown',e=>e.stopPropagation());
+ document.addEventListener('click',e=>{if(menuOpen&&panel.isConnected&&!panel.contains(e.target)&&!menu.contains(e.target))toggle(false)},true);
  if(!supported())msg.textContent='Bu cihazda bildirim desteği bulunmuyor.';
  else if(Notification.permission==='granted'){msg.textContent='Bildirim durumu kontrol ediliyor…';refreshState()}
  else if(Notification.permission==='denied'){msg.textContent='Bildirim izni tarayıcı ayarlarından kapalı.';dot.style.background='#e58a8a'}
- for(const [id,enable] of [['akRecOn',true],['akRecOff',false]])menu.querySelector('#'+id).onclick=async()=>{
+ for(const [id,enable] of [['akRecOn',true],['akRecOff',false]])menu.querySelector('#'+id).onclick=async(e)=>{e.preventDefault();e.stopPropagation();
   if(busy)return;busy=true;const buttons=menu.querySelectorAll('#akRecOn,#akRecOff');buttons.forEach(b=>b.disabled=true);
   msg.textContent=enable?'Bildirim izni ve cihaz kaydı kontrol ediliyor…':'Bildirim aboneliği kapatılıyor…';
   try{const result=await sub(enable);if(panel.isConnected){msg.textContent=result;paint(enable);toggle(false)}}

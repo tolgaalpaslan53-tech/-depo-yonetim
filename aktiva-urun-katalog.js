@@ -2,7 +2,34 @@
 let products=[],map={},chosen=null,pendingBarcode='';
 try{map=JSON.parse(localStorage.getItem('aktiva_barkod_eslestirme_demo')||'{}')||{}}catch{}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const style=document.createElement('style');style.textContent=`#aktivaCatalogOverlay{position:fixed;inset:0;z-index:2147483001;background:#101722;color:#f5f6fa;overflow:auto;padding:16px;font:15px system-ui}#aktivaCatalogOverlay .ac-wrap{max-width:650px;margin:auto}#aktivaCatalogOverlay input,#aktivaCatalogOverlay select{width:100%;box-sizing:border-box;background:#202a39;color:white;border:1px solid #647084;border-radius:9px;padding:12px;margin:6px 0;font-size:16px}#aktivaCatalogOverlay button{background:#c62842;color:white;border:0;border-radius:9px;padding:12px;cursor:pointer;margin:4px}#aktivaCatalogOverlay .ac-item{display:block;width:100%;text-align:left;background:#202a39;border:1px solid #485466;border-radius:9px;padding:12px;margin:5px 0}#aktivaCatalogOverlay small{color:#b8c1cf}#ac-selected{background:#183a30;border:1px solid #44aa79;border-radius:12px;padding:12px;margin:12px 0}#ac-list:empty{display:none}`;style.textContent+=`#aktivaCatalogOverlay{padding:22px 16px 42px;background:#101722}#aktivaCatalogOverlay .ac-wrap{max-width:650px}#aktivaCatalogOverlay .ac-wrap>h2{font-size:clamp(21px,5vw,27px);letter-spacing:-.4px;margin:22px 0 24px;line-height:1.25}#aktivaCatalogOverlay #ac-close{background:#222d3c;color:#e6ebf2;border:1px solid #425064;padding:11px 17px;border-radius:12px;font-weight:700}#aktivaCatalogOverlay #ac-close:hover{background:#2d394a}#aktivaCatalogOverlay .ac-wrap>button:not(#ac-close){display:block;width:100%;margin:10px 0;background:#202b3a;color:#f2f5fa;border:1px solid #394b60;border-left:3px solid #df2339;border-radius:14px;padding:16px;text-align:left;font-weight:700;font-size:15px;box-shadow:0 3px 10px #0002}#aktivaCatalogOverlay .ac-wrap>button:not(#ac-close):hover{background:#2a384a}#aktivaCatalogOverlay #ac-export{border-left-color:#38a88a}#aktivaCatalogOverlay #ac-hint{color:#9baabe;margin:24px 0 12px;font-size:14px}#aktivaCatalogOverlay .ac-wrap>label{display:block;color:#e9eef6;font-weight:650;margin:12px 0}#aktivaCatalogOverlay #ac-search{background:#202b3b;border:1px solid #56657a;border-radius:13px;padding:15px 16px;margin-top:9px;outline:none}#aktivaCatalogOverlay #ac-search:focus{border-color:#d94a5a;box-shadow:0 0 0 3px #d94a5a22}#aktivaCatalogOverlay #ac-search::placeholder{color:#9daaba}`;document.head.append(style);
+const style=document.createElement('style');style.textContent=`#aktivaCatalogOverlay{position:fixed;inset:0;z-index:2147483001;background:#101722;color:#f5f6fa;overflow:auto;padding:16px;font:15px system-ui}#aktivaCatalogOverlay .ac-wrap{max-width:650px;margin:auto}#aktivaCatalogOverlay input,#aktivaCatalogOverlay select{width:100%;box-sizing:border-box;background:#202a39;color:white;border:1px solid #647084;border-radius:9px;padding:12px;margin:6px 0;font-size:16px}#aktivaCatalogOverlay button{background:#c62842;color:white;border:0;border-radius:9px;padding:12px;cursor:pointer;margin:4px}#aktivaCatalogOverlay .ac-item{display:block;width:100%;text-align:left;background:#202a39;border:1px solid #485466;border-radius:9px;padding:12px;margin:5px 0}#aktivaCatalogOverlay small{color:#b8c1cf}#ac-selected{background:#183a30;border:1px solid #44aa79;border-radius:12px;padding:12px;margin:12px 0}#ac-list:empty{display:none}`;style.textContent+=`#aktivaCatalogOverlay{padding:22px 16px 42px;background:#101722}#aktivaCatalogOverlay .ac-wrap{max-width:650px}#aktivaCatalogOverlay .ac-wrap>h2{font-size:clamp(21px,5vw,27px);letter-spacing:-.4px;margin:22px 0 24px;line-height:1.25}#aktivaCatalogOverlay #ac-close{background:#222d3c;color:#e6ebf2;border:1px solid #425064;padding:11px 17px;border-radius:12px;font-weight:700}#aktivaCatalogOverlay #ac-close:hover{background:#2d394a}#aktivaCatalogOverlay .ac-wrap>button:not(#ac-close){display:block;width:100%;margin:10px 0;background:#202b3a;color:#f2f5fa;border:1px solid #394b60;border-left:3px solid #df2339;border-radius:14px;padding:16px;text-align:left;font-weight:700;font-size:15px;box-shadow:0 3px 10px #0002}#aktivaCatalogOverlay .ac-wrap>button:not(#ac-close):hover{background:#2a384a}#aktivaCatalogOverlay #ac-export{border-left-color:#38a88a}#aktivaCatalogOverlay #ac-hint{color:#9baabe;margin:24px 0 12px;font-size:14px}#aktivaCatalogOverlay .ac-wrap>label{display:block;color:#e9eef6;font-weight:650;margin:12px 0}#aktivaCatalogOverlay #ac-search{background:#202b3b;border:1px solid #56657a;border-radius:13px;padding:15px 16px;margin-top:9px;outline:none}#aktivaCatalogOverlay #ac-search:focus{border-color:#d94a5a;box-shadow:0 0 0 3px #d94a5a22}#aktivaCatalogOverlay #ac-search::placeholder{color:#9daaba}`;style.textContent+=`
+/* AKTIVA Barkod ekranina ozel, genel tema buton kurallarini gecersiz kil */
+#aktivaCatalogOverlay .ac-wrap > button,
+#aktivaCatalogOverlay .ac-wrap > button:not(#ac-close),
+#aktivaCatalogOverlay button#ac-close,
+#aktivaCatalogOverlay button#ac-export {
+  background:#202b3a !important; background-image:none !important;
+  color:#f2f5fa !important; border:1px solid #405168 !important;
+  box-shadow:0 5px 16px rgba(0,0,0,.16) !important;
+  text-shadow:none !important;
+}
+#aktivaCatalogOverlay .ac-wrap > button:not(#ac-close) {
+  display:block !important; width:100% !important; text-align:left !important;
+  margin:10px 0 !important; padding:16px 17px !important;
+  border-left:3px solid #d83b51 !important; border-radius:14px !important;
+  font-size:15px !important; font-weight:700 !important;
+}
+#aktivaCatalogOverlay .ac-wrap > button#ac-export {
+  background:#1d3035 !important; border-left-color:#39ad8b !important;
+}
+#aktivaCatalogOverlay .ac-wrap > button#ac-close {
+  display:inline-flex !important; width:auto !important; margin:4px 0 14px !important;
+  padding:11px 16px !important; border-radius:12px !important;
+  background:#253040 !important; border:1px solid #475569 !important;
+}
+#aktivaCatalogOverlay .ac-wrap > button:hover { filter:brightness(1.12); }
+#aktivaCatalogOverlay .ac-wrap > button:active { transform:translateY(1px); }
+`;document.head.append(style);
 async function init(){if(products.length)return;try{const r=await fetch('aktiva-urunler.json',{cache:'no-store'});if(!r.ok)throw Error('Dosya bulunamadı');const data=await r.json();if(Array.isArray(data))products=data}catch(e){console.warn(e)}await refreshShared()}
 async function refreshShared(){
  if(typeof req!=='function'||typeof session==='undefined'||!session)throw Error('Supabase oturumu bulunamadı');

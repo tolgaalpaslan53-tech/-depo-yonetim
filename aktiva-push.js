@@ -3,6 +3,9 @@
   'use strict';
   const keyName = 'aktiva_vapid_public_key';
   let busy = false;
+  let panelOpen = false;
+  const positionPanel = () => {const bell=document.getElementById('akForkBell'), panel=document.getElementById('akForkPushPanel');if(!panel)return;if(bell){const rect=bell.getBoundingClientRect();panel.style.top=Math.min(window.innerHeight-120,rect.bottom+10)+'px';panel.style.right=Math.max(10,window.innerWidth-rect.right)+'px';}else{panel.style.top='76px';panel.style.right='12px';}};
+  document.addEventListener('click',e=>{const bell=e.target.closest?.('#akForkBell');const close=e.target.closest?.('#akForkPushClose');const panel=document.getElementById('akForkPushPanel');if(bell){panelOpen=!panelOpen;positionPanel();if(panel)panel.style.display=panelOpen?'block':'none';bell.setAttribute('aria-expanded',String(panelOpen));if(panelOpen)void render();return;}if(close||(panelOpen&&panel&&!e.target.closest?.('#akForkPushPanel'))){panelOpen=false;if(panel)panel.style.display='none';document.getElementById('akForkBell')?.setAttribute('aria-expanded','false');}});
   let lastChecked = 0;
   let status = null;
   const marker = 'aktiva_fork_push_registered';
@@ -62,18 +65,18 @@
   }
   async function render(){
     const s=current();let panel=document.getElementById('akForkPushPanel');
-    if(s.role!=='fork'||!s.user||!s.token){if(panel)panel.style.display='none';status=null;return}
+    if(s.role!=='fork'||!s.user||!s.token){panelOpen=false;if(panel)panel.style.display='none';status=null;return}
     if(!document.body)return;
     if(!panel){
       panel=document.createElement('section');panel.id='akForkPushPanel';
-      panel.style.cssText='position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:100000;max-width:min(360px,calc(100vw - 24px));padding:12px;border:1px solid #385a76;border-radius:14px;background:#0b2236;color:#fff;box-shadow:0 8px 28px #0009';
-      panel.innerHTML='<div style="display:flex;gap:7px;flex-wrap:wrap"><button id="akForkPushEnable" type="button" style="background:#ffd135!important;color:#0a1b2b!important;font-weight:800;border-radius:10px">🔔 Bildirimleri Aç / Yenile</button><button id="akForkPushDisable" type="button" style="background:#35475b!important;color:#fff!important;font-weight:750;border-radius:10px">🔕 Bildirimleri Kapat</button></div><p id="akForkPushInfo" style="color:#c5d5e4;font-size:12px;margin:9px 0 0"></p>';
+      panel.style.cssText='display:none;position:fixed;right:12px;top:76px;z-index:100000;width:min(330px,calc(100vw - 24px));max-height:min(70vh,480px);overflow:auto;padding:15px;border:1px solid #52738f;border-radius:16px;background:#0c2236;color:#fff;box-shadow:0 16px 38px #000a';
+      panel.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px"><strong style="font-size:15px;color:#f4f8ff">Bildirim Ayarları</strong><button type="button" id="akForkPushClose" aria-label="Kapat" style="background:#253d54!important;color:#fff!important;border:1px solid #52738f!important;border-radius:8px;padding:5px 10px;box-shadow:none!important">✕</button></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button id="akForkPushEnable" type="button" style="background:#ffd135!important;color:#0a1b2b!important;font-weight:800;border-radius:10px">🔔 Bildirimleri Aç / Yenile</button><button id="akForkPushDisable" type="button" style="background:#35475b!important;color:#fff!important;font-weight:750;border-radius:10px">🔕 Bildirimleri Kapat</button></div><p id="akForkPushInfo" style="color:#c5d5e4;font-size:12px;margin:9px 0 0"></p>';
       document.body.append(panel);
       const on=panel.querySelector('#akForkPushEnable'),off=panel.querySelector('#akForkPushDisable'),msg=panel.querySelector('#akForkPushInfo');
       on.onclick=async()=>{if(busy)return;busy=true;on.disabled=off.disabled=true;msg.textContent='Cihaz kaydı yenileniyor…';try{await register();msg.textContent='🟢 Bildirimler açık · Cihaz yeniden kaydedildi'}catch(e){status=null;msg.textContent=e.message||String(e)}finally{busy=false;on.disabled=off.disabled=false;await render()}};
       off.onclick=async()=>{if(busy)return;busy=true;on.disabled=off.disabled=true;msg.textContent='Bildirimler kapatılıyor…';try{await disable();msg.textContent='🔕 Bildirimler bu cihazda kapalı'}catch(e){msg.textContent=e.message||String(e)}finally{busy=false;on.disabled=off.disabled=false;await render()}};
     }
-    panel.style.display='block';
+    panel.style.display=panelOpen?'block':'none';if(panelOpen)positionPanel();
     if(busy)return;
     const on=panel.querySelector('#akForkPushEnable'),off=panel.querySelector('#akForkPushDisable'),msg=panel.querySelector('#akForkPushInfo');
     if(!isSupported()){on.style.display=off.style.display='none';msg.textContent='Bu cihazda bildirim desteği yok. iPhone: Ana Ekrana Ekle.';return}

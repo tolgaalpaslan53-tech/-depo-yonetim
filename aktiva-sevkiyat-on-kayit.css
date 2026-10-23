@@ -33,3 +33,20 @@ body[data-role="count"] #akpr-home-panel .akpr-muted{color:#b9c9d8}
 body[data-role="count"] #akpr-home-panel .akpr-pill{background:#34485a;color:#f5d48d}
 body[data-role="count"] #akpr-home-panel .akpr-btn.light{background:#273e55;color:#eaf3fb;border:1px solid #536c82}
 body[data-role="count"] #akpr-home-panel .akpr-btn.primary{background:#314d66;color:#fff;border:1px solid #66859b}
+
+/* Sevkiyat Kayıt Personeli: Mal Kabul tasarımına uyumlu koyu görünüm; diğer roller etkilenmez. */
+body[data-role="pre_receiving"] #ak-pre-receiving{color:#edf4fb;max-width:1040px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-head{background:#17283d;border:1px solid #3b526b}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-card{background:#17283b;border:1px solid #3a5169;box-shadow:0 6px 16px #0002;color:#eef4fb}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-muted{color:#bbcbdc}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-stat{color:#ffffff}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-label{color:#e9f1fa}
+body[data-role="pre_receiving"] #ak-pre-receiving input,body[data-role="pre_receiving"] #ak-pre-receiving textarea{background:#24374e;border:1px solid #50677f;color:#fff}
+body[data-role="pre_receiving"] #ak-pre-receiving input::placeholder,body[data-role="pre_receiving"] #ak-pre-receiving textarea::placeholder{color:#aebed0}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-row{border-top-color:#3a5068}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-btn.light{background:#263b52;border:1px solid #5b7086;color:#eef5fc}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-btn.primary{background:#2a5878;color:#fff;border:1px solid #6c92ae}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-btn.akpr-danger{background:#49303a;color:#ffdce0;border:1px solid #875564}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-pill{background:#344a60;color:#f5d9a2}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-ok{color:#8ce0bf}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-error{color:#ffabb2}

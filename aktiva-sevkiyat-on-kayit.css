@@ -62,3 +62,29 @@ body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-icon{display:grid;pl
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-arrow{position:absolute;bottom:13px;right:17px;color:#f0c963;font-weight:bold;font-size:31px}
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-detail-head{margin-bottom:15px}
 @media(max-width:650px){body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card{padding:16px 12px;min-height:196px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card strong{font-size:16px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card small{font-size:12px}}
+
+/* Ön kayıtlar sadece mevcut Mal Kabul Kayıtları sayfasında görünür */
+#akpr-receiving-panel{display:none!important}
+body[data-role="count"] #akd-dashboard #akpr-records-panel{color:#dce7f2;border:1px solid #344960;border-radius:16px;background:#152335;padding:13px;margin:12px 0 18px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button{background:#21354a;color:#e6edf7;border:1px solid #455b70;border-radius:11px;font:inherit;font-weight:700;padding:11px 15px;cursor:pointer}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected{background:#314b63;color:#ffffff;border-color:#7995ab;box-shadow:inset 0 0 0 1px #7995ab}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading strong{font-size:17px;flex:1 1 auto}
+body[data-role="count"] #akpr-records-panel .akpr-muted{color:#b4c3d3}
+body[data-role="count"] #akpr-records-panel #akpr-record-search{width:100%;background:#101c2b;color:#f4f7fc;border:1px solid #496178;border-radius:11px;padding:11px;box-sizing:border-box}
+body[data-role="count"] #akpr-records-panel .akpr-row{border-top-color:#35495f;color:#eef5fc}
+body[data-role="count"] #akpr-records-panel .akpr-pill{color:#604209}
+body[data-role="count"] #akpr-records-panel .akpr-btn.primary{background:#ad1930;color:#fff}
+body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-records-list,body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-record-pager{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel .akpr-pre-records{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel{padding-bottom:0}
+
+/* Filtrelerde sade görünüm: mevcut kırmızı tema bu düğmelere taşınmasın */
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button,body[data-role="count"] #akpr-records-panel .akpr-source-tabs button:hover{background:#22364b!important;color:#dce8f2!important;border:1px solid #435c72!important;box-shadow:none!important;background-image:none!important}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected,body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected:hover{background:#385572!important;color:#fff!important;border-color:#86a6be!important;box-shadow:inset 0 0 0 1px #86a6be!important;background-image:none!important}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary>div{background:#1e3347;border:1px solid #38536b;border-radius:11px;padding:12px;min-width:0}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary small{display:block;color:#baccdc;font-size:12px;line-height:1.4}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary strong{display:block;color:#fff;font-size:20px;margin-top:5px}
+@media(max-width:600px){body[data-role="count"] #akpr-records-panel .akpr-pending-summary{grid-template-columns:1fr}}

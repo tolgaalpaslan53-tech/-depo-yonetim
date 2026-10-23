@@ -1,0 +1,14 @@
+/* AKTİVA - Sevkiyat Ön Kayıt: yalnızca yeni rolü etkiler */
+body[data-role="pre_receiving"] #app > :not(#ak-pre-receiving):not(#message){display:none!important}
+body[data-role="pre_receiving"] .wrap > header,body[data-role="pre_receiving"] #aktiva-shell-top,body[data-role="pre_receiving"] #aktiva-shell-sidebar{display:none!important}
+#ak-pre-receiving{max-width:1080px;margin:0 auto;padding:18px 12px 50px;font-family:inherit;color:#1e293b}
+.akpr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#17243b;color:white;padding:20px;border-radius:16px;margin-bottom:14px}
+.akpr-head h1{font-size:22px;margin:0;color:white}.akpr-head small{color:#b7cadb}
+.akpr-btn{background:#243b53;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+.akpr-btn.primary{background:#176b63}.akpr-btn.light{background:#edf3f8;color:#26384c}.akpr-btn:disabled{opacity:.5;cursor:wait}
+.akpr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.akpr-card{background:#fff;border:1px solid #dbe4ef;border-radius:15px;padding:17px;margin:12px 0;box-shadow:0 3px 14px #15243a0b}
+.akpr-stat{font-size:26px;font-weight:900;color:#243b53}.akpr-muted{color:#64748b;font-size:13px}.akpr-label{display:block;font-weight:700;font-size:13px;margin:10px 0 4px}
+#ak-pre-receiving input,#ak-pre-receiving textarea,#ak-pre-receiving select{width:100%;box-sizing:border-box;border:1px solid #cad5e1;background:white;padding:12px;border-radius:10px;font:inherit;color:#1e293b}
+.akpr-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}.akpr-row{border-top:1px solid #e4eaf2;padding:12px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.akpr-pill{font-weight:700;color:#875f12;background:#fff3d0;border-radius:20px;padding:4px 9px;font-size:12px}.akpr-msg{font-size:13px;margin-top:9px}.akpr-error{color:#b91c1c}.akpr-ok{color:#087b5e}
+#akpr-receiving-panel{border:1px solid #dbe4ef;border-radius:14px;padding:14px;background:white;margin:12px 0}#akpr-receiving-panel h3{margin:0 0 8px}
+@media(max-width:650px){.akpr-grid{grid-template-columns:1fr}.akpr-head{align-items:flex-start}.akpr-head h1{font-size:19px}}

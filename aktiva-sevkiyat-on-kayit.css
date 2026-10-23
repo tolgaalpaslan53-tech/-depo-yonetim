@@ -122,3 +122,11 @@ body.akpr-count-open{overflow:hidden!important}
 #akpr-count-overlay .akpr-count-footer .primary{background:#315e79;color:white;border:1px solid #7496ad}
 #akpr-count-overlay .akpr-summary-line{border:1px solid #3b5268;border-radius:11px;padding:14px;display:grid;gap:7px;background:#1c3045}
 #akpr-count-overlay .akpr-summary-line small{color:#bacddd}
+
+/* Ön kayıt: sırayla tek ürün giriş ve katalog araması */
+#ak-pre-receiving .akpr-saved-products{display:grid;gap:8px}
+#ak-pre-receiving .akpr-saved-item{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;text-align:left;background:#18354b;color:#eff9ff;border:1px solid #3f667a;border-radius:10px;padding:12px;cursor:pointer}
+#ak-pre-receiving .akpr-saved-item span{font-size:12px;color:#b9d5e4}
+#ak-pre-receiving .akpr-catalog-results{grid-column:1/-1;display:grid;gap:4px;max-height:220px;overflow-y:auto}
+#ak-pre-receiving .akpr-catalog-item{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:10px;color:#fff;border-radius:8px;background:#27445b;border:1px solid #456b80;cursor:pointer}
+#ak-pre-receiving .akpr-catalog-item small{color:#b9d5e4}

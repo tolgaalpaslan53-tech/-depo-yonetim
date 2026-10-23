@@ -50,12 +50,38 @@
  }
  async function refresh(){if(!active())return;try{const records=await api('/rest/v1/'+table+'?select=id,plate,company,driver_name,waybill_number,notes,photo_path,status,created_at&order=created_at.desc&limit=100');
     if($('#akpr-list')){rows(records,$('#akpr-list'),false);const todays=records.filter(r=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(r.created_at))===today());$('#akpr-total').textContent=todays.length;$('#akpr-pending').textContent=todays.filter(r=>r.status==='waiting').length}
-    if($('#akpr-receiving-list'))rows(records,$('#akpr-receiving-list'),true);
-   }catch(e){if($('#akpr-list'))$('#akpr-list').textContent='Kayıtlar alınamadı: '+e.message;if($('#akpr-receiving-list'))$('#akpr-receiving-list').textContent='Kayıtlar alınamadı: '+e.message}
+    if($('#akpr-records-content'))drawReceiving(records);
+   }catch(e){if($('#akpr-list'))$('#akpr-list').textContent='Kayıtlar alınamadı: '+e.message;if($('#akpr-records-content'))$('#akpr-records-content').textContent='Ön kayıtlar alınamadı: '+e.message}
  }
- function receiving(){if($('#akpr-receiving-panel')||!document.querySelector('#akd-dashboard'))return;
-  const panel=document.createElement('section');panel.id='akpr-receiving-panel';panel.innerHTML='<div class="akpr-actions" style="justify-content:space-between"><h3>🚚 Sevkiyat Ön Kayıt · Bekleyen Araçlar</h3><button class="akpr-btn light" type="button" id="akpr-receiving-refresh">Yenile</button></div><div id="akpr-receiving-list" class="akpr-muted">Yükleniyor…</div>';
-  const target=$('#akd-dashboard');target.prepend(panel);panel.querySelector('button').onclick=refresh;
+ let source='all', cache=[], lastHost=null;
+ function drawReceiving(records){
+  cache=records;
+  const host=$('#akpr-records-content');if(!host)return;
+  const q=($('#akpr-record-search')?.value||'').toLocaleLowerCase('tr-TR').trim();
+  const filtered=records.filter(r=>(r.plate+' '+r.company+' '+(r.waybill_number||'')).toLocaleLowerCase('tr-TR').includes(q));
+  host.textContent='';rows(filtered,host,true);
+  const badge=$('#akpr-record-count');if(badge)badge.textContent=filtered.length+' ön kayıt';
+ }
+ function applySource(){
+  const root=$('#akd-dashboard');if(!root)return;
+  root.classList.toggle('akpr-show-only-pre',source==='pre');
+  root.classList.toggle('akpr-hide-pre',source==='mal');
+  root.querySelectorAll('[data-akpr-source]').forEach(btn=>{const selected=btn.dataset.akprSource===source;btn.classList.toggle('akpr-selected',selected);btn.setAttribute('aria-pressed',String(selected))});
+ }
+ function receiving(){
+  const root=$('#akd-dashboard');if(!root||document.body.dataset.role!=='count')return;
+  const body=root.querySelector('.akd-body');
+  const list=body?.querySelector('.akd-records-list');
+  if(!list){root.classList.remove('akpr-show-only-pre','akpr-hide-pre');lastHost=null;return}
+  if(lastHost===list && $('#akpr-records-panel'))return;
+  lastHost=list;
+  const box=document.createElement('section');box.id='akpr-records-panel';
+  box.innerHTML='<div class="akpr-source-tabs" role="group" aria-label="Kayıt kaynağı"><button type="button" data-akpr-source="all">Tümü</button><button type="button" data-akpr-source="mal">Mal Kabul</button><button type="button" data-akpr-source="pre">Ön Kayıt</button></div><div class="akpr-pre-records"><div class="akpr-pre-heading"><strong>Sevkiyat Ön Kayıtları</strong><span id="akpr-record-count"></span><button type="button" class="akpr-btn light" id="akpr-receiving-refresh">Yenile</button></div><input id="akpr-record-search" type="search" placeholder="Ön kayıtlarda plaka, firma veya irsaliye ara" aria-label="Ön kayıtlarda ara"><div id="akpr-records-content" class="akpr-muted">Kayıtlar yükleniyor…</div></div>';
+  list.before(box);
+  box.querySelectorAll('[data-akpr-source]').forEach(btn=>btn.addEventListener('click',()=>{source=btn.dataset.akprSource;applySource()}));
+  box.querySelector('#akpr-receiving-refresh').addEventListener('click',refresh);
+  box.querySelector('#akpr-record-search').addEventListener('input',()=>drawReceiving(cache));
+  applySource();refresh();
  }
  function mount(){const role=document.body.dataset.role;if(role==='pre_receiving'){
     const app=$('#app');if(!app||app.classList.contains('hidden'))return;
@@ -68,5 +94,6 @@
  }
  document.addEventListener('aktiva:session-changed',()=>{lastRole='';setTimeout(mount,20)});
  new MutationObserver(()=>{if(['count','pre_receiving'].includes(document.body.dataset.role))mount()}).observe(document.body,{attributes:true,attributeFilter:['data-role']});
- document.addEventListener('DOMContentLoaded',()=>{mount();timer=setInterval(()=>{if(!document.hidden&&active()&&['count','pre_receiving'].includes(document.body.dataset.role)){mount();refresh()}},15000)});
+ let pending=false;function observeRecords(){const root=$('#akd-dashboard');if(!root)return false;new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;if(document.body.dataset.role==='count')receiving()})}).observe(root,{childList:true,subtree:true});return true}
+ document.addEventListener('DOMContentLoaded',()=>{mount();if(!observeRecords()){const tryObserve=setInterval(()=>{if(observeRecords())clearInterval(tryObserve)},600)}timer=setInterval(()=>{if(!document.hidden&&active()&&['count','pre_receiving'].includes(document.body.dataset.role)){mount();refresh()}},15000)});
 })();

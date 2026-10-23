@@ -12,3 +12,20 @@ body[data-role="pre_receiving"] .wrap > header,body[data-role="pre_receiving"] #
 .akpr-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}.akpr-row{border-top:1px solid #e4eaf2;padding:12px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.akpr-pill{font-weight:700;color:#875f12;background:#fff3d0;border-radius:20px;padding:4px 9px;font-size:12px}.akpr-msg{font-size:13px;margin-top:9px}.akpr-error{color:#b91c1c}.akpr-ok{color:#087b5e}
 #akpr-receiving-panel{border:1px solid #dbe4ef;border-radius:14px;padding:14px;background:white;margin:12px 0}#akpr-receiving-panel h3{margin:0 0 8px}
 @media(max-width:650px){.akpr-grid{grid-template-columns:1fr}.akpr-head{align-items:flex-start}.akpr-head h1{font-size:19px}}
+
+/* Ön kayıtlar sadece mevcut Mal Kabul Kayıtları sayfasında görünür */
+#akpr-receiving-panel{display:none!important}
+body[data-role="count"] #akd-dashboard #akpr-records-panel{color:#dce7f2;border:1px solid #344960;border-radius:16px;background:#152335;padding:13px;margin:12px 0 18px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button{background:#21354a;color:#e6edf7;border:1px solid #455b70;border-radius:11px;font:inherit;font-weight:700;padding:11px 15px;cursor:pointer}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected{background:#ab142a;color:#fff;border-color:#de4056}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading strong{font-size:17px;flex:1 1 auto}
+body[data-role="count"] #akpr-records-panel .akpr-muted{color:#b4c3d3}
+body[data-role="count"] #akpr-records-panel #akpr-record-search{width:100%;background:#101c2b;color:#f4f7fc;border:1px solid #496178;border-radius:11px;padding:11px;box-sizing:border-box}
+body[data-role="count"] #akpr-records-panel .akpr-row{border-top-color:#35495f;color:#eef5fc}
+body[data-role="count"] #akpr-records-panel .akpr-pill{color:#604209}
+body[data-role="count"] #akpr-records-panel .akpr-btn.primary{background:#ad1930;color:#fff}
+body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-records-list,body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-record-pager{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel .akpr-pre-records{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel{padding-bottom:0}

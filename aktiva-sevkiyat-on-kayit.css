@@ -88,3 +88,37 @@ body[data-role="count"] #akpr-records-panel .akpr-pending-summary>div{background
 body[data-role="count"] #akpr-records-panel .akpr-pending-summary small{display:block;color:#baccdc;font-size:12px;line-height:1.4}
 body[data-role="count"] #akpr-records-panel .akpr-pending-summary strong{display:block;color:#fff;font-size:20px;margin-top:5px}
 @media(max-width:600px){body[data-role="count"] #akpr-records-panel .akpr-pending-summary{grid-template-columns:1fr}}
+
+/* Yalnızca sevkiyat ön kayıt ürünleri ve mal kabul tam ekran sayımı. */
+#ak-pre-receiving .akpr-products{margin:18px 0;padding:14px;border:1px solid #496179;border-radius:15px}
+#ak-pre-receiving .akpr-product-edit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:10px 0;padding:14px;border:1px solid #465c73;border-radius:13px;background:#1c3045}
+#ak-pre-receiving .akpr-product-edit label{display:grid;gap:5px;min-width:0}
+#ak-pre-receiving .akpr-product-edit input,#ak-pre-receiving .akpr-product-edit select{box-sizing:border-box;width:100%;padding:11px;background:#24374e;color:white;border:1px solid #586f84;border-radius:9px}
+#ak-pre-receiving .akpr-line-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+@media(max-width:550px){#ak-pre-receiving .akpr-product-edit{grid-template-columns:1fr}}
+#akpr-count-overlay[hidden]{display:none!important}
+body.akpr-count-open{overflow:hidden!important}
+#akpr-count-overlay{position:fixed;inset:0;z-index:2147483640;background:#101c2b;color:#f0f5fc;display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain;font-family:inherit}
+#akpr-count-overlay *{box-sizing:border-box}
+#akpr-count-overlay .akpr-count-head{padding:calc(env(safe-area-inset-top,0px) + 17px) 18px 17px;background:#192c42;border-bottom:1px solid #39516b;display:flex;flex-direction:column;gap:9px}
+#akpr-count-overlay .akpr-count-head strong{font-size:19px}
+#akpr-count-overlay .akpr-count-head small{color:#bccde0}
+#akpr-count-overlay .akpr-count-back{align-self:flex-start;border:1px solid #526982;background:#263c53;color:white;border-radius:10px;padding:9px 12px;font:inherit}
+#akpr-count-overlay .akpr-progress{font-size:14px;color:#d0dfec}
+#akpr-count-overlay .akpr-progressbar{height:6px;border-radius:8px;background:#43556a;overflow:hidden}
+#akpr-count-overlay .akpr-progressbar span{display:block;height:100%;background:#4cbb8a}
+#akpr-count-overlay .akpr-count-main{width:min(100%,700px);margin:0 auto;flex:1;padding:22px 18px;display:flex;flex-direction:column;gap:19px}
+#akpr-count-overlay .akpr-count-product{padding:22px;background:#1d3147;border:1px solid #415b73;border-radius:17px}
+#akpr-count-overlay .akpr-count-product small{color:#b9ccdc}
+#akpr-count-overlay .akpr-count-product h2{font-size:clamp(22px,5vw,31px);margin:12px 0 22px;color:#fff}
+#akpr-count-overlay .akpr-expected{border-top:1px solid #42576b;padding-top:15px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#akpr-count-overlay .akpr-expected strong{font-size:23px;color:#fff}
+#akpr-count-overlay label{font-weight:600;display:flex;flex-direction:column;gap:9px;color:#ecf4fa}
+#akpr-count-overlay input,#akpr-count-overlay textarea{width:100%;background:#20364d;color:#fff;border:1px solid #587087;border-radius:12px;padding:14px;font:inherit;font-size:18px}
+#akpr-count-overlay #akpr-count-difference{color:#b5e4cb;font-weight:600}
+#akpr-count-overlay #akpr-count-error{color:#ffb0b6}
+#akpr-count-overlay .akpr-count-footer{position:sticky;bottom:0;background:#16273a;border-top:1px solid #40576c;display:flex;justify-content:center;gap:10px;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px))}
+#akpr-count-overlay .akpr-count-footer button{min-height:49px}
+#akpr-count-overlay .akpr-count-footer .primary{background:#315e79;color:white;border:1px solid #7496ad}
+#akpr-count-overlay .akpr-summary-line{border:1px solid #3b5268;border-radius:11px;padding:14px;display:grid;gap:7px;background:#1c3045}
+#akpr-count-overlay .akpr-summary-line small{color:#bacddd}

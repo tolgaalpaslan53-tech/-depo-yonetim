@@ -50,3 +50,15 @@ body[data-role="pre_receiving"] #ak-pre-receiving .akpr-btn.akpr-danger{backgrou
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-pill{background:#344a60;color:#f5d9a2}
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-ok{color:#8ce0bf}
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-error{color:#ffabb2}
+
+/* Yalnız Sevkiyat Kayıt Personeli: iki kartlı ana ekran. [hidden] kesinlikle korunur. */
+body[data-role="pre_receiving"] #ak-pre-receiving [hidden]{display:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 24px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:10px;min-height:185px;padding:21px 19px;background:linear-gradient(145deg,#1c3349,#132337);color:#f2f6fb;border:1px solid #466078;border-bottom:4px solid #e6bd55;border-radius:18px;cursor:pointer;font:inherit;box-shadow:0 6px 18px #0002}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card:focus-visible{outline:3px solid #f1c45b;outline-offset:3px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card strong{font-size:19px;line-height:1.25}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card small{color:#b9cbd9;line-height:1.45;font-size:13px;max-width:27ch}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:13px;background:#29465e;color:#f0c963;font-size:30px;font-weight:700}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-arrow{position:absolute;bottom:13px;right:17px;color:#f0c963;font-weight:bold;font-size:31px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-detail-head{margin-bottom:15px}
+@media(max-width:650px){body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card{padding:16px 12px;min-height:196px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card strong{font-size:16px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card small{font-size:12px}}

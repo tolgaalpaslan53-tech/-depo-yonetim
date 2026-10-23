@@ -50,10 +50,10 @@
  }
  async function refresh(){if(!active())return;try{const records=await api('/rest/v1/'+table+'?select=id,plate,company,driver_name,waybill_number,notes,photo_path,status,created_at&order=created_at.desc&limit=100');
     if($('#akpr-list')){rows(records,$('#akpr-list'),false);const todays=records.filter(r=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(r.created_at))===today());$('#akpr-total').textContent=todays.length;$('#akpr-pending').textContent=todays.filter(r=>r.status==='waiting').length}
-    if($('#akpr-records-content'))drawReceiving(records);
+    cache=records;if($('#akpr-records-content'))drawReceiving(records);
    }catch(e){if($('#akpr-list'))$('#akpr-list').textContent='Kayıtlar alınamadı: '+e.message;if($('#akpr-records-content'))$('#akpr-records-content').textContent='Ön kayıtlar alınamadı: '+e.message}
  }
- let source='all', cache=[], lastHost=null;
+ let cache=[], homeOpen=false;
  function drawReceiving(records){
   cache=records;
   const host=$('#akpr-records-content');if(!host)return;
@@ -61,28 +61,40 @@
   const filtered=records.filter(r=>(r.plate+' '+r.company+' '+(r.waybill_number||'')).toLocaleLowerCase('tr-TR').includes(q));
   host.textContent='';rows(filtered,host,true);
   const badge=$('#akpr-record-count');if(badge)badge.textContent=filtered.length+' ön kayıt';
+  const counter=$('#akpr-home-counter');if(counter)counter.textContent=records.filter(r=>r.status==='waiting').length+' bekleyen';
  }
- function applySource(){
-  const root=$('#akd-dashboard');if(!root)return;
-  root.classList.toggle('akpr-show-only-pre',source==='pre');
-  root.classList.toggle('akpr-hide-pre',source==='mal');
-  root.querySelectorAll('[data-akpr-source]').forEach(btn=>{const selected=btn.dataset.akprSource===source;btn.classList.toggle('akpr-selected',selected);btn.setAttribute('aria-pressed',String(selected))});
+ function closePre(){homeOpen=false;const root=$('#akd-dashboard');root?.classList.remove('akpr-home-open');}
+ function openPre(){
+  if(document.body.dataset.role!=='count')return;
+  homeOpen=true;receiving();const root=$('#akd-dashboard');
+  root?.classList.add('akpr-home-open');refresh();
  }
  function receiving(){
   const root=$('#akd-dashboard');if(!root||document.body.dataset.role!=='count')return;
-  const body=root.querySelector('.akd-body');
-  const list=body?.querySelector('.akd-records-list');
-  if(!list){root.classList.remove('akpr-show-only-pre','akpr-hide-pre');lastHost=null;return}
-  if(lastHost===list && $('#akpr-records-panel'))return;
-  lastHost=list;
-  const box=document.createElement('section');box.id='akpr-records-panel';
-  box.innerHTML='<div class="akpr-source-tabs" role="group" aria-label="Kayıt kaynağı"><button type="button" data-akpr-source="all">Tümü</button><button type="button" data-akpr-source="mal">Mal Kabul</button><button type="button" data-akpr-source="pre">Ön Kayıt</button></div><div class="akpr-pre-records"><div class="akpr-pre-heading"><strong>Sevkiyat Ön Kayıtları</strong><span id="akpr-record-count"></span><button type="button" class="akpr-btn light" id="akpr-receiving-refresh">Yenile</button></div><input id="akpr-record-search" type="search" placeholder="Ön kayıtlarda plaka, firma veya irsaliye ara" aria-label="Ön kayıtlarda ara"><div id="akpr-records-content" class="akpr-muted">Kayıtlar yükleniyor…</div></div>';
-  list.before(box);
-  box.querySelectorAll('[data-akpr-source]').forEach(btn=>btn.addEventListener('click',()=>{source=btn.dataset.akprSource;applySource()}));
-  box.querySelector('#akpr-receiving-refresh').addEventListener('click',refresh);
-  box.querySelector('#akpr-record-search').addEventListener('input',()=>drawReceiving(cache));
-  applySource();refresh();
+  const actions=root.querySelector('.akd-actions');
+  // Kart yalnız Mal Kabul ana sayfasında bulunur; çalışan kartlara müdahale edilmez.
+  if(actions&&!actions.querySelector('#akpr-home-card')){
+   const card=document.createElement('button');card.type='button';card.id='akpr-home-card';card.className='akd-action';
+   card.innerHTML='<span class="akd-action-ico" aria-hidden="true">🚛</span><strong>Sevkiyat Ön Kayıt</strong><small>Gelen araçları ve irsaliyeleri incele</small><b aria-hidden="true">›</b>';
+   card.addEventListener('click',openPre);actions.appendChild(card);
+  }
+  const content=root.querySelector('.akd-content');if(!content)return;
+  if(!content.querySelector('#akpr-home-panel')){
+   const panel=document.createElement('section');panel.id='akpr-home-panel';panel.setAttribute('aria-label','Sevkiyat Ön Kayıt');
+   panel.innerHTML='<div class="akpr-page-head"><h1>Sevkiyat Ön Kayıt</h1><button type="button" id="akpr-back-home">← Ana Sayfa</button></div><p class="akpr-page-desc">Sevkiyat Kayıt Personeli tarafından oluşturulan kayıtlar</p><div class="akpr-home-box"><div class="akpr-pre-heading"><strong>Gelen Ön Kayıtlar</strong><span id="akpr-record-count"></span></div><input id="akpr-record-search" type="search" placeholder="Plaka, firma veya irsaliye ara" aria-label="Ön kayıtlarda ara"><div id="akpr-records-content" class="akpr-muted">Kayıtlar yükleniyor…</div></div>';
+   content.appendChild(panel);
+   panel.querySelector('#akpr-back-home').addEventListener('click',closePre);
+   panel.querySelector('#akpr-record-search').addEventListener('input',()=>drawReceiving(cache));
+   if(cache.length)drawReceiving(cache);
+  }
+  root.classList.toggle('akpr-home-open',homeOpen&&!!actions);
  }
+ // Kullanıcı başka Mal Kabul ekranına geçtiğinde yeni panel kapanır.
+ document.addEventListener('click',e=>{
+  if(!homeOpen)return;
+  if(e.target.closest('#akpr-home-card,#akpr-home-panel'))return;
+  if(e.target.closest('[data-akd],.akd-nav'))closePre();
+ },true);
  function mount(){const role=document.body.dataset.role;if(role==='pre_receiving'){
     const app=$('#app');if(!app||app.classList.contains('hidden'))return;
     if(!$('#ak-pre-receiving')){app.insertAdjacentHTML('beforeend',markup());$('#akpr-form').addEventListener('submit',create);$('#akpr-refresh').onclick=refresh;$('#akpr-logout').onclick=()=>$('#logout')?.click();}

@@ -13,19 +13,23 @@ body[data-role="pre_receiving"] .wrap > header,body[data-role="pre_receiving"] #
 #akpr-receiving-panel{border:1px solid #dbe4ef;border-radius:14px;padding:14px;background:white;margin:12px 0}#akpr-receiving-panel h3{margin:0 0 8px}
 @media(max-width:650px){.akpr-grid{grid-template-columns:1fr}.akpr-head{align-items:flex-start}.akpr-head h1{font-size:19px}}
 
-/* Ön kayıtlar sadece mevcut Mal Kabul Kayıtları sayfasında görünür */
-#akpr-receiving-panel{display:none!important}
-body[data-role="count"] #akd-dashboard #akpr-records-panel{color:#dce7f2;border:1px solid #344960;border-radius:16px;background:#152335;padding:13px;margin:12px 0 18px}
-body[data-role="count"] #akpr-records-panel .akpr-source-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}
-body[data-role="count"] #akpr-records-panel .akpr-source-tabs button{background:#21354a;color:#e6edf7;border:1px solid #455b70;border-radius:11px;font:inherit;font-weight:700;padding:11px 15px;cursor:pointer}
-body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected{background:#ab142a;color:#fff;border-color:#de4056}
-body[data-role="count"] #akpr-records-panel .akpr-pre-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
-body[data-role="count"] #akpr-records-panel .akpr-pre-heading strong{font-size:17px;flex:1 1 auto}
-body[data-role="count"] #akpr-records-panel .akpr-muted{color:#b4c3d3}
-body[data-role="count"] #akpr-records-panel #akpr-record-search{width:100%;background:#101c2b;color:#f4f7fc;border:1px solid #496178;border-radius:11px;padding:11px;box-sizing:border-box}
-body[data-role="count"] #akpr-records-panel .akpr-row{border-top-color:#35495f;color:#eef5fc}
-body[data-role="count"] #akpr-records-panel .akpr-pill{color:#604209}
-body[data-role="count"] #akpr-records-panel .akpr-btn.primary{background:#ad1930;color:#fff}
-body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-records-list,body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-record-pager{display:none!important}
-body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel .akpr-pre-records{display:none!important}
-body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel{padding-bottom:0}
+
+/* Mal Kabul ana sayfa: mevcut tasarım diliyle bağımsız ön kayıt kartı ve ekranı */
+body[data-role="count"] #akd-dashboard #akpr-home-card{min-width:0}
+body[data-role="count"] #akd-dashboard #akpr-home-panel{display:none;box-sizing:border-box;padding:clamp(14px,3vw,24px);color:#e8f0f8}
+body[data-role="count"] #akd-dashboard.akpr-home-open .akd-body{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-home-open #akpr-home-panel{display:block}
+body[data-role="count"] #akpr-home-panel .akpr-page-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:4px 0 10px}
+body[data-role="count"] #akpr-home-panel h1{color:#f4f8fb;font-size:clamp(22px,4vw,29px);margin:0;font-weight:750}
+body[data-role="count"] #akpr-home-panel .akpr-page-desc{color:#aebfd2;margin:0 0 18px}
+body[data-role="count"] #akpr-home-panel #akpr-back-home{background:#21364b!important;color:#e4ebf3!important;border:1px solid #476078!important;border-radius:13px;padding:11px 16px;font:inherit;cursor:pointer}
+body[data-role="count"] #akpr-home-panel .akpr-home-box{background:#152436;border:1px solid #3a4e64;border-radius:20px;padding:clamp(14px,3vw,22px);min-width:0}
+body[data-role="count"] #akpr-home-panel .akpr-pre-heading{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:14px}
+body[data-role="count"] #akpr-home-panel .akpr-pre-heading strong{font-size:19px;color:#f2f7fc}
+body[data-role="count"] #akpr-home-panel .akpr-pre-heading span{font-size:13px;color:#acbdce}
+body[data-role="count"] #akpr-home-panel #akpr-record-search{box-sizing:border-box;width:100%;border-radius:13px;border:1px solid #4a6077;background:#203249;color:#f5f8fa;padding:13px 14px;font:inherit}
+body[data-role="count"] #akpr-home-panel .akpr-row{color:#f0f5fa;border-top-color:#3a5068;min-width:0;overflow-wrap:anywhere}
+body[data-role="count"] #akpr-home-panel .akpr-muted{color:#b9c9d8}
+body[data-role="count"] #akpr-home-panel .akpr-pill{background:#34485a;color:#f5d48d}
+body[data-role="count"] #akpr-home-panel .akpr-btn.light{background:#273e55;color:#eaf3fb;border:1px solid #536c82}
+body[data-role="count"] #akpr-home-panel .akpr-btn.primary{background:#314d66;color:#fff;border:1px solid #66859b}

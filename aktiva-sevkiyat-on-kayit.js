@@ -14,14 +14,29 @@
    if(!r.ok)throw Error(v?.message||v?.error||('İstek başarısız: '+r.status));return v;
  }
  const stamp=t=>t?new Date(t).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'}):'—';
+ const elapsedText=(start,end)=>{
+   const a=Date.parse(start||''),b=end?Date.parse(end):Date.now();
+   if(!Number.isFinite(a)||!Number.isFinite(b))return '—';
+   const total=Math.max(0,Math.floor((b-a)/60000));
+   return (Math.floor(total/1440)?Math.floor(total/1440)+' gün ':'')+Math.floor(total%1440/60)+' sa '+(total%60)+' dk';
+ };
+ const normalized=v=>String(v||'').trim().toLocaleUpperCase('tr-TR').replace(/\s+/g,' ');
+ const similarRecord=(records,row,except)=>records.find(r=>{
+   if(r.id===except||r.status==='cancelled')return false;
+   if(normalized(r.plate)!==normalized(row.plate))return false;
+   const invoice=normalized(row.waybill_number),oldInvoice=normalized(r.waybill_number);
+   if(invoice && oldInvoice)return invoice===oldInvoice && normalized(r.company)===normalized(row.company);
+   return normalized(r.company)===normalized(row.company) && (!invoice||!oldInvoice);
+ });
+
  const table='ak_sevkiyat_on_kayit';
  const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
- function markup(){return `<section id="ak-pre-receiving"><div class="akpr-head"><div><h1>📋 AKTİVA · Sevkiyat Ön Kayıt</h1><small>Sevkiyat Kayıt Personeli</small></div><button type="button" class="akpr-btn alt" id="akpr-logout">Çıkış</button></div>
+ function markup(){return `<section id="ak-pre-receiving"><div class="akpr-head"><div><h1>📋 AKTİVA · Sevkiyat Ön Kayıt</h1><small>Sevkiyat Kayıt Personeli</small></div><button type="button" class="akpr-btn" id="akpr-logout">Çıkış</button></div>
  <div class="akpr-grid"><div class="akpr-card"><div class="akpr-muted">Bugünkü Ön Kayıt</div><div class="akpr-stat" id="akpr-total">—</div></div><div class="akpr-card"><div class="akpr-muted">Toplam Bekleyen Ön Kayıt</div><div class="akpr-stat" id="akpr-pending">—</div></div></div>
- <nav class="akpr-home-nav" id="akpr-home-nav" aria-label="Sevkiyat işlemleri"><button type="button" id="akpr-open-new" class="akpr-nav-card alt"><span class="akpr-nav-icon" aria-hidden="true">＋</span><strong>Yeni Sevkiyat Kaydı</strong><small>Gelen aracın ve irsaliyenin ön kaydını oluştur</small><span class="akpr-nav-arrow" aria-hidden="true">›</span></button><button type="button" id="akpr-open-list" class="akpr-nav-card alt"><span class="akpr-nav-icon" aria-hidden="true">▤</span><strong>Sevkiyat Kayıtlarım</strong><small>Oluşturduğun kayıtları gör, düzenle veya iptal et</small><span class="akpr-nav-arrow" aria-hidden="true">›</span></button></nav>
- <div class="akpr-card akpr-detail-view" id="akpr-new-view" hidden><div class="akpr-detail-head"><button type="button" class="akpr-btn light alt akpr-back" data-akpr-back>← Ana Sayfa</button></div><h2 id="akpr-form-title" style="margin:0 0 8px;font-size:20px">Yeni Sevkiyat Kaydı</h2><form id="akpr-form"><div class="akpr-grid"><label class="akpr-label">Araç plakası *<input name="plate" maxlength="24" autocomplete="off" required placeholder="48 ABC 123"></label><label class="akpr-label">Gönderen firma *<input name="company" maxlength="120" required placeholder="Firma adı"></label><label class="akpr-label">Şoför adı<input name="driver" maxlength="100" placeholder="Ad soyad"></label><label class="akpr-label">Şoför telefonu<input name="driver_phone" type="tel" inputmode="tel" maxlength="20" placeholder="05XX XXX XX XX"></label><label class="akpr-label">İrsaliye numarası<input name="waybill" maxlength="100" placeholder="İrsaliye no"></label></div>
+ <nav class="akpr-home-nav" id="akpr-home-nav" aria-label="Sevkiyat işlemleri"><button type="button" id="akpr-open-new" class="akpr-nav-card"><span class="akpr-nav-icon" aria-hidden="true">＋</span><strong>Yeni Sevkiyat Kaydı</strong><small>Gelen aracın ve irsaliyenin ön kaydını oluştur</small><span class="akpr-nav-arrow" aria-hidden="true">›</span></button><button type="button" id="akpr-open-list" class="akpr-nav-card"><span class="akpr-nav-icon" aria-hidden="true">▤</span><strong>Sevkiyat Kayıtlarım</strong><small>Oluşturduğun kayıtları gör, düzenle veya iptal et</small><span class="akpr-nav-arrow" aria-hidden="true">›</span></button></nav>
+ <div class="akpr-card akpr-detail-view" id="akpr-new-view" hidden><div class="akpr-detail-head"><button type="button" class="akpr-btn light akpr-back" data-akpr-back>← Ana Sayfa</button></div><h2 id="akpr-form-title" style="margin:0 0 8px;font-size:20px">Yeni Sevkiyat Kaydı</h2><form id="akpr-form"><div class="akpr-grid"><label class="akpr-label">Araç plakası *<input name="plate" maxlength="24" autocomplete="off" required placeholder="48 ABC 123"></label><label class="akpr-label">Gönderen firma *<input name="company" maxlength="120" required placeholder="Firma adı"></label><label class="akpr-label">Şoför adı<input name="driver" maxlength="100" placeholder="Ad soyad"></label><label class="akpr-label">Şoför telefonu<input name="driver_phone" type="tel" inputmode="tel" maxlength="20" placeholder="05XX XXX XX XX"></label><label class="akpr-label">İrsaliye numarası<input name="waybill" maxlength="100" placeholder="İrsaliye no"></label></div>
  <div class="akpr-products"><h3>Sevkiyattaki Ürünler</h3><div id="akpr-products-list"></div><button type="button" id="akpr-add-product" class="akpr-btn light">＋ Ürün Ekle</button></div><label class="akpr-label">İrsaliye fotoğrafı (en fazla 5 MB)<input name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment"></label><label class="akpr-label">Not<textarea name="note" rows="2" maxlength="500" placeholder="Varsa açıklama"></textarea></label><div class="akpr-actions"><button class="akpr-btn primary" id="akpr-submit" type="submit">Kaydet ve Mal Kabule Gönder</button><button class="akpr-btn light" id="akpr-reset" type="reset">Temizle</button></div><div id="akpr-feedback" class="akpr-msg" role="status"></div></form></div>
- <div class="akpr-card akpr-detail-view" id="akpr-list-view" hidden><div class="akpr-detail-head"><button type="button" class="akpr-btn light alt akpr-back" data-akpr-back>← Ana Sayfa</button></div><div class="akpr-actions" style="justify-content:space-between"><h2 style="margin:0;font-size:20px">Oluşturduğum Ön Kayıtlar</h2><button type="button" class="akpr-btn light" id="akpr-refresh">Yenile</button></div><div id="akpr-list" class="akpr-muted">Kayıtlar yükleniyor…</div></div></section>`}
+ <div class="akpr-card akpr-detail-view" id="akpr-list-view" hidden><div class="akpr-detail-head"><button type="button" class="akpr-btn light akpr-back" data-akpr-back>← Ana Sayfa</button></div><div class="akpr-actions" style="justify-content:space-between"><h2 style="margin:0;font-size:20px">Oluşturduğum Ön Kayıtlar</h2><button type="button" class="akpr-btn light" id="akpr-refresh">Yenile</button></div><div id="akpr-list" class="akpr-muted">Kayıtlar yükleniyor…</div></div></section>`}
  async function loadCatalog(){
   try{const rows=await api('/rest/v1/aktiva_excel_catalog?select=code,name&order=code.asc&limit=10000');catalogProducts=Array.isArray(rows)?rows.filter(x=>x.name):[]}
   catch(e){console.warn('Ön kayıt kataloğu okunamadı:',e);catalogProducts=[]}
@@ -92,6 +107,16 @@
    if(incomplete.length)throw Error('Eksik doldurulmuş ürün var. Tamamlayın veya kaldırın.');
    if(!complete.length)throw Error('Mal Kabule göndermek için en az bir ürün ekleyin.');
    row.products=complete.map(x=>({...x,name:String(x.name).trim(),code:String(x.code||'').trim(),quantity:Number(x.quantity)}));
+   // Ön kayıt kaydetmeden hemen önce sunucudaki güncel kayıtları kontrol et.
+   // Uyarı gösterilir; gerçekten ayrı sevkiyatsa kullanıcı devam edebilir.
+   const registered=await fetchRecords();
+   const duplicate=similarRecord(registered,row,editId);
+   if(duplicate){
+     const details=`${duplicate.plate} · ${duplicate.company} · İrsaliye: ${duplicate.waybill_number||'Girilmemiş'} · Kayıt: ${stamp(duplicate.created_at)}`;
+     if(!confirm('Benzer bir sevkiyat kaydı bulundu!\n\n'+details+'\n\nAynı kaydı ikinci kez oluşturmadığından emin misin?\n\nYine de kaydetmek için Tamam seç.')){
+       say('#akpr-feedback','Benzer kayıt nedeniyle işlem durduruldu. Önce kaydı kontrol edebilirsin.',true);return;
+     }
+   }
    const file=fd.get('photo');
    if(editId){
     const original=cache.find(r=>r.id===editId);
@@ -112,14 +137,14 @@
  }
  async function imageLink(path){if(!path)return null;const p=path.split('/').map(encodeURIComponent).join('/');const d=await api('/storage/v1/object/sign/ak-sevkiyat-irsaliyeleri/'+p,{method:'POST',json:{expiresIn:300}});return cfg.url+d.signedURL}
  function rows(records,host,receiving){host.innerHTML=records.length?'':'<p class="akpr-muted">Bu listede kayıt bulunmuyor.</p>';
-  for(const r of records){const x=document.createElement('div');x.className='akpr-row';x.innerHTML=`<div><strong>${E(r.plate)}</strong> · ${E(r.company)}<div class="akpr-muted">Geliş: ${stamp(r.created_at)} · ${E(r.driver_name||'Şoför belirtilmedi')} · İrsaliye: ${E(r.waybill_number||'—')}</div><div class="akpr-muted">${E(r.notes||'')}</div></div><div><span class="akpr-pill">${r.status==='waiting'?'Mal Kabul Bekliyor':r.status==='at_dock'?'Peronda':r.status==='counting'?'Sayım Devam Ediyor':r.status==='completed'?'Tamamlandı':'İptal'}</span></div>`;
+  for(const r of records){const x=document.createElement('div');x.className='akpr-row';x.innerHTML=`<div><strong>${E(r.plate)}</strong> · ${E(r.company)}<div class="akpr-muted">Geliş: ${stamp(r.created_at)} · ${E(r.driver_name||'Şoför belirtilmedi')} · İrsaliye: ${E(r.waybill_number||'—')}</div><div class="akpr-muted">${E(r.notes||'')}</div><div class="akpr-wait-time" data-akpr-start="${E(r.created_at)}" data-akpr-end="${E(r.docked_at||'')}">${r.docked_at?'Perona kadar bekleme: ':'Bekleme süresi: '}<strong>${elapsedText(r.created_at,r.docked_at)}</strong></div></div><div><span class="akpr-pill">${r.status==='waiting'?'Mal Kabul Bekliyor':r.status==='at_dock'?'Peronda':r.status==='counting'?'Sayım Devam Ediyor':r.status==='completed'?'Tamamlandı':'İptal'}</span></div>`;
    const b=document.createElement('div');b.className='akpr-actions';
    if(r.photo_path){const v=document.createElement('button');v.type='button';v.className='akpr-btn light';v.textContent='📷 İrsaliyeyi Gör';v.onclick=async()=>{v.disabled=true;try{const url=await imageLink(r.photo_path);window.open(url,'_blank','noopener,noreferrer')}catch(e){alert(e.message)}finally{v.disabled=false}};b.append(v)}
    if(!receiving&&r.created_by===session?.user?.id&&r.status==='waiting'){
     const edit=document.createElement('button');edit.type='button';edit.className='akpr-btn light';edit.textContent='✏️ Düzenle';edit.onclick=()=>startEdit(r);b.append(edit);
     const cancel=document.createElement('button');cancel.type='button';cancel.className='akpr-btn akpr-danger';cancel.textContent='İptal Et';cancel.onclick=()=>cancelRecord(r);b.append(cancel);
    }
-   if(receiving&&['waiting','at_dock'].includes(r.status)){const open=document.createElement('button');open.type='button';open.className='akpr-btn primary';open.textContent='Sayımı Aç';open.onclick=()=>openCount(r);b.append(open);const btn=document.createElement('button');btn.type='button';btn.className='akpr-btn primary';btn.textContent='Perona Alındı';btn.onclick=async()=>{btn.disabled=true;try{await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},json:{status:'at_dock'}});await refresh()}catch(e){alert(e.message);btn.disabled=false}};b.append(btn)}
+   if(receiving&&['waiting','at_dock'].includes(r.status)){const open=document.createElement('button');open.type='button';open.className='akpr-btn primary';open.textContent='Sayımı Aç';open.onclick=()=>openCount(r);b.append(open);const btn=document.createElement('button');btn.type='button';btn.className='akpr-btn primary';btn.textContent='Perona Alındı';btn.onclick=async()=>{btn.disabled=true;try{await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},json:r.docked_at?{status:'at_dock'}:{status:'at_dock',docked_at:new Date().toISOString()}});await refresh()}catch(e){alert(e.message);btn.disabled=false}};b.append(btn)}
    if(receiving&&r.status==='counting'){const resume=document.createElement('button');resume.type='button';resume.className='akpr-btn primary';resume.textContent='Sayıma Devam Et';resume.onclick=()=>openCount(r);b.append(resume)}
    x.append(b);host.append(x)
   }
@@ -130,7 +155,7 @@
  async function fetchRecords(){
   const all=[],pageSize=500;
   for(let offset=0;offset<10000;offset+=pageSize){
-   const page=await api('/rest/v1/'+table+'?select=id,created_by,plate,company,driver_name,driver_phone,waybill_number,notes,photo_path,status,created_at,products,count_results,counted_at&order=created_at.desc&limit='+pageSize+'&offset='+offset);
+   const page=await api('/rest/v1/'+table+'?select=id,created_by,plate,company,driver_name,driver_phone,waybill_number,notes,photo_path,status,created_at,docked_at,products,count_results,counted_at&order=created_at.desc&limit='+pageSize+'&offset='+offset);
    if(!Array.isArray(page))throw Error('Ön kayıt listesi okunamadı.');
    all.push(...page);if(page.length<pageSize)return all;
   }
@@ -223,5 +248,5 @@
  document.addEventListener('aktiva:session-changed',()=>{lastRole='';setTimeout(mount,20)});
  new MutationObserver(()=>{if(['count','pre_receiving'].includes(document.body.dataset.role))mount()}).observe(document.body,{attributes:true,attributeFilter:['data-role']});
  let pending=false;function observeRecords(){const root=$('#akd-dashboard');if(!root)return false;new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;if(document.body.dataset.role==='count')receiving()})}).observe(root,{childList:true,subtree:true});return true}
- document.addEventListener('DOMContentLoaded',()=>{mount();if(!observeRecords()){const tryObserve=setInterval(()=>{if(observeRecords())clearInterval(tryObserve)},600)}timer=setInterval(()=>{if(!document.hidden&&active()&&['count','pre_receiving'].includes(document.body.dataset.role)){mount();refresh()}},15000)});
+ document.addEventListener('DOMContentLoaded',()=>{mount();if(!observeRecords()){const tryObserve=setInterval(()=>{if(observeRecords())clearInterval(tryObserve)},600)}timer=setInterval(()=>{if(!document.hidden&&active()&&['count','pre_receiving'].includes(document.body.dataset.role)){mount();refresh()}},15000);setInterval(()=>{if(document.hidden)return;document.querySelectorAll('.akpr-wait-time[data-akpr-start]').forEach(el=>{const end=el.dataset.akprEnd;const text=el.querySelector('strong');if(text)text.textContent=elapsedText(el.dataset.akprStart,end)})},30000)});
 })();

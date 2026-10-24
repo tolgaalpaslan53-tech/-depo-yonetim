@@ -236,3 +236,14 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-danger {
 html body[data-role="pre_receiving"] #app #ak-pre-receiving button:hover:not(:disabled) {
   filter:brightness(1.12);
 }
+
+/* AKTİVA: Ön kayıtta araç bekleme süresi – mevcut lacivert görünüm korunur. */
+#ak-pre-receiving .akpr-wait-time,
+body[data-role="count"] #akpr-records-panel .akpr-wait-time{
+ display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;
+ margin-top:8px;padding:7px 10px;border-radius:9px;
+ background:#233b50;color:#d7e7f3;border:1px solid #48657c;
+ font-size:12px;line-height:1.45;
+}
+#ak-pre-receiving .akpr-wait-time strong,
+body[data-role="count"] #akpr-records-panel .akpr-wait-time strong{color:#f2d17c;font-weight:800}

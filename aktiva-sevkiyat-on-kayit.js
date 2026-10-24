@@ -34,6 +34,11 @@
  const localInput=t=>{if(!t)return '';const d=new Date(t);if(!Number.isFinite(d.getTime()))return '';return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(d).replace(' ','T')};
  const parseLocal=v=>v?new Date(v).toISOString():null;
  const recordedArrival=r=>r.arrival_at||r.created_at;
+ // Türkiye sabit UTC+03:00: manuel girilen saat cihazın saat diliminden etkilenmez.
+ const manualTime=raw=>{if(!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(raw||''))return null;const d=new Date(raw+':00+03:00');return Number.isFinite(d.getTime())&&localInput(d.toISOString())===raw?d.toISOString():null};
+ const requestTime=(caption,defaultTime)=>{const entered=prompt(caption+'\nTürkiye saati (YYYY-AA-GG SS:DD):',localInput(defaultTime||new Date().toISOString()).replace('T',' '));if(entered===null)return null;const timestamp=manualTime(entered.trim().replace(' ','T'));if(!timestamp){alert('Geçerli tarih ve saat girin. Örnek: 2026-10-24 15:30');return null}return timestamp};
+ const canEditRecord=r=>r.created_by===session?.user?.id&&document.body.dataset.role==='pre_receiving';
+
  const fmtMinutes=n=>Number.isFinite(n)?Math.round(n)+' dk':'—';
  const duration=(a,b)=>a&&b?Math.max(0,(Date.parse(b)-Date.parse(a))/60000):null;
  const statusText=r=>r.status==='cancelled'?'İptal edildi':r.departed_at?'Çıkış yaptı':r.status==='completed'?'Tamamlandı':r.status==='counting'?'Sayım devam ediyor':r.status==='at_dock'?'Perona Gönderildi':'Bekliyor';
@@ -151,7 +156,7 @@
    }
    if(receiving&&['waiting','at_dock'].includes(r.status)){const open=document.createElement('button');open.type='button';open.className='akpr-btn primary';open.textContent='Sayımı Aç';open.onclick=()=>openCount(r);if(Array.isArray(r.products)&&r.products.length)b.append(open);}
    if(receiving&&r.status==='counting'){const resume=document.createElement('button');resume.type='button';resume.className='akpr-btn primary';resume.textContent='Sayıma Devam Et';resume.onclick=()=>openCount(r);b.append(resume)}
-   if(!receiving&&r.created_by===session?.user?.id&&!r.docked_at&&!r.departed_at&&r.status==='waiting'){
+   if(!receiving&&canEditRecord(r)&&!r.docked_at&&!r.departed_at&&r.status==='waiting'){
      const dock=document.createElement('button');dock.type='button';dock.className='akpr-btn primary';dock.textContent='🚛 Perona Gönderildi';
      dock.onclick=async()=>{
        if(!confirm((r.plate||recordNo(r))+' aracı perona gönderildi olarak kaydedilsin mi? Bu işlem bekleme süresini durdurur.'))return;
@@ -166,11 +171,25 @@
        }catch(e){alert('Perona gönderme işlemi başarısız: '+e.message)}finally{dock.disabled=false}
      };b.append(dock);
    }
+   if(!receiving&&canEditRecord(r)&&!r.docked_at&&r.status!=='cancelled'){
+     const fixDock=document.createElement('button');fixDock.type='button';fixDock.className='akpr-btn light';fixDock.textContent='🕒 Eksik Peron Saatini Gir';
+     fixDock.onclick=async()=>{const value=requestTime('Perona gönderilme zamanını girin',r.departed_at||new Date().toISOString());if(!value)return;
+       if(Date.parse(value)<Date.parse(recordedArrival(r))||r.departed_at&&Date.parse(value)>Date.parse(r.departed_at)){alert('Peron saati gelişten önce veya çıkıştan sonra olamaz.');return}
+       if(!confirm('Perona gönderilme saati '+stamp(value)+' olarak kaydedilsin mi?'))return;
+       fixDock.disabled=true;try{const data={docked_at:value};if(r.status==='waiting')data.status='at_dock';const result=await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id)+'&created_by=eq.'+encodeURIComponent(session.user.id)+'&docked_at=is.null',{method:'PATCH',headers:{Prefer:'return=representation'},json:data});if(!Array.isArray(result)||!result.length)throw Error('Kayıt güncellenemedi veya saat başka bir cihazdan girildi.');await refresh()}catch(e){alert('Peron saati kaydedilemedi: '+e.message)}finally{fixDock.disabled=false}
+     };b.append(fixDock);
+   }
    if(!receiving&&r.created_by===session?.user?.id&&!r.departed_at&&r.status!=='cancelled'){
      const out=document.createElement('button');out.type='button';out.className='akpr-btn light';out.textContent='🚚 Araç Çıkışını Kaydet';out.onclick=async()=>{
        if(!confirm((r.plate||recordNo(r))+' aracı çıkış yaptı mı?'))return;
        out.disabled=true;try{const value=new Date().toISOString();await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id)+'&created_by=eq.'+encodeURIComponent(session.user.id),{method:'PATCH',headers:{Prefer:'return=representation'},json:{departed_at:value}}).then(x=>{if(!Array.isArray(x)||!x.length)throw Error('Çıkış saati kaydedilemedi. Yetki politikalarını kontrol edin.')});await refresh()}catch(e){alert('Çıkış kaydedilemedi: '+e.message)}finally{out.disabled=false}
      };b.append(out);
+     const manualExit=document.createElement('button');manualExit.type='button';manualExit.className='akpr-btn light';manualExit.textContent='🕒 Geçmiş Çıkış Saatini Gir';manualExit.onclick=async()=>{
+       const value=requestTime('Gerçek araç çıkış zamanını girin',new Date().toISOString());if(!value)return;
+       if(Date.parse(value)<Date.parse(recordedArrival(r))||r.docked_at&&Date.parse(value)<Date.parse(r.docked_at)){alert('Çıkış saati gelişten veya perona gönderilmeden önce olamaz.');return}
+       if(!confirm('Araç çıkışı '+stamp(value)+' olarak kaydedilsin mi?'))return;
+       manualExit.disabled=true;try{const result=await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id)+'&created_by=eq.'+encodeURIComponent(session.user.id)+'&departed_at=is.null',{method:'PATCH',headers:{Prefer:'return=representation'},json:{departed_at:value}});if(!Array.isArray(result)||!result.length)throw Error('Kayıt güncellenemedi veya çıkış saati zaten girilmiş.');await refresh()}catch(e){alert('Çıkış kaydedilemedi: '+e.message)}finally{manualExit.disabled=false}
+     };b.append(manualExit);
    }
    x.append(b);host.append(x)
   }
@@ -190,7 +209,14 @@
  async function refresh(){if(!active())return;try{
    const records=await fetchRecords();cache=records;
    const mine=records.filter(r=>r.created_by===session?.user?.id);
-   if($('#akpr-list'))rows(mine,$('#akpr-list'),false);
+   if($('#akpr-list')){
+     const live=r=>!r.docked_at&&!r.departed_at&&r.status==='waiting';
+     const ordered=[...mine].sort((a,b)=>Number(live(b))-Number(live(a))||(live(a)?Date.parse(recordedArrival(a))-Date.parse(recordedArrival(b)):Date.parse(b.created_at)-Date.parse(a.created_at)));
+     const old=ordered.filter(r=>live(r)&&istanbulDate(recordedArrival(r))<today()).length;
+     const current=ordered.filter(r=>live(r)&&istanbulDate(recordedArrival(r))===today()).length;
+     const host=$('#akpr-list');host.innerHTML='<div class="akpr-pending-summary"><div><small>Önceki Günlerden Bekleyen</small><strong>'+old+' araç</strong></div><div><small>Bugün Gelen ve Bekleyen</small><strong>'+current+' araç</strong></div></div>';
+     const list=document.createElement('div');host.append(list);rows(ordered,list,false);
+   }
    const total=$('#akpr-total'),pending=$('#akpr-pending');
    if(total)total.textContent=mine.filter(r=>istanbulDate(r.created_at)===today()).length;
    if(pending)pending.textContent=mine.filter(r=>r.status==='waiting').length;
@@ -254,6 +280,33 @@
    sheet('Araç Giriş Çıkış',['Kayıt no','Plaka','Firma','Durum','Gerçek geliş','Kayıt zamanı','Perona gönderilme','Araç çıkışı','Peron bekleme','Tesiste kalış'],[20,15,23,17,20,20,20,20,20,20],vehicleRows);
    const detailRows=records.map(r=>[recordNo(r),r.plate||'—',r.company||'—',r.driver_name||'—',r.driver_phone||'—',r.waybill_number||'—',statusText(r),stamp(r.created_at),stamp(recordedArrival(r)),stamp(r.docked_at),stamp(r.departed_at),r.cancellation_reason||'—',r.notes||'—']);
    sheet('İşlem Detayları',['Kayıt no','Plaka','Firma','Şoför','Telefon','İrsaliye','Durum','Kayıt zamanı','Gerçek geliş','Perona gönderilme','Çıkış','İptal nedeni','Açıklama'],[20,14,22,18,17,20,16,19,19,19,19,22,23],detailRows);
+   // Ayrı bir saatlik yoğunluk tablosu ve A4 uyumlu görsel grafik.
+   const hourRows=[];
+   const hourBucket=new Array(12).fill(0).map((_,i)=>({start:i*2,entries:0,exits:0}));
+   for(const r of records){
+     for(const [field,key] of [[recordedArrival(r),'entries'],[r.departed_at,'exits']]){
+       if(!field)continue;const dt=new Date(field);if(!Number.isFinite(dt.getTime()))continue;
+       const part=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Istanbul',hour:'2-digit',hourCycle:'h23'}).format(dt);
+       const ix=Math.floor(Number(part)/2);if(hourBucket[ix])hourBucket[ix][key]++;
+     }
+   }
+   const hh=i=>String(i).padStart(2,'0')+':00';
+   for(const b of hourBucket)hourRows.push([hh(b.start)+' – '+hh(b.start+2),b.entries,b.exits]);
+   const analysis=sheet('Operasyon Analizi',['SAAT ARALIĞI','ARAÇ GİRİŞİ','ARAÇ ÇIKIŞI','GİRİŞ YOĞUNLUĞU','ÇIKIŞ YOĞUNLUĞU'],[22,19,19,31,31],hourRows,{portrait:false});
+   const maxCount=Math.max(1,...hourBucket.flatMap(b=>[b.entries,b.exits]));
+   for(let i=0;i<hourBucket.length;i++){
+     const row=analysis.getRow(i+4),b=hourBucket[i];
+     for(const [col,val] of [[4,b.entries],[5,b.exits]]){
+       const cell=row.getCell(col);cell.value=val?('▮'.repeat(Math.max(1,Math.round(val/maxCount*15)))+'  '+val):'—';
+       cell.font={name:'Aptos',size:10,bold:true,color:{argb:col===4?'FF217195':'FF9D6930'}};
+       cell.alignment={vertical:'middle',horizontal:'left',indent:1};
+     }
+   }
+   analysis.addRow(['TOPLAM',hourBucket.reduce((n,b)=>n+b.entries,0),hourBucket.reduce((n,b)=>n+b.exits,0),'','']);
+   analysis.getRow(analysis.rowCount).eachCell(c=>{c.font={name:'Aptos',size:10,bold:true,color:{argb:white}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:navy2}};c.alignment={vertical:'middle'}});
+   analysis.autoFilter=undefined;
+   analysis.printArea='A1:E'+analysis.rowCount;
+   analysis.pageSetup.fitToHeight=1;
    const buffer=await wb.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='AKTIVA_Danisma_A4_'+start+'_'+end+'.xlsx';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
    info.textContent=records.length+' kayıt, A4 yazdırma ayarlı Excel raporuna aktarıldı.';
   }catch(e){info.textContent='Excel oluşturulamadı: '+e.message}finally{btn.disabled=false}

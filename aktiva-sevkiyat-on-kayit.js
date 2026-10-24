@@ -225,11 +225,10 @@
   try{
    const records=(await fetchRecords()).filter(r=>{const d=istanbulDate(recordedArrival(r));return d>=start&&d<=end}).filter(r=>mode==='all'||(mode==='waiting'?r.status==='waiting':mode==='cancelled'?r.status==='cancelled':r.status==='completed'||!!r.departed_at));
    const ExcelJS=await ensureExcelJS(),wb=new ExcelJS.Workbook();wb.creator='AKTİVA · Danışma';wb.created=new Date();wb.modified=new Date();
-   const navy='173047',navy2='254760',gold='E0B85B',light='EAF0F5',muted='60748A',white='FFFFFF';
+   const navy='FF173047',navy2='FF254760',gold='FFE0B85B',light='FFEAF0F5',muted='FF60748A',white='FFFFFFFF';
    const period=start.split('-').reverse().join('.')+' – '+end.split('-').reverse().join('.');
-   const filterLabel=({all:'Tüm araçlar',waiting:'Bekleyenler',completed:'Tamamlanan / çıkış yapanlar',cancelled:'İptal edilenler'})[mode]||'Tüm araçlar';
    function sheet(name,headers,widths,rows,{portrait=false}={}){
-    const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:5}]});
+    const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:3}]});
     ws.columns=widths.map(w=>({width:w}));
     ws.pageSetup={paperSize:9,orientation:portrait?'portrait':'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,showGridLines:false,horizontalCentered:true};
     ws.pageMargins={left:.22,right:.22,top:.48,bottom:.48,header:.22,footer:.22};
@@ -237,24 +236,22 @@
     ws.headerFooter.oddFooter='&LGiriş – peron – çıkış kayıtları&RSayfa &P / &N';
     ws.properties.pageSetUpPr={fitToPage:true};
     ws.mergeCells(1,1,1,headers.length);const title=ws.getCell(1,1);title.value='AKTİVA  |  DANIŞMA ARAÇ GİRİŞ – ÇIKIŞ RAPORU';title.font={name:'Aptos Display',size:15,bold:true,color:{argb:gold}};title.fill={type:'pattern',pattern:'solid',fgColor:{argb:navy}};title.alignment={vertical:'middle',horizontal:'left',indent:1};ws.getRow(1).height=33;
-    ws.mergeCells(2,1,2,headers.length);const subtitle=ws.getCell(2,1);subtitle.value='Rapor dönemi: '+period+'    |    Kapsam: '+filterLabel+'    |    Toplam kayıt: '+records.length;subtitle.font={name:'Aptos',size:10,bold:true,color:{argb:navy2}};subtitle.fill={type:'pattern',pattern:'solid',fgColor:{argb:light}};subtitle.alignment={indent:1,vertical:'middle'};ws.getRow(2).height=24;
-    ws.mergeCells(3,1,3,headers.length);ws.getCell(3,1).value='Tarih ve saatler Türkiye saatine göredir. Boş alanlar kayıt girilmediğini gösterir.';ws.getCell(3,1).font={size:9,italic:true,color:{argb:muted}};ws.getRow(3).height=20;
-    ws.getRow(4).height=8;
-    const head=ws.getRow(5);head.values=headers;head.height=32;
+    ws.mergeCells(2,1,2,headers.length);const subtitle=ws.getCell(2,1);subtitle.value=period;subtitle.font={name:'Aptos',size:11,bold:true,color:{argb:navy2}};subtitle.fill={type:'pattern',pattern:'solid',fgColor:{argb:light}};subtitle.alignment={indent:1,vertical:'middle'};ws.getRow(2).height=25;
+    const head=ws.getRow(3);head.values=headers;head.height=33;
     head.eachCell(c=>{c.font={name:'Aptos',size:9,bold:true,color:{argb:white}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:navy2}};c.alignment={vertical:'middle',horizontal:'center',wrapText:true};c.border={bottom:{style:'medium',color:{argb:gold}}}});
-    rows.forEach((values,i)=>{const r=ws.addRow(values);r.height=26;r.eachCell({includeEmpty:true},(c)=>{c.font={name:'Aptos',size:9,color:{argb:navy}};c.alignment={vertical:'middle',wrapText:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:i%2?'F0F5F9':'FFFFFF'}};c.border={bottom:{style:'hair',color:{argb:'D8E2EB'}}};});});
-    ws.autoFilter={from:{row:5,column:1},to:{row:Math.max(5,ws.rowCount),column:headers.length}};
-    ws.pageSetup.printTitlesRow='1:5';ws.printArea='A1:'+ws.getColumn(headers.length).letter+Math.max(6,ws.rowCount);
+    rows.forEach((values,i)=>{const r=ws.addRow(values);r.height=34;r.eachCell({includeEmpty:true},(c)=>{c.font={name:'Aptos',size:9,color:{argb:navy}};c.alignment={vertical:'middle',wrapText:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:i%2?'FFF0F5F9':'FFFFFFFF'}};c.border={bottom:{style:'hair',color:{argb:'FFD8E2EB'}}};});});
+    ws.autoFilter={from:{row:3,column:1},to:{row:Math.max(3,ws.rowCount),column:headers.length}};
+    ws.pageSetup.printTitlesRow='1:3';ws.printArea='A1:'+ws.getColumn(headers.length).letter+Math.max(4,ws.rowCount);
     return ws;
    }
    const statuses={};for(const r of records){const s=statusText(r);statuses[s]=(statuses[s]||0)+1}
    const waits=records.map(r=>duration(recordedArrival(r),r.docked_at)).filter(x=>x!==null);
    const avg=waits.length?Math.round(waits.reduce((a,b)=>a+b,0)/waits.length):null;
-   const overview=[['Toplam araç kaydı',records.length],['Bekleyen',statuses['Bekliyor']||0],['Perona gönderilen',records.filter(r=>!!r.docked_at).length],['Tamamlanan',records.filter(r=>r.status==='completed').length],['Çıkış yapılan',records.filter(r=>!!r.departed_at).length],['İptal edilen',records.filter(r=>r.status==='cancelled').length],['Ortalama peron beklemesi',avg===null?'—':Math.floor(avg/60)+' sa '+avg%60+' dk']];
+   const formatMinutes=v=>{if(v===null||!Number.isFinite(v))return '—';const total=Math.max(0,Math.round(v*60)),h=Math.floor(total/3600),m=Math.floor(total%3600/60),sec=total%60;return (h?h+' sa ':'')+(m||h?m+' dk ':'')+sec+' sn';};
+   const overview=[['Toplam araç kaydı',records.length],['Bekleyen',statuses['Bekliyor']||0],['Perona gönderilen',records.filter(r=>!!r.docked_at).length],['Tamamlanan',records.filter(r=>r.status==='completed').length],['Çıkış yapılan',records.filter(r=>!!r.departed_at).length],['İptal edilen',records.filter(r=>r.status==='cancelled').length],['Ortalama peron beklemesi',formatMinutes(avg)]];
    const os=sheet('Özet',['GÖSTERGE','DEĞER'],[34,30],overview,{portrait:true});os.getColumn(2).alignment={horizontal:'center',vertical:'middle'};os.getColumn(2).font={bold:true};os.pageSetup.fitToHeight=1;
-   const formatMinutes=v=>v===null?'—':Math.floor(v/60)+' sa '+v%60+' dk';
    const vehicleRows=records.map(r=>[recordNo(r),r.plate||'—',r.company||'—',statusText(r),stamp(recordedArrival(r)),stamp(r.created_at),stamp(r.docked_at),stamp(r.departed_at),formatMinutes(duration(recordedArrival(r),r.docked_at)),formatMinutes(duration(recordedArrival(r),r.departed_at))]);
-   sheet('Araç Giriş Çıkış',['Kayıt no','Plaka','Firma','Durum','Gerçek geliş','Kayıt zamanı','Perona gönderilme','Araç çıkışı','Peron bekleme','Tesiste kalış'],[20,15,23,17,20,20,20,20,15,15],vehicleRows);
+   sheet('Araç Giriş Çıkış',['Kayıt no','Plaka','Firma','Durum','Gerçek geliş','Kayıt zamanı','Perona gönderilme','Araç çıkışı','Peron bekleme','Tesiste kalış'],[20,15,23,17,20,20,20,20,20,20],vehicleRows);
    const detailRows=records.map(r=>[recordNo(r),r.plate||'—',r.company||'—',r.driver_name||'—',r.driver_phone||'—',r.waybill_number||'—',statusText(r),stamp(r.created_at),stamp(recordedArrival(r)),stamp(r.docked_at),stamp(r.departed_at),r.cancellation_reason||'—',r.notes||'—']);
    sheet('İşlem Detayları',['Kayıt no','Plaka','Firma','Şoför','Telefon','İrsaliye','Durum','Kayıt zamanı','Gerçek geliş','Perona gönderilme','Çıkış','İptal nedeni','Açıklama'],[20,14,22,18,17,20,16,19,19,19,19,22,23],detailRows);
    const buffer=await wb.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='AKTIVA_Danisma_A4_'+start+'_'+end+'.xlsx';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);

@@ -5,14 +5,46 @@
  const allowed=()=>typeof profile!=='undefined' && ['pre_receiving','count','admin'].includes(profile?.role);
  const active=()=>typeof session!=='undefined'&&!!session?.access_token&&allowed();
  const base=()=>typeof cfg!=='undefined'?cfg:null;
- async function api(path,opt={}){
-   if(!active()||!base()?.url||!base()?.key)throw Error('Yetkili oturum bulunamadı.');
-   const h={'apikey':cfg.key,'Authorization':'Bearer '+session.access_token,...(opt.headers||{})};
-   if(opt.json!==undefined)h['Content-Type']='application/json';
-   const r=await fetch(cfg.url+path,{method:opt.method||'GET',headers:h,body:opt.json===undefined?opt.body:JSON.stringify(opt.json)});
-   const t=await r.text();let v;try{v=JSON.parse(t)}catch{v=t}
-   if(!r.ok)throw Error(v?.message||v?.error||('İstek başarısız: '+r.status));return v;
+ // Danışma talepleri ana uygulamanın oturum yenilemesini kullanır.
+ // Aynı anda birden fazla isteğin refresh token yarışına girmesi önlenir.
+ let danismaRefreshPromise=null;
+ const expiredAuth=e=>/jwt expired|invalid jwt|token.*expired|expired.*token/i.test(String(e||''));
+ async function ensureDanismaSession(force=false){
+   if(!session?.refresh_token)throw Error('Oturum sona erdi. Bilgileriniz korunuyor; tekrar giriş yapın.');
+   const expires=Number(session.expires_at)||0;
+   if(!force&&expires&&expires>Date.now()/1000+90)return;
+   if(!force&&!expires)return; // Eski oturumlar 401 üzerine yenilenir.
+   if(!danismaRefreshPromise){
+     danismaRefreshPromise=(async()=>{
+       if(typeof refreshToken!=='function')throw Error('Oturum yenileme kullanılamıyor.');
+       const ok=await refreshToken();
+       if(!ok)throw Error('Oturum yenilenemedi. Bilgileriniz korunuyor; tekrar giriş yapın.');
+     })().finally(()=>{danismaRefreshPromise=null});
+   }
+   return danismaRefreshPromise;
  }
+ async function api(path,opt={}){
+   if(!active()||!base()?.url||!base()?.key)throw Error('Oturum sona erdi. Bilgileriniz korunuyor; tekrar giriş yapın.');
+   await ensureDanismaSession();
+   // Yalnızca doğrulanmış yetkilendirme hatası sonrası bir kere tekrarlanır.
+   for(let attempt=0;attempt<2;attempt++){
+     const token=session?.access_token;
+     if(!token)throw Error('Oturum sona erdi. Bilgileriniz korunuyor; tekrar giriş yapın.');
+     const h={'apikey':cfg.key,'Authorization':'Bearer '+token,...(opt.headers||{})};
+     if(opt.json!==undefined)h['Content-Type']='application/json';
+     const r=await fetch(cfg.url+path,{method:opt.method||'GET',headers:h,body:opt.json===undefined?opt.body:JSON.stringify(opt.json)});
+     const t=await r.text();let v;try{v=JSON.parse(t)}catch{v=t}
+     if(r.ok)return v;
+     const err=v?.message||v?.error_description||v?.error||('İstek başarısız: '+r.status);
+     if(attempt===0&&r.status===401&&expiredAuth(err)){
+       await ensureDanismaSession(true);
+       continue;
+     }
+     if(r.status===401)throw Error('Oturum doğrulanamadı. Bilgileriniz korunuyor; tekrar giriş yapın.');
+     throw Error(err);
+   }
+ }
+
  const stamp=t=>t?new Date(t).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'}):'—';
  const elapsedText=(start,end)=>{
    const a=Date.parse(start||''),b=end?Date.parse(end):Date.now();
@@ -121,6 +153,7 @@
  }
  async function create(ev){ev.preventDefault();const form=ev.currentTarget,fd=new FormData(form),btn=$('#akpr-submit');if(!btn)return;
   if(!online()){saveDraft();say('#akpr-feedback','Bağlantı yok. Taslak bu sekmede korundu; internete bağlanınca kontrol edip kaydedin.',true);return}
+  saveDraft(); // Hata/oturum süresi dolması sırasında doldurulmuş alanlar kaybolmasın.
   btn.disabled=true;say('#akpr-feedback',editId?'Güncelleniyor…':'Kaydediliyor…');
   try{
    const row={plate:String(fd.get('plate')||'').trim().toLocaleUpperCase('tr-TR'),company:String(fd.get('company')||'').trim(),driver_name:String(fd.get('driver')||'').trim(),driver_phone:String(fd.get('driver_phone')||'').trim(),waybill_number:String(fd.get('waybill')||'').trim(),notes:String(fd.get('note')||'').trim()};

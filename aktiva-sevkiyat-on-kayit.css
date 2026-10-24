@@ -130,3 +130,53 @@ body.akpr-count-open{overflow:hidden!important}
 #ak-pre-receiving .akpr-catalog-results{grid-column:1/-1;display:grid;gap:4px;max-height:220px;overflow-y:auto}
 #ak-pre-receiving .akpr-catalog-item{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:10px;color:#fff;border-radius:8px;background:#27445b;border:1px solid #456b80;cursor:pointer}
 #ak-pre-receiving .akpr-catalog-item small{color:#b9d5e4}
+
+
+/* AKTİVA - Yalnızca Sevkiyat Ön Kayıt personeli kırmızı buton düzeltmesi.
+   Ana ekran kartları, Çıkış ve Ana Sayfa butonları.
+   Diğer roller ve iş mantığı etkilenmez. */
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > .akpr-nav-card {
+  background:linear-gradient(145deg,#1d344a 0%,#17283b 100%) !important;
+  background-color:#17283b !important;
+  color:#f0f5fb !important;
+  border:1px solid #50657b !important;
+  border-bottom:3px solid #c6a358 !important;
+  box-shadow:0 5px 14px rgba(0,0,0,.18) !important;
+  text-align:left !important;
+  transform:none;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card:hover {
+  background:linear-gradient(145deg,#26435b,#1b3046) !important;
+  border-color:#8598a9 !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card .akpr-nav-icon {
+  background:#29465e !important;
+  color:#e9c66d !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card strong {
+  color:#f1f5fa !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card small {
+  color:#b8c7d7 !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card .akpr-nav-arrow {
+  color:#e9c66d !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-logout {
+  background:#263c50 !important;
+  color:#eaf2f9 !important;
+  border:1px solid #647c92 !important;
+  box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving button.akpr-back {
+  background:#263b51 !important;
+  color:#eaf2f9 !important;
+  border:1px solid #5b748d !important;
+  box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-logout:focus-visible,
+body[data-role="pre_receiving"] #ak-pre-receiving button.akpr-back:focus-visible {
+  outline:2px solid #e6c46e !important;
+  outline-offset:2px;
+}

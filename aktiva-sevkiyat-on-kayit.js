@@ -190,9 +190,30 @@
   box.querySelector('#akpr-record-search').addEventListener('input',()=>drawReceiving(cache));
   applySource();if(cache.length)drawReceiving(cache);else refresh();
  }
+ // Only the four pre-registration navigation controls; strong inline styling bypasses conflicting global button CSS.
+ function applyPreRegistrationButtonTheme(){
+   if(document.body.dataset.role!=='pre_receiving')return;
+   const styles=[
+     ['#akpr-open-new','#21384e','#f3f7fc','#d5b360'],
+     ['#akpr-open-list','#21384e','#f3f7fc','#d5b360'],
+     ['#akpr-logout','#2b4157','#f3f7fc','#698197'],
+     ['#ak-pre-receiving .akpr-back','#2b4157','#f3f7fc','#698197']
+   ];
+   for(const [selector,bg,fg,edge] of styles){
+     document.querySelectorAll(selector).forEach(el=>{
+       el.style.setProperty('background',bg,'important');
+       el.style.setProperty('background-color',bg,'important');
+       el.style.setProperty('background-image','none','important');
+       el.style.setProperty('color',fg,'important');
+       el.style.setProperty('border-color',edge,'important');
+       el.style.setProperty('box-shadow','none','important');
+     });
+   }
+ }
  function mount(){const role=document.body.dataset.role;if(role==='pre_receiving'){
     const app=$('#app');if(!app||app.classList.contains('hidden'))return;
     if(!$('#ak-pre-receiving')){app.insertAdjacentHTML('beforeend',markup());$('#akpr-form').addEventListener('submit',create);setupProducts();$('#akpr-form').addEventListener('reset',()=>setTimeout(()=>{resetEditing();resetProducts()},0));$('#akpr-refresh').onclick=refresh;$('#akpr-logout').onclick=()=>$('#logout')?.click();$('#akpr-open-new').onclick=()=>{resetEditing();$('#akpr-form')?.reset();showStaffView('new')};$('#akpr-open-list').onclick=()=>showStaffView('list');document.querySelectorAll('#ak-pre-receiving [data-akpr-back]').forEach(b=>b.addEventListener('click',()=>{resetEditing();$('#akpr-form')?.reset();showStaffView('home')}));}
+    applyPreRegistrationButtonTheme();
     if(lastRole!==role)refresh();
    }else if(role==='count'){
     receiving();if(lastRole!==role)refresh();

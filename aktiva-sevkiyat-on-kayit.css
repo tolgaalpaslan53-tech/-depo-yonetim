@@ -180,3 +180,28 @@ body[data-role="pre_receiving"] #ak-pre-receiving button.akpr-back:focus-visible
   outline:2px solid #e6c46e !important;
   outline-offset:2px;
 }
+
+/* 24.10.2026 - Tam hedefli buton renkleri; sayfa geneli buton kurallarını ezer. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-new,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-list {
+  background:#21384e !important;
+  background-color:#21384e !important;
+  background-image:none !important;
+  color:#f3f7fc !important;
+  border:1px solid #536b83 !important;
+  border-bottom:3px solid #d5b360 !important;
+  box-shadow:0 4px 12px rgba(0,0,0,.22) !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button#akpr-logout,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-back[data-akpr-back] {
+  background:#2b4157 !important;
+  background-color:#2b4157 !important;
+  background-image:none !important;
+  color:#f2f6fb !important;
+  border:1px solid #698197 !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button:is(#akpr-open-new,#akpr-open-list):is(:hover,:active,:focus) {
+  background:#2c4962 !important;
+  background-image:none !important;
+}

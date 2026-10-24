@@ -205,3 +205,34 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav bu
   background:#2c4962 !important;
   background-image:none !important;
 }
+
+/* 2026-10-24: Ön Kayıt personelinin TÜM işlem butonları. Başka rollere dokunmaz.
+   Genel index.html button:not(.alt) kırmızı stilini sadece bu bölümde geçersiz kılar. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button:not(.akpr-danger) {
+  background:#263e55 !important;
+  background-color:#263e55 !important;
+  background-image:none !important;
+  color:#f1f6fb !important;
+  border:1px solid #5b758e !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-nav-card {
+  background:#1c3349 !important;
+  background-image:none !important;
+  border-bottom:4px solid #d5b360 !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-btn.primary:not(.akpr-danger) {
+  background:#2b5874 !important;
+  background-image:none !important;
+  border-color:#6c91a9 !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-danger {
+  background:#49303a !important;
+  background-image:none !important;
+  color:#ffdce0 !important;
+  border:1px solid #875564 !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button:hover:not(:disabled) {
+  filter:brightness(1.12);
+}

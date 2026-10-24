@@ -36,7 +36,7 @@
  const recordedArrival=r=>r.arrival_at||r.created_at;
  const fmtMinutes=n=>Number.isFinite(n)?Math.round(n)+' dk':'—';
  const duration=(a,b)=>a&&b?Math.max(0,(Date.parse(b)-Date.parse(a))/60000):null;
- const statusText=r=>r.status==='cancelled'?'İptal edildi':r.departed_at?'Çıkış yaptı':r.status==='completed'?'Tamamlandı':r.status==='counting'?'Sayım devam ediyor':r.status==='at_dock'?'Peronda':'Bekliyor';
+ const statusText=r=>r.status==='cancelled'?'İptal edildi':r.departed_at?'Çıkış yaptı':r.status==='completed'?'Tamamlandı':r.status==='counting'?'Sayım devam ediyor':r.status==='at_dock'?'Perona Gönderildi':'Bekliyor';
 
  const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  function markup(){return `<section id="ak-pre-receiving"><div class="akpr-head"><div><h1>📋 AKTİVA · Danışma</h1><small>Danışma Personeli</small></div><button type="button" class="akpr-btn" id="akpr-logout">Çıkış</button></div>
@@ -142,15 +142,30 @@
  }
  async function imageLink(path){if(!path)return null;const p=path.split('/').map(encodeURIComponent).join('/');const d=await api('/storage/v1/object/sign/ak-sevkiyat-irsaliyeleri/'+p,{method:'POST',json:{expiresIn:300}});return cfg.url+d.signedURL}
  function rows(records,host,receiving){host.innerHTML=records.length?'':'<p class="akpr-muted">Bu listede kayıt bulunmuyor.</p>';
-  for(const r of records){const x=document.createElement('div');x.className='akpr-row';x.innerHTML=`<div><strong>${E(r.plate||recordNo(r))}</strong> · ${E(r.company||"Firma belirtilmedi")}<div class="akpr-muted">Kayıt No: ${E(recordNo(r))} · Kayıt: ${stamp(r.created_at)} · Geliş: ${stamp(recordedArrival(r))} · ${E(r.driver_name||'Şoför belirtilmedi')} · İrsaliye: ${E(r.waybill_number||'—')}</div><div class="akpr-muted">Perona alınma: ${stamp(r.docked_at)} · Çıkış: ${stamp(r.departed_at)}</div><div class="akpr-muted">${E(r.notes||'')}${r.cancellation_reason?" · İptal nedeni: "+E(r.cancellation_reason):""}</div><div class="akpr-wait-time" data-akpr-start="${E(recordedArrival(r))}" data-akpr-end="${E(r.docked_at||r.departed_at||(r.status==='cancelled'?r.created_at:''))}">${r.docked_at?'Perona kadar bekleme: ':'Bekleme süresi: '}<strong>${elapsedText(recordedArrival(r),r.docked_at||r.departed_at||(r.status==='cancelled'?r.created_at:null))}</strong></div></div><div><span class="akpr-pill">${statusText(r)}</span></div>`;
+  for(const r of records){const x=document.createElement('div');x.className='akpr-row';x.innerHTML=`<div><strong>${E(r.plate||recordNo(r))}</strong> · ${E(r.company||"Firma belirtilmedi")}<div class="akpr-muted">Kayıt No: ${E(recordNo(r))} · Kayıt: ${stamp(r.created_at)} · Geliş: ${stamp(recordedArrival(r))} · ${E(r.driver_name||'Şoför belirtilmedi')} · İrsaliye: ${E(r.waybill_number||'—')}</div><div class="akpr-muted">Perona gönderilme: ${stamp(r.docked_at)} · Çıkış: ${stamp(r.departed_at)}</div><div class="akpr-muted">${E(r.notes||'')}${r.cancellation_reason?" · İptal nedeni: "+E(r.cancellation_reason):""}</div><div class="akpr-wait-time" data-akpr-start="${E(recordedArrival(r))}" data-akpr-end="${E(r.docked_at||(r.status==='cancelled'?r.created_at:''))}">${r.docked_at?'Perona gönderilene kadar bekleme: ':'Bekleme süresi: '}<strong>${elapsedText(recordedArrival(r),r.docked_at||(r.status==='cancelled'?r.created_at:null))}</strong></div></div><div><span class="akpr-pill">${statusText(r)}</span></div>`;
    const b=document.createElement('div');b.className='akpr-actions';
    if(r.photo_path){const v=document.createElement('button');v.type='button';v.className='akpr-btn light';v.textContent='📷 İrsaliyeyi Gör';v.onclick=async()=>{v.disabled=true;try{const url=await imageLink(r.photo_path);window.open(url,'_blank','noopener,noreferrer')}catch(e){alert(e.message)}finally{v.disabled=false}};b.append(v)}
    if(!receiving&&r.created_by===session?.user?.id&&r.status==='waiting'){
     const edit=document.createElement('button');edit.type='button';edit.className='akpr-btn light';edit.textContent='✏️ Düzenle';edit.onclick=()=>startEdit(r);b.append(edit);
     const cancel=document.createElement('button');cancel.type='button';cancel.className='akpr-btn akpr-danger';cancel.textContent='İptal Et';cancel.onclick=()=>cancelRecord(r);b.append(cancel);
    }
-   if(receiving&&['waiting','at_dock'].includes(r.status)){const open=document.createElement('button');open.type='button';open.className='akpr-btn primary';open.textContent='Sayımı Aç';open.onclick=()=>openCount(r);if(Array.isArray(r.products)&&r.products.length)b.append(open);const btn=document.createElement('button');btn.type='button';btn.className='akpr-btn primary';btn.textContent='Perona Alındı';btn.onclick=async()=>{btn.disabled=true;try{await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},json:r.docked_at?{status:'at_dock'}:{status:'at_dock',docked_at:new Date().toISOString()}});await refresh()}catch(e){alert(e.message);btn.disabled=false}};b.append(btn)}
+   if(receiving&&['waiting','at_dock'].includes(r.status)){const open=document.createElement('button');open.type='button';open.className='akpr-btn primary';open.textContent='Sayımı Aç';open.onclick=()=>openCount(r);if(Array.isArray(r.products)&&r.products.length)b.append(open);}
    if(receiving&&r.status==='counting'){const resume=document.createElement('button');resume.type='button';resume.className='akpr-btn primary';resume.textContent='Sayıma Devam Et';resume.onclick=()=>openCount(r);b.append(resume)}
+   if(!receiving&&r.created_by===session?.user?.id&&!r.docked_at&&!r.departed_at&&r.status==='waiting'){
+     const dock=document.createElement('button');dock.type='button';dock.className='akpr-btn primary';dock.textContent='🚛 Perona Gönderildi';
+     dock.onclick=async()=>{
+       if(!confirm((r.plate||recordNo(r))+' aracı perona gönderildi olarak kaydedilsin mi? Bu işlem bekleme süresini durdurur.'))return;
+       dock.disabled=true;
+       try{
+         const now=new Date().toISOString();
+         const result=await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id)+'&created_by=eq.'+encodeURIComponent(session.user.id)+'&status=eq.waiting&docked_at=is.null',{
+           method:'PATCH',headers:{Prefer:'return=representation'},json:{status:'at_dock',docked_at:now}
+         });
+         if(!Array.isArray(result)||!result.length)throw Error('İşlem kaydedilemedi. Kayıt başka cihazdan güncellenmiş olabilir.');
+         await refresh();
+       }catch(e){alert('Perona gönderme işlemi başarısız: '+e.message)}finally{dock.disabled=false}
+     };b.append(dock);
+   }
    if(!receiving&&r.created_by===session?.user?.id&&!r.departed_at&&r.status!=='cancelled'){
      const out=document.createElement('button');out.type='button';out.className='akpr-btn light';out.textContent='🚚 Araç Çıkışını Kaydet';out.onclick=async()=>{
        if(!confirm((r.plate||recordNo(r))+' aracı çıkış yaptı mı?'))return;
@@ -214,8 +229,8 @@
    const statuses={};for(const r of records){const s=statusText(r);statuses[s]=(statuses[s]||0)+1}
    const waits=records.map(r=>duration(recordedArrival(r),r.docked_at)).filter(x=>x!==null);
    ws('Özet',[['DANIŞMA ARAÇ GİRİŞ ÇIKIŞ RAPORU',''],['Başlangıç tarihi',start],['Bitiş tarihi',end],['Toplam kayıt',records.length],['Bekleyen',statuses['Bekliyor']||0],['Peronda',statuses['Peronda']||0],['Tamamlanan',statuses['Tamamlandı']||0],['Çıkış yapan',statuses['Çıkış yaptı']||0],['İptal edilen',statuses['İptal edildi']||0],['Ortalama bekleme (dakika)',waits.length?Math.round(waits.reduce((a,b)=>a+b,0)/waits.length):'—']],[32,24]);
-   ws('Araç Giriş Çıkış',[['Kayıt no','Plaka','Firma','Durum','Gerçek geliş','Kayıt tarihi','Perona alınma','Çıkış tarihi','Bekleme (dakika)','Tesiste geçen (dakika)'],...records.map(r=>[recordNo(r),r.plate||'',r.company||'',statusText(r),stamp(recordedArrival(r)),stamp(r.created_at),stamp(r.docked_at),stamp(r.departed_at),duration(recordedArrival(r),r.docked_at),duration(recordedArrival(r),r.departed_at)])],[22,18,29,19,23,23,23,23,19,23]);
-   ws('İşlem Detayları',[['Kayıt no','Plaka','Firma','Şoför adı','Şoför telefonu','İrsaliye no','Durum','Kayıt tarihi','Gerçek geliş','Perona alınma','Çıkış','İptal nedeni','Açıklama'],...records.map(r=>[recordNo(r),r.plate||'',r.company||'',r.driver_name||'',r.driver_phone||'',r.waybill_number||'',statusText(r),stamp(r.created_at),stamp(recordedArrival(r)),stamp(r.docked_at),stamp(r.departed_at),r.cancellation_reason||'',r.notes||''])],[22,18,29,22,21,26,20,23,23,23,23,30,32]);
+   ws('Araç Giriş Çıkış',[['Kayıt no','Plaka','Firma','Durum','Gerçek geliş','Kayıt tarihi','Perona gönderilme','Çıkış tarihi','Bekleme (dakika)','Tesiste geçen (dakika)'],...records.map(r=>[recordNo(r),r.plate||'',r.company||'',statusText(r),stamp(recordedArrival(r)),stamp(r.created_at),stamp(r.docked_at),stamp(r.departed_at),duration(recordedArrival(r),r.docked_at),duration(recordedArrival(r),r.departed_at)])],[22,18,29,19,23,23,23,23,19,23]);
+   ws('İşlem Detayları',[['Kayıt no','Plaka','Firma','Şoför adı','Şoför telefonu','İrsaliye no','Durum','Kayıt tarihi','Gerçek geliş','Perona gönderilme','Çıkış','İptal nedeni','Açıklama'],...records.map(r=>[recordNo(r),r.plate||'',r.company||'',r.driver_name||'',r.driver_phone||'',r.waybill_number||'',statusText(r),stamp(r.created_at),stamp(recordedArrival(r)),stamp(r.docked_at),stamp(r.departed_at),r.cancellation_reason||'',r.notes||''])],[22,18,29,22,21,26,20,23,23,23,23,30,32]);
    XLSX.writeFile(wb,'AKTIVA_Danisma_'+start+'_'+end+'.xlsx');info.textContent=records.length+' kayıt Excel dosyasına aktarıldı.';
   }catch(e){info.textContent='Excel oluşturulamadı: '+e.message}finally{btn.disabled=false}
  }

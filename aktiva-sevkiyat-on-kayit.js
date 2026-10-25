@@ -240,7 +240,36 @@
    }
    if(!receiving&&canEditRecord(r)){
      const note=document.createElement('button');note.type='button';note.className='akpr-btn light';note.textContent='📝 Operasyon Notu';note.onclick=async()=>{const value=prompt('Danışma ve Mal Kabul ekranında görünecek operasyon notu:',r.operation_note||'');if(value===null)return;if(value.length>500){alert('En fazla 500 karakter yazın.');return}try{const result=await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id)+'&created_by=eq.'+encodeURIComponent(session.user.id),{method:'PATCH',headers:{Prefer:'return=representation'},json:{operation_note:value}});if(!result?.length)throw Error('Kaydedilemedi.');await refresh()}catch(e){alert(e.message)}};b.append(note);
-     const history=document.createElement('button');history.type='button';history.className='akpr-btn light';history.textContent='🕘 İşlem Geçmişi';history.onclick=async()=>{try{const events=await api('/rest/v1/ak_danisma_audit?select=changed_at,actor_id,changed_fields,old_times,new_times&record_id=eq.'+encodeURIComponent(r.id)+'&order=changed_at.desc&limit=100');alert(events.length?events.map(x=>stamp(x.changed_at)+' · '+(x.changed_fields||[]).join(', ')+' · Personel: '+String(x.actor_id||'—').slice(0,8)).join('\n'):'Henüz değişiklik bulunmuyor.')}catch(e){alert('Geçmiş okunamadı: '+e.message)}};b.append(history);
+     const history=document.createElement('button');history.type='button';history.className='akpr-btn light';history.textContent='🕘 İşlem Geçmişi';history.onclick=async()=>{
+       try{
+         const events=await api('/rest/v1/ak_danisma_audit?select=changed_at,actor_id,changed_fields,old_times,new_times&record_id=eq.'+encodeURIComponent(r.id)+'&order=changed_at.desc&limit=100');
+         const ids=[...new Set((events||[]).map(e=>e.actor_id).filter(Boolean))];
+         const names=new Map();
+         if(profile?.id&&profile?.full_name)names.set(profile.id,profile.full_name);
+         if(ids.length){
+           try{
+             const people=await api('/rest/v1/profiles?select=id,full_name&id=in.('+ids.map(encodeURIComponent).join(',')+')');
+             for(const person of people||[])if(person.full_name?.trim())names.set(person.id,person.full_name.trim());
+           }catch(err){console.warn('AKTİVA: Personel isimleri okunamadı',err)}
+         }
+         const descriptions={departed_at:'Araç çıkışı kaydedildi',docked_at:'Araç perona gönderildi',arrival_at:'Depoya giriş saati güncellendi',status:'Araç durumu güncellendi',operation_note:'Operasyon notu güncellendi',driver_name:'Şoför bilgisi güncellendi',driver_phone:'Telefon bilgisi güncellendi',plate:'Plaka güncellendi',company:'Firma bilgisi güncellendi',waybill_number:'İrsaliye bilgisi güncellendi',cancellation_reason:'İptal nedeni kaydedildi'};
+         const dialog=document.createElement('div');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Araç işlem geçmişi');
+         dialog.style.cssText='position:fixed;inset:0;z-index:2147483640;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px';
+         const panel=document.createElement('div');panel.style.cssText='background:#142333;color:#f2f5f8;border:1px solid #415367;border-radius:18px;width:min(100%,520px);max-height:80vh;overflow:auto;padding:20px;font:inherit';
+         const heading=document.createElement('h3');heading.textContent='Araç İşlem Geçmişi';heading.style.margin='0 0 16px';panel.append(heading);
+         if(!events?.length){const empty=document.createElement('p');empty.textContent='Henüz değişiklik bulunmuyor.';panel.append(empty)}
+         for(const event of events||[]){
+           const item=document.createElement('div');item.style.cssText='padding:12px 0;border-top:1px solid #34475a';
+           const fields=Array.isArray(event.changed_fields)?event.changed_fields:[];
+           const labels=[...new Set(fields.map(field=>descriptions[field]||'Kayıt bilgisi güncellendi'))];
+           const title=document.createElement('strong');title.textContent=labels.join(' · ')||'Kayıt güncellendi';title.style.display='block';item.append(title);
+           const time=document.createElement('div');time.textContent=stamp(event.changed_at);time.style.cssText='opacity:.75;font-size:.88em;margin-top:5px';item.append(time);
+           const person=document.createElement('div');person.textContent='İşlemi yapan: '+(names.get(event.actor_id)||'Personel adı bulunamadı');person.style.cssText='margin-top:7px;font-size:.92em';item.append(person);panel.append(item);
+         }
+         const close=document.createElement('button');close.type='button';close.textContent='Kapat';close.className='akpr-btn light';close.style.cssText='margin-top:16px;width:100%';close.onclick=()=>dialog.remove();panel.append(close);dialog.append(panel);
+         dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.remove()});document.body.append(dialog);
+       }catch(e){alert('Geçmiş okunamadı: '+e.message)}
+     };b.append(history);
    }
    if(receiving){x.append(b)}else{if(b.childElementCount)details.append(b);x.append(details)}host.append(x)
   }

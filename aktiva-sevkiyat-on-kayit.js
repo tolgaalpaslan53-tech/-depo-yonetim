@@ -250,10 +250,20 @@
          const names=new Map();
          if(profile?.id&&profile?.full_name)names.set(profile.id,profile.full_name);
          if(ids.length){
-           try{
-             const people=await api('/rest/v1/profiles?select=id,full_name&id=in.('+ids.map(encodeURIComponent).join(',')+')');
-             for(const person of people||[])if(person.full_name?.trim())names.set(person.id,person.full_name.trim());
-           }catch(err){console.warn('AKTİVA: Personel isimleri okunamadı',err)}
+           // Diğer danışma personelinin adı profiles RLS nedeniyle doğrudan okunamaz.
+           // Yalnızca işlem geçmişinde bulunan aktörler için yetki kontrollü RPC kullanılır.
+           const results=await Promise.allSettled(ids.filter(id=>!names.has(id)).map(async id=>({
+             id,
+             name:await api('/rest/v1/rpc/ak_danisma_personel_adi',{
+               method:'POST',json:{p_user_id:id}
+             })
+           })));
+           for(const result of results){
+             if(result.status==='fulfilled'){
+               const {id,name}=result.value;
+               if(typeof name==='string'&&name.trim())names.set(id,name.trim());
+             }else console.warn('AKTİVA: Personel adı RPC üzerinden okunamadı',result.reason);
+           }
          }
          const descriptions={departed_at:'Araç çıkışı kaydedildi',docked_at:'Araç perona gönderildi',arrival_at:'Depoya giriş saati güncellendi',status:'Araç durumu güncellendi',operation_note:'Operasyon notu güncellendi',driver_name:'Şoför bilgisi güncellendi',driver_phone:'Telefon bilgisi güncellendi',plate:'Plaka güncellendi',company:'Firma bilgisi güncellendi',waybill_number:'İrsaliye bilgisi güncellendi',cancellation_reason:'İptal nedeni kaydedildi'};
          const dialog=document.createElement('div');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Araç işlem geçmişi');

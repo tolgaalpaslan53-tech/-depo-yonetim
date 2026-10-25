@@ -223,7 +223,7 @@
      fixDock.onclick=async()=>{const value=requestTime('Perona gönderilme zamanını girin',r.departed_at||new Date().toISOString());if(!value)return;
        if(Date.parse(value)<Date.parse(recordedArrival(r))||r.departed_at&&Date.parse(value)>Date.parse(r.departed_at)){alert('Peron saati gelişten önce veya çıkıştan sonra olamaz.');return}
        if(!confirm('Perona gönderilme saati '+stamp(value)+' olarak kaydedilsin mi?'))return;
-       fixDock.disabled=true;try{const data={docked_at:value};if(r.status==='waiting')data.status='at_dock';const result=await api('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(r.id)+'&created_by=eq.'+encodeURIComponent(session.user.id)+'&docked_at=is.null',{method:'PATCH',headers:{Prefer:'return=representation'},json:data});if(!Array.isArray(result)||!result.length)throw Error('Kayıt güncellenemedi veya saat başka bir cihazdan girildi.');await refresh()}catch(e){alert('Peron saati kaydedilemedi: '+e.message)}finally{fixDock.disabled=false}
+       fixDock.disabled=true;try{const result=await api('/rest/v1/rpc/ak_danisma_eksik_peron_saati',{method:'POST',json:{p_record_id:r.id,p_docked_at:value}});if(result!==true)throw Error('Peron saati kaydedilemedi. Kayıt başka cihazdan değiştirilmiş veya saat geçersiz olabilir.');await refresh()}catch(e){alert('Peron saati kaydedilemedi: '+e.message)}finally{fixDock.disabled=false}
      };b.append(fixDock);
    }
    if(!receiving&&r.created_by===session?.user?.id&&!r.departed_at&&r.status!=='cancelled'){

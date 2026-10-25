@@ -184,7 +184,7 @@
  }
  async function imageLink(path){if(!path)return null;const p=path.split('/').map(encodeURIComponent).join('/');const d=await api('/storage/v1/object/sign/ak-sevkiyat-irsaliyeleri/'+p,{method:'POST',json:{expiresIn:300}});return cfg.url+d.signedURL}
  function rows(records,host,receiving){host.innerHTML=records.length?'':'<p class="akpr-muted">Bu listede kayıt bulunmuyor.</p>';
-  for(const r of records){const x=document.createElement('div');x.className='akpr-row';
+  for(const r of records){const x=document.createElement('div');x.className='akpr-row';x.dataset.recordId=r.id;
    const state=r.status==='cancelled'?'cancelled':r.departed_at?'exited':r.docked_at?'depot':'outside';
    x.dataset.vehicleState=state;
    const summary=document.createElement('div');summary.className='akpr-vehicle-head';
@@ -265,9 +265,9 @@
      const ordered=[...mine].sort((a,b)=>Number(live(b))-Number(live(a))||(live(a)?Date.parse(recordedArrival(a))-Date.parse(recordedArrival(b)):Date.parse(b.created_at)-Date.parse(a.created_at)));
      const old=ordered.filter(r=>live(r)&&istanbulDate(recordedArrival(r))<today()).length;
      const current=ordered.filter(r=>live(r)&&istanbulDate(recordedArrival(r))===today()).length;
-     const host=$('#akpr-list');host.innerHTML='<div class="akpr-pending-summary"><div><small>Önceki Günlerden Bekleyen</small><strong>'+old+' araç</strong></div><div><small>Bugün Gelen ve Bekleyen</small><strong>'+current+' araç</strong></div></div>';
+     const host=$('#akpr-list');const openDetails=new Set([...host.querySelectorAll('details.akpr-vehicle-details[open]')].map(el=>el.closest('.akpr-row')?.dataset.recordId).filter(Boolean));host.innerHTML='<div class="akpr-pending-summary"><div><small>Önceki Günlerden Bekleyen</small><strong>'+old+' araç</strong></div><div><small>Bugün Gelen ve Bekleyen</small><strong>'+current+' araç</strong></div></div>';
      const filter=$('#akpr-filter')?.value||'all';const search=($('#akpr-search')?.value||'').toLocaleLowerCase('tr-TR').trim();const filtered=ordered.filter(r=>(!search||[r.plate,r.company,r.driver_name,r.driver_phone,r.waybill_number,recordNo(r)].some(v=>String(v||'').toLocaleLowerCase('tr-TR').includes(search)))&&(filter==='all'||filter==='missing'&&(!r.plate||!r.company||!r.driver_name||!r.driver_phone||!r.waybill_number)||filter==='open'&&!!r.docked_at&&!r.departed_at&&r.status!=='cancelled'||filter==='waiting'&&live(r)||filter==='exited'&&!!r.departed_at||filter==='previous'&&live(r)&&istanbulDate(recordedArrival(r))<today()));
-     const list=document.createElement('div');host.append(list);rows(filtered,list,false);
+     const list=document.createElement('div');host.append(list);rows(filtered,list,false);list.querySelectorAll('.akpr-row').forEach(el=>{const id=el.dataset.recordId;if(id&&openDetails.has(id)){const d=el.querySelector('details.akpr-vehicle-details');if(d)d.open=true;}});
    }
    const total=$('#akpr-total'),pending=$('#akpr-pending');
    if(total)total.textContent=mine.filter(r=>istanbulDate(r.created_at)===today()).length;

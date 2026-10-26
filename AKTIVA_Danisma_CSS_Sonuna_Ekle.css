@@ -1,0 +1,60 @@
+/* AKTİVA Danışma — 26.10.2026: yalnızca görsel düzeltme.
+   Bu blok mevcut aktiva-sevkiyat-on-kayit.css dosyasının EN SONUNA eklenir.
+   Var olan CSS, JavaScript ve forkliftçi bildirimleri değiştirilmez. */
+html:has(body[data-role="pre_receiving"]) {
+  background-color:#101720 !important;
+}
+html body[data-role="pre_receiving"] {
+  background:#101720 !important;
+  background-image:none !important;
+  min-height:100vh;
+}
+html body[data-role="pre_receiving"] #app,
+html body[data-role="pre_receiving"] .wrap,
+html body[data-role="pre_receiving"] main,
+html body[data-role="pre_receiving"] #ak-pre-receiving {
+  background:transparent !important;
+  background-image:none !important;
+}
+/* Bütün ana menü kartları: sarı alt çizgi, çerçeve ve gölge kaldırılır. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button.akpr-nav-card,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-new,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-list {
+  background:#21354a !important;
+  background-color:#21354a !important;
+  background-image:none !important;
+  color:#f2f6fb !important;
+  border:1px solid #465d73 !important;
+  border-bottom:1px solid #465d73 !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button.akpr-nav-card:hover {
+  background:#294158 !important;
+  border-color:#70869b !important;
+}
+/* Sarı ikonlar ve oklar da aynı soğuk renk ailesinde olsun. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-icon {
+  background:#2b455c !important;
+  color:#d5e3ef !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-arrow {
+  color:#c3d4e3 !important;
+}
+/* Excel kısayolu: sarı çerçeveyi temizle. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-report-shortcut {
+  background:#21354a !important;
+  background-image:none !important;
+  border:1px solid #465d73 !important;
+  border-bottom:1px solid #465d73 !important;
+  box-shadow:none !important;
+  color:#f2f6fb !important;
+}
+/* İstatistikler: zeminden ayrışan, tutarlı yüzey. */
+html body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats > .akpr-mini-card,
+html body[data-role="pre_receiving"] #ak-pre-receiving .akpr-mini-card {
+  background:#1b2b3c !important;
+  background-image:none !important;
+  border:1px solid #3d5368 !important;
+  box-shadow:none !important;
+}
+/* Mevcut mobil/masaüstü kolon düzenleri ve tarih seçicileri korunur. */

@@ -495,3 +495,18 @@ body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy{dis
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy strong{font-size:15px}
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy small{font-size:12px;color:#b9cbd9;line-height:1.4}
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option>span:last-child{font-size:25px;color:#c4d4df}
+
+/* AKTİVA Danışma: Ayarlar ve alt sayfaları bağımsız tam ekran göster. */
+body[data-role="pre_receiving"] #ak-pre-receiving [hidden] { display:none !important; }
+body[data-role="pre_receiving"].akpr-settings-fullscreen { overflow:hidden; }
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-settings-view:not([hidden]),
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) {
+ position:fixed !important; inset:0 !important; z-index:2147483000 !important;
+ box-sizing:border-box !important; width:100vw !important; max-width:none !important;
+ height:100dvh !important; min-height:100vh; overflow-y:auto !important;
+ margin:0 !important; border:0 !important; border-radius:0 !important;
+ padding:calc(env(safe-area-inset-top, 0px) + 22px) max(18px, calc((100vw - 720px) / 2)) calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+ background:#f6f8fb !important; box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-settings-view:not([hidden]) h2,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) h2 {margin-top:24px;}

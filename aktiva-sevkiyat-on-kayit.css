@@ -1661,3 +1661,44 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-setti
 html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) h3{
   max-width:100%!important;overflow-wrap:anywhere!important;
 }
+
+/* 26.10.2026 — Danışma: ayar alt ekranlarında okunabilir başlık ve açıklamalar.
+   Önceki mobil taşma düzeltmesi başlığı lacivert alandan aşağı indirmişti.
+   Sadece görünüm; iş mantığına ve diğer rollere müdahale edilmez. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) .akpr-detail-head{
+  position:relative!important;
+  padding-bottom:125px!important;
+  background:linear-gradient(125deg,#1d344c 0%,#284a67 65%,#1c334b 100%)!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) .akpr-detail-head::after{
+  content:'⚙'!important;display:block!important;position:absolute!important;
+  right:max(20px,calc((100vw - 720px)/2))!important;bottom:10px!important;
+  font-size:78px!important;line-height:1!important;color:rgba(225,237,248,.19)!important;
+  pointer-events:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) h2{
+  position:relative!important;z-index:2!important;
+  margin:-112px 0 10px!important;
+  color:#ffffff!important;font-weight:800!important;
+  font-size:clamp(23px,5.4vw,32px)!important;line-height:1.28!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.14)!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) h2 + p.akpr-muted{
+  position:relative!important;z-index:2!important;
+  margin:0 0 75px!important;
+  color:#f0f6fc!important;font-size:14px!important;
+  line-height:1.55!important;font-weight:500!important;
+  overflow-wrap:anywhere!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) h3{
+  color:#20384f!important;font-weight:800!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) .akpr-muted:not(h2 + p.akpr-muted){
+  color:#526a80!important;
+}
+/* Araç bekleme süresi: koyu başlık zemininde açıklama belirgin olsun. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) h2 + p.akpr-muted,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-settings-view:not([hidden]) h2 + p.akpr-muted{
+  color:#f0f6fc!important;font-size:14px!important;line-height:1.55!important;
+  font-weight:500!important;
+}

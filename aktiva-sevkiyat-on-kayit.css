@@ -582,3 +582,1025 @@ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-wait-settings-view:not([
   body[data-role="pre_receiving"] #ak-pre-receiving #akpr-settings-view:not([hidden]) h2,
   body[data-role="pre_receiving"] #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) h2{font-size:25px!important}
 }
+
+/* Danışma kişisel tercihler - mevcut tam ekran Ayarlar tasarımıyla uyumlu */
+.akpr-pref-checks{display:grid;gap:10px;margin:12px 0 20px}
+.akpr-pref-checks label{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #dce5ed;border-radius:12px;background:#f8fafc;color:#24384e;font-weight:600}
+.akpr-pref-checks input{width:18px;height:18px;flex:none;accent-color:#244768}
+#akpr-list-settings-view h3,#akpr-form-settings-view h3{font-size:15px;color:#263d56;margin:18px 0 8px}
+#akpr-list-settings-view select,#akpr-form-settings-view select{width:100%}
+#akpr-form label[hidden],.akpr-vehicle-facts>div[hidden],.akpr-vehicle-company[hidden],.akpr-wait-time[hidden]{display:none!important}
+
+/* Kişisel list ayarları tam ekran */
+body[data-role="pre_receiving"] #ak-pre-receiving [hidden]{display:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 24px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:10px;min-height:185px;padding:21px 19px;background:linear-gradient(145deg,#1c3349,#132337);color:#f2f6fb;border:1px solid #466078;border-bottom:4px solid #e6bd55;border-radius:18px;cursor:pointer;font:inherit;box-shadow:0 6px 18px #0002}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card:focus-visible{outline:3px solid #f1c45b;outline-offset:3px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card strong{font-size:19px;line-height:1.25}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card small{color:#b9cbd9;line-height:1.45;font-size:13px;max-width:27ch}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:13px;background:#29465e;color:#f0c963;font-size:30px;font-weight:700}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-arrow{position:absolute;bottom:13px;right:17px;color:#f0c963;font-weight:bold;font-size:31px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-detail-head{margin-bottom:15px}
+@media(max-width:650px){body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card{padding:16px 12px;min-height:196px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card strong{font-size:16px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card small{font-size:12px}}
+
+/* Ön kayıtlar sadece mevcut Mal Kabul Kayıtları sayfasında görünür */
+#akpr-receiving-panel{display:none!important}
+body[data-role="count"] #akd-dashboard #akpr-records-panel{color:#dce7f2;border:1px solid #344960;border-radius:16px;background:#152335;padding:13px;margin:12px 0 18px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button{background:#21354a;color:#e6edf7;border:1px solid #455b70;border-radius:11px;font:inherit;font-weight:700;padding:11px 15px;cursor:pointer}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected{background:#314b63;color:#ffffff;border-color:#7995ab;box-shadow:inset 0 0 0 1px #7995ab}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading strong{font-size:17px;flex:1 1 auto}
+body[data-role="count"] #akpr-records-panel .akpr-muted{color:#b4c3d3}
+body[data-role="count"] #akpr-records-panel #akpr-record-search{width:100%;background:#101c2b;color:#f4f7fc;border:1px solid #496178;border-radius:11px;padding:11px;box-sizing:border-box}
+body[data-role="count"] #akpr-records-panel .akpr-row{border-top-color:#35495f;color:#eef5fc}
+body[data-role="count"] #akpr-records-panel .akpr-pill{color:#604209}
+body[data-role="count"] #akpr-records-panel .akpr-btn.primary{background:#ad1930;color:#fff}
+body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-records-list,body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-record-pager{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel .akpr-pre-records{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel{padding-bottom:0}
+
+/* Filtrelerde sade görünüm: mevcut kırmızı tema bu düğmelere taşınmasın */
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button,body[data-role="count"] #akpr-records-panel .akpr-source-tabs button:hover{background:#22364b!important;color:#dce8f2!important;border:1px solid #435c72!important;box-shadow:none!important;background-image:none!important}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected,body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected:hover{background:#385572!important;color:#fff!important;border-color:#86a6be!important;box-shadow:inset 0 0 0 1px #86a6be!important;background-image:none!important}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary>div{background:#1e3347;border:1px solid #38536b;border-radius:11px;padding:12px;min-width:0}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary small{display:block;color:#baccdc;font-size:12px;line-height:1.4}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary strong{display:block;color:#fff;font-size:20px;margin-top:5px}
+@media(max-width:600px){body[data-role="count"] #akpr-records-panel .akpr-pending-summary{grid-template-columns:1fr}}
+
+/* Yalnızca sevkiyat ön kayıt ürünleri ve mal kabul tam ekran sayımı. */
+#ak-pre-receiving .akpr-products{margin:18px 0;padding:14px;border:1px solid #496179;border-radius:15px}
+#ak-pre-receiving .akpr-product-edit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:10px 0;padding:14px;border:1px solid #465c73;border-radius:13px;background:#1c3045}
+#ak-pre-receiving .akpr-product-edit label{display:grid;gap:5px;min-width:0}
+#ak-pre-receiving .akpr-product-edit input,#ak-pre-receiving .akpr-product-edit select{box-sizing:border-box;width:100%;padding:11px;background:#24374e;color:white;border:1px solid #586f84;border-radius:9px}
+#ak-pre-receiving .akpr-line-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+@media(max-width:550px){#ak-pre-receiving .akpr-product-edit{grid-template-columns:1fr}}
+#akpr-count-overlay[hidden]{display:none!important}
+body.akpr-count-open{overflow:hidden!important}
+#akpr-count-overlay{position:fixed;inset:0;z-index:2147483640;background:#101c2b;color:#f0f5fc;display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain;font-family:inherit}
+#akpr-count-overlay *{box-sizing:border-box}
+#akpr-count-overlay .akpr-count-head{padding:calc(env(safe-area-inset-top,0px) + 17px) 18px 17px;background:#192c42;border-bottom:1px solid #39516b;display:flex;flex-direction:column;gap:9px}
+#akpr-count-overlay .akpr-count-head strong{font-size:19px}
+#akpr-count-overlay .akpr-count-head small{color:#bccde0}
+#akpr-count-overlay .akpr-count-back{align-self:flex-start;border:1px solid #526982;background:#263c53;color:white;border-radius:10px;padding:9px 12px;font:inherit}
+#akpr-count-overlay .akpr-progress{font-size:14px;color:#d0dfec}
+#akpr-count-overlay .akpr-progressbar{height:6px;border-radius:8px;background:#43556a;overflow:hidden}
+#akpr-count-overlay .akpr-progressbar span{display:block;height:100%;background:#4cbb8a}
+#akpr-count-overlay .akpr-count-main{width:min(100%,700px);margin:0 auto;flex:1;padding:22px 18px;display:flex;flex-direction:column;gap:19px}
+#akpr-count-overlay .akpr-count-product{padding:22px;background:#1d3147;border:1px solid #415b73;border-radius:17px}
+#akpr-count-overlay .akpr-count-product small{color:#b9ccdc}
+#akpr-count-overlay .akpr-count-product h2{font-size:clamp(22px,5vw,31px);margin:12px 0 22px;color:#fff}
+#akpr-count-overlay .akpr-expected{border-top:1px solid #42576b;padding-top:15px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#akpr-count-overlay .akpr-expected strong{font-size:23px;color:#fff}
+#akpr-count-overlay label{font-weight:600;display:flex;flex-direction:column;gap:9px;color:#ecf4fa}
+#akpr-count-overlay input,#akpr-count-overlay textarea{width:100%;background:#20364d;color:#fff;border:1px solid #587087;border-radius:12px;padding:14px;font:inherit;font-size:18px}
+#akpr-count-overlay #akpr-count-difference{color:#b5e4cb;font-weight:600}
+#akpr-count-overlay #akpr-count-error{color:#ffb0b6}
+#akpr-count-overlay .akpr-count-footer{position:sticky;bottom:0;background:#16273a;border-top:1px solid #40576c;display:flex;justify-content:center;gap:10px;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px))}
+#akpr-count-overlay .akpr-count-footer button{min-height:49px}
+#akpr-count-overlay .akpr-count-footer .primary{background:#315e79;color:white;border:1px solid #7496ad}
+#akpr-count-overlay .akpr-summary-line{border:1px solid #3b5268;border-radius:11px;padding:14px;display:grid;gap:7px;background:#1c3045}
+#akpr-count-overlay .akpr-summary-line small{color:#bacddd}
+
+/* Ön kayıt: sırayla tek ürün giriş ve katalog araması */
+#ak-pre-receiving .akpr-saved-products{display:grid;gap:8px}
+#ak-pre-receiving .akpr-saved-item{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;text-align:left;background:#18354b;color:#eff9ff;border:1px solid #3f667a;border-radius:10px;padding:12px;cursor:pointer}
+#ak-pre-receiving .akpr-saved-item span{font-size:12px;color:#b9d5e4}
+#ak-pre-receiving .akpr-catalog-results{grid-column:1/-1;display:grid;gap:4px;max-height:220px;overflow-y:auto}
+#ak-pre-receiving .akpr-catalog-item{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:10px;color:#fff;border-radius:8px;background:#27445b;border:1px solid #456b80;cursor:pointer}
+#ak-pre-receiving .akpr-catalog-item small{color:#b9d5e4}
+
+
+/* AKTİVA - Yalnızca Sevkiyat Ön Kayıt personeli kırmızı buton düzeltmesi.
+   Ana ekran kartları, Çıkış ve Ana Sayfa butonları.
+   Diğer roller ve iş mantığı etkilenmez. */
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > .akpr-nav-card {
+  background:linear-gradient(145deg,#1d344a 0%,#17283b 100%) !important;
+  background-color:#17283b !important;
+  color:#f0f5fb !important;
+  border:1px solid #50657b !important;
+  border-bottom:3px solid #c6a358 !important;
+  box-shadow:0 5px 14px rgba(0,0,0,.18) !important;
+  text-align:left !important;
+  transform:none;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card:hover {
+  background:linear-gradient(145deg,#26435b,#1b3046) !important;
+  border-color:#8598a9 !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card .akpr-nav-icon {
+  background:#29465e !important;
+  color:#e9c66d !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card strong {
+  color:#f1f5fa !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card small {
+  color:#b8c7d7 !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card .akpr-nav-arrow {
+  color:#e9c66d !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-logout {
+  background:#263c50 !important;
+  color:#eaf2f9 !important;
+  border:1px solid #647c92 !important;
+  box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving button.akpr-back {
+  background:#263b51 !important;
+  color:#eaf2f9 !important;
+  border:1px solid #5b748d !important;
+  box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-logout:focus-visible,
+body[data-role="pre_receiving"] #ak-pre-receiving button.akpr-back:focus-visible {
+  outline:2px solid #e6c46e !important;
+  outline-offset:2px;
+}
+
+/* 24.10.2026 - Tam hedefli buton renkleri; sayfa geneli buton kurallarını ezer. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-new,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-list {
+  background:#21384e !important;
+  background-color:#21384e !important;
+  background-image:none !important;
+  color:#f3f7fc !important;
+  border:1px solid #536b83 !important;
+  border-bottom:3px solid #d5b360 !important;
+  box-shadow:0 4px 12px rgba(0,0,0,.22) !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button#akpr-logout,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-back[data-akpr-back] {
+  background:#2b4157 !important;
+  background-color:#2b4157 !important;
+  background-image:none !important;
+  color:#f2f6fb !important;
+  border:1px solid #698197 !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button:is(#akpr-open-new,#akpr-open-list):is(:hover,:active,:focus) {
+  background:#2c4962 !important;
+  background-image:none !important;
+}
+
+/* 2026-10-24: Ön Kayıt personelinin TÜM işlem butonları. Başka rollere dokunmaz.
+   Genel index.html button:not(.alt) kırmızı stilini sadece bu bölümde geçersiz kılar. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button:not(.akpr-danger) {
+  background:#263e55 !important;
+  background-color:#263e55 !important;
+  background-image:none !important;
+  color:#f1f6fb !important;
+  border:1px solid #5b758e !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-nav-card {
+  background:#1c3349 !important;
+  background-image:none !important;
+  border-bottom:4px solid #d5b360 !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-btn.primary:not(.akpr-danger) {
+  background:#2b5874 !important;
+  background-image:none !important;
+  border-color:#6c91a9 !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-danger {
+  background:#49303a !important;
+  background-image:none !important;
+  color:#ffdce0 !important;
+  border:1px solid #875564 !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button:hover:not(:disabled) {
+  filter:brightness(1.12);
+}
+
+/* AKTİVA: Ön kayıtta araç bekleme süresi – mevcut lacivert görünüm korunur. */
+#ak-pre-receiving .akpr-wait-time,
+body[data-role="count"] #akpr-records-panel .akpr-wait-time{
+ display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;
+ margin-top:8px;padding:7px 10px;border-radius:9px;
+ background:#233b50;color:#d7e7f3;border:1px solid #48657c;
+ font-size:12px;line-height:1.45;
+}
+#ak-pre-receiving .akpr-wait-time strong,
+body[data-role="count"] #akpr-records-panel .akpr-wait-time strong{color:#f2d17c;font-weight:800}
+
+/* Danışma ekranı: yalnızca rol bazlı yeni bölümler */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-report-shortcut {display:block;width:100%;margin:12px 0;background:#21384e!important;background-image:none!important;color:#fff!important;border:1px solid #536b83!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-export {background:#21384e!important;background-image:none!important;color:#fff!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-report-view label {display:block;color:#e4eaf2;margin:12px 0}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-report-view input,body[data-role="pre_receiving"] #ak-pre-receiving #akpr-report-view select {background:#172a3c!important;color:white!important;border:1px solid #536b83!important}
+
+/* AKTİVA Danışma - kayıt kartları; yalnızca danışma rolü */
+body[data-role="pre_receiving"] #akpr-list .akpr-row{display:block;margin:12px 0;padding:15px;border:1px solid #496179;border-radius:15px;background:#1d3146;min-width:0;color:#eaf1f9;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-head{width:100%;min-width:0}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-top{display:flex;justify-content:space-between;align-items:flex-start;gap:9px;flex-wrap:wrap}
+body[data-role="pre_receiving"] #akpr-list .akpr-plate{font-size:19px;color:#f3f7fc;letter-spacing:.3px}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-company{font-size:13px;color:#b6c8d9;margin-top:3px}
+body[data-role="pre_receiving"] #akpr-list .akpr-pill{display:inline-block;background:#31485f;color:#f3d89a;border:1px solid #53677f;white-space:normal}
+body[data-role="pre_receiving"] #akpr-list .akpr-state-outside{color:#e4c88a}
+body[data-role="pre_receiving"] #akpr-list .akpr-state-depot{color:#a9d8f6}
+body[data-role="pre_receiving"] #akpr-list .akpr-state-exited{color:#a9dec9}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:15px;padding-top:12px;border-top:1px solid #3d5268}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts>div,body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+body[data-role="pre_receiving"] #akpr-list small{font-size:11px;color:#abbdd0}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts b{font-size:13px;font-weight:600;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details{margin-top:14px;border-radius:11px;background:#263d53;border:1px solid #4c6680;overflow:hidden}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details>summary{cursor:pointer;padding:12px 14px;font-weight:700;color:#ebf4fc;list-style-position:inside}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details[open]>summary{border-bottom:1px solid #4c6680}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more span{overflow-wrap:anywhere;font-size:12px}
+body[data-role="pre_receiving"] #akpr-list .akpr-actions{margin:0;padding:0 12px 14px}
+body[data-role="pre_receiving"] #akpr-list .akpr-actions button{font-size:12px;max-width:100%;flex:1 1 155px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-search-label input{width:100%;min-width:0}
+@media(max-width:380px){body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more{grid-template-columns:1fr}}
+
+/* AKTİVA Danışma: kompakt operasyon kartları ve tek satırlık filtreler */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary .akpr-stat{font-size:22px!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary .akpr-card,body[data-role="pre_receiving"] #ak-pre-receiving .akpr-compact-status .akpr-card{min-height:88px;box-sizing:border-box}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:5px;border-radius:13px;background:#102235;border:1px solid #425971;margin:12px 0 8px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-tab{border:0;border-radius:9px;background:transparent;color:#bdcddd;font-weight:700;padding:11px 4px;cursor:pointer;font-size:13px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-tab.is-active{background:#35516b;color:#fff;box-shadow:0 1px 5px #07162655}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-advanced-filter{font-size:12px;margin:0 0 10px;color:#aebfd1}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-advanced-filter select{padding:9px 12px!important;font-size:13px!important;background:#20364d!important;color:#edf4fc!important;border:1px solid #506983!important;border-radius:10px!important}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary>div{min-width:0;padding:10px;border:1px solid #425971;border-radius:10px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary small{display:block;font-size:11px;line-height:1.4}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary strong{display:block;margin-top:5px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-empty-state{padding:16px 8px;color:#b9cada;text-align:center;font-size:13px}
+
+/* Beş sayaç: 2+2 ve ortalanmış son kart */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats>.akpr-mini-card{min-width:0;min-height:88px;box-sizing:border-box}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats>.akpr-mini-card:last-child{grid-column:1 / -1;justify-self:center;width:calc(50% - 5px)}
+
+
+/* AKTİVA Danışma: antrasit-lacivert yüzey; diğer roller etkilenmez. */
+body[data-role="pre_receiving"] {
+  background: #192431 !important;
+  background-image: linear-gradient(155deg,#202e3d 0%,#192431 58%,#17212d 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+body[data-role="pre_receiving"] #app,
+body[data-role="pre_receiving"] .wrap {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Danışma > Araç Kayıtları > Geçmiş: mobil tarih alanları taşmasın. */
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates {
+  width:100%; max-width:100%; box-sizing:border-box;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  column-gap:12px !important; row-gap:10px !important;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates > label {
+  display:block; min-width:0; max-width:100%; width:100%;
+  box-sizing:border-box; margin:0; overflow:hidden;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"] {
+  display:block; width:100% !important; min-width:0 !important;
+  max-width:100% !important; box-sizing:border-box !important;
+  padding:11px 8px !important; margin:6px 0 0 !important;
+  font-size:14px !important; line-height:1.35;
+  border:1px solid #59728a !important; border-radius:10px !important;
+  background:#263b51 !important; color:#f1f6fb !important;
+  color-scheme:dark;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]::-webkit-date-and-time-value {
+  min-width:0; text-align:left;
+}
+@media(max-width:390px) {
+  body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates {column-gap:8px !important}
+  body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"] {font-size:12px !important; padding:10px 5px !important}
+}
+
+/* AKTİVA Danışma - iOS tarih seçici ve ana zemin kalıcı düzeltme */
+html:has(body[data-role="pre_receiving"]){background-color:#192431!important}
+body[data-role="pre_receiving"],body[data-role="pre_receiving"] #app,body[data-role="pre_receiving"] main,body[data-role="pre_receiving"] #ak-pre-receiving{background-color:#192431!important;background-image:linear-gradient(160deg,#223244 0%,#192431 65%,#192431 100%)!important;min-height:100vh}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;width:100%!important;max-width:100%!important;min-width:0!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates[style*="display: none"],body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates[style*="display:none"]{display:none!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates>label{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:visible!important;box-sizing:border-box!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]{display:block!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:48px!important;padding:10px 12px!important;font-size:16px!important;-webkit-appearance:none;appearance:none;overflow:hidden!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]::-webkit-date-and-time-value{min-width:0!important;text-align:left!important}
+
+/* AKTİVA Danışma - tek renk standardı ve geniş ekran yerleşimi */
+html:has(body[data-role="pre_receiving"]){background:#151c26!important}
+body[data-role="pre_receiving"],body[data-role="pre_receiving"] #app,body[data-role="pre_receiving"] main,body[data-role="pre_receiving"] #ak-pre-receiving{background:#151c26!important;background-image:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-head{background:#213246!important;border:1px solid #40566b!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user{display:flex;flex-direction:column;gap:3px;margin-top:7px;min-width:0}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user strong{color:#fff;font-size:15px;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user small{color:#b8c8d8;font-size:12px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card{background:#263b50!important;background-image:none!important;border:1px solid #40566b!important;border-bottom:1px solid #40566b!important;box-shadow:none!important;color:#f5f8fb!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card::before,
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card::after{background:none!important;border-color:transparent!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card:focus-visible{outline:2px solid #9fb8ce!important;outline-offset:2px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-mini-card{background:#1e2d3f!important;background-image:none!important;border:1px solid #374c60!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-report-shortcut{background:#263b50!important;border:1px solid #40566b!important;box-shadow:none!important}
+@media(min-width:900px){
+ body[data-role="pre_receiving"] #ak-pre-receiving{max-width:1320px;padding:24px 28px 60px}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card{min-height:142px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status>.akpr-mini-card:last-child{grid-column:auto!important;justify-self:stretch!important;width:auto!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-view .akpr-row{display:flex;align-items:center}
+}
+
+/* AKTİVA Danışma — isim/unvan ve sade kart görünümü, yalnızca pre_receiving. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:14px!important;min-width:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head>div{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  min-width:0!important;flex:1 1 auto!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head h1{
+  font-size:clamp(18px,4.5vw,22px)!important;line-height:1.3!important;
+  margin:0 0 10px!important;overflow-wrap:anywhere!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-user{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  gap:5px!important;width:100%!important;min-width:0!important;margin:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-user-name{
+  display:block!important;width:100%!important;color:#f6f9fc!important;
+  font-size:16px!important;line-height:1.35!important;font-weight:750!important;
+  overflow-wrap:anywhere!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-user-role{
+  display:block!important;color:#b7c9da!important;font-size:12px!important;
+  line-height:1.45!important;white-space:normal!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-logout{
+  flex:0 0 auto!important;align-self:center!important;
+  background:#2b4157!important;color:#f2f6fb!important;
+  border:1px solid #698197!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav button.akpr-nav-card{
+  background:#263b50!important;background-image:none!important;
+  border:1px solid #4c647b!important;border-bottom:1px solid #4c647b!important;
+  border-radius:16px!important;box-shadow:none!important;
+  color:#f1f6fb!important;transform:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav button.akpr-nav-card:hover{
+  background:#2d455b!important;border-color:#7992a9!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-icon{
+  background:#314b63!important;color:#dbe7f1!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-arrow{
+  color:#a9bed0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-card::before,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-card::after{
+  border-color:transparent!important;background:none!important;
+}
+@media(max-width:390px){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head{padding:15px!important;gap:8px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-logout{padding:9px 12px!important}
+}
+
+/* 26.10.2026 — Danışma ana ekranı son düzeltme; ayrı CSS gerekmez. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card:hover {
+  border:1px solid #4c647b!important;
+  border-bottom:1px solid #4c647b!important;
+  box-shadow:none!important;
+  background-image:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card::before,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card::after {
+  content:none!important;
+  display:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats > .akpr-mini-card:last-child {
+  grid-column:1 / -1!important;
+  width:100%!important;
+  max-width:none!important;
+  justify-self:stretch!important;
+  box-sizing:border-box!important;
+}
+
+/* Danışma: altın renkli alt kenar dahil tüm navigasyon kartları tek renkte. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card {
+  border:1px solid #4c647b !important;
+  border-bottom-width:1px !important;
+  border-bottom-style:solid !important;
+  border-bottom-color:#4c647b !important;
+  box-shadow:none !important;
+}
+
+/* AKTİVA Danışma / Araç Kayıtları — sade durum akışı (2026-10-26) */
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-progress{margin-top:15px;padding:13px 12px 11px;border-radius:11px;background:#172b3f;border:1px solid #3e5870}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:start}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span{font-size:10px;line-height:1.35;color:#aebed0;text-align:center;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span:first-child{text-align:left}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span:last-child{text-align:right}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span.is-current{color:#f1f6fb;font-weight:700}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track span{height:6px;border-radius:20px;background:#41576a}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track span.is-done{background:#4b9d82}
+body[data-role="pre_receiving"] #akpr-list .akpr-quick-action{margin-top:13px;display:flex}
+body[data-role="pre_receiving"] #akpr-list .akpr-main-action{width:100%;min-height:46px;border-radius:11px!important;background:#315c79!important;color:#f4f8fc!important;border:1px solid #63849b!important;box-shadow:none!important;font-size:14px!important;font-weight:700!important}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details{margin-top:10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details>summary{font-size:13px;font-weight:600}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts{gap:12px 10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-row{padding:16px;border-radius:16px}
+
+/* Danışma - ortak bekleme uyarısı ayarları */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-row.akpr-warning-yellow{border-left:4px solid #dba640!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-row.akpr-warning-red{border-left:4px solid #d65b60!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning{font-size:11px;font-weight:750;border-radius:8px;padding:5px 8px;white-space:nowrap}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning.yellow{background:#493c21;color:#ffe3a3}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning.red{background:#4b2830;color:#ffc1c5}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-open-settings{margin-top:0!important}
+
+/* Danışma Ayarları > Araç Bekleme Süresi */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option{display:flex;align-items:center;gap:13px;width:100%;padding:17px 15px;margin-top:14px;border:1px solid #40576b;border-radius:13px;background:#26394a;color:#f2f6fa;text-align:left;cursor:pointer}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-icon{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:11px;background:#344e61;font-size:25px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy strong{font-size:15px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy small{font-size:12px;color:#b9cbd9;line-height:1.4}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option>span:last-child{font-size:25px;color:#c4d4df}
+
+/* AKTİVA Danışma: Ayarlar ve alt sayfaları bağımsız tam ekran göster. */
+body[data-role="pre_receiving"] #ak-pre-receiving [hidden] { display:none !important; }
+body[data-role="pre_receiving"].akpr-settings-fullscreen { overflow:hidden; }
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]),
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) {
+ position:fixed !important; inset:0 !important; z-index:2147483000 !important;
+ box-sizing:border-box !important; width:100vw !important; max-width:none !important;
+ height:100dvh !important; min-height:100vh; overflow-y:auto !important;
+ margin:0 !important; border:0 !important; border-radius:0 !important;
+ padding:calc(env(safe-area-inset-top, 0px) + 22px) max(18px, calc((100vw - 720px) / 2)) calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+ background:#f6f8fb !important; box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2 {margin-top:24px;}
+
+/* AKTİVA | Danışma tam ekran Ayarlar - kurumsal lacivert / mavi gri */
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]),
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]){
+  --ak-settings-ink:#20384f;
+  color:var(--ak-settings-ink)!important;
+  background:radial-gradient(ellipse 110% 65% at 100% 110%,rgba(127,155,180,.19),transparent 70%),linear-gradient(160deg,#e9f0f7 0%,#f1f5fa 58%,#e5edf6 100%)!important;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) max(18px,calc((100vw - 720px)/2)) calc(env(safe-area-inset-bottom,0px) + 36px)!important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-detail-head,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-detail-head{
+  position:relative;display:flex;align-items:flex-start;
+  margin:-16px calc(-1 * max(18px,(100vw - 720px)/2)) 0!important;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) max(18px,calc((100vw - 720px)/2)) 108px!important;
+  background:linear-gradient(125deg,#1d344c 0%,#284a67 65%,#1c334b 100%)!important;
+  border-radius:0 0 26px 26px;box-shadow:0 14px 28px rgba(26,49,74,.17);
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-detail-head::after,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-detail-head::after{
+  content:'⚙';position:absolute;right:max(20px,calc((100vw - 720px)/2));bottom:13px;
+  font-size:88px;line-height:1;color:rgba(213,229,242,.10);pointer-events:none;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-back,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-back{
+  position:relative;z-index:1;background:rgba(255,255,255,.10)!important;color:#f6f9fc!important;
+  border:1px solid rgba(224,238,250,.33)!important;border-radius:12px!important;
+  box-shadow:none!important;min-height:44px;font-weight:700!important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2{
+  position:relative;z-index:1;margin:-87px 0 8px!important;padding:0 0 0 0!important;
+  font-size:clamp(25px,5.6vw,33px)!important;line-height:1.2;color:#fff!important;
+  text-shadow:none!important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2::before,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2::before{
+  content:'⚙';display:inline-grid;place-items:center;margin-right:12px;
+  width:43px;height:43px;border-radius:13px;background:rgba(255,255,255,.13);font-size:27px;vertical-align:middle;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2::before{content:'◷'}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2 + p.akpr-muted,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) h2 + p.akpr-muted{
+  position:relative;z-index:1;color:#cbddeb!important;margin:0 0 70px!important;font-size:13px!important;line-height:1.5;
+}
+
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-detail-head button{position:relative;z-index:1;background:rgba(255,255,255,.12)!important;color:white!important;border:1px solid rgba(255,255,255,.3)!important;border-radius:12px!important;min-height:44px}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]) .akpr-label{color:#233c55!important}
+
+/* Kişisel form ayarları tam ekran */
+body[data-role="pre_receiving"] #ak-pre-receiving [hidden]{display:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 24px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:10px;min-height:185px;padding:21px 19px;background:linear-gradient(145deg,#1c3349,#132337);color:#f2f6fb;border:1px solid #466078;border-bottom:4px solid #e6bd55;border-radius:18px;cursor:pointer;font:inherit;box-shadow:0 6px 18px #0002}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card:focus-visible{outline:3px solid #f1c45b;outline-offset:3px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card strong{font-size:19px;line-height:1.25}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card small{color:#b9cbd9;line-height:1.45;font-size:13px;max-width:27ch}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:13px;background:#29465e;color:#f0c963;font-size:30px;font-weight:700}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-arrow{position:absolute;bottom:13px;right:17px;color:#f0c963;font-weight:bold;font-size:31px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-detail-head{margin-bottom:15px}
+@media(max-width:650px){body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card{padding:16px 12px;min-height:196px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card strong{font-size:16px}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card small{font-size:12px}}
+
+/* Ön kayıtlar sadece mevcut Mal Kabul Kayıtları sayfasında görünür */
+#akpr-receiving-panel{display:none!important}
+body[data-role="count"] #akd-dashboard #akpr-records-panel{color:#dce7f2;border:1px solid #344960;border-radius:16px;background:#152335;padding:13px;margin:12px 0 18px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button{background:#21354a;color:#e6edf7;border:1px solid #455b70;border-radius:11px;font:inherit;font-weight:700;padding:11px 15px;cursor:pointer}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected{background:#314b63;color:#ffffff;border-color:#7995ab;box-shadow:inset 0 0 0 1px #7995ab}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+body[data-role="count"] #akpr-records-panel .akpr-pre-heading strong{font-size:17px;flex:1 1 auto}
+body[data-role="count"] #akpr-records-panel .akpr-muted{color:#b4c3d3}
+body[data-role="count"] #akpr-records-panel #akpr-record-search{width:100%;background:#101c2b;color:#f4f7fc;border:1px solid #496178;border-radius:11px;padding:11px;box-sizing:border-box}
+body[data-role="count"] #akpr-records-panel .akpr-row{border-top-color:#35495f;color:#eef5fc}
+body[data-role="count"] #akpr-records-panel .akpr-pill{color:#604209}
+body[data-role="count"] #akpr-records-panel .akpr-btn.primary{background:#ad1930;color:#fff}
+body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-records-list,body[data-role="count"] #akd-dashboard.akpr-show-only-pre .akd-record-pager{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel .akpr-pre-records{display:none!important}
+body[data-role="count"] #akd-dashboard.akpr-hide-pre #akpr-records-panel{padding-bottom:0}
+
+/* Filtrelerde sade görünüm: mevcut kırmızı tema bu düğmelere taşınmasın */
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button,body[data-role="count"] #akpr-records-panel .akpr-source-tabs button:hover{background:#22364b!important;color:#dce8f2!important;border:1px solid #435c72!important;box-shadow:none!important;background-image:none!important}
+body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected,body[data-role="count"] #akpr-records-panel .akpr-source-tabs button.akpr-selected:hover{background:#385572!important;color:#fff!important;border-color:#86a6be!important;box-shadow:inset 0 0 0 1px #86a6be!important;background-image:none!important}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary>div{background:#1e3347;border:1px solid #38536b;border-radius:11px;padding:12px;min-width:0}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary small{display:block;color:#baccdc;font-size:12px;line-height:1.4}
+body[data-role="count"] #akpr-records-panel .akpr-pending-summary strong{display:block;color:#fff;font-size:20px;margin-top:5px}
+@media(max-width:600px){body[data-role="count"] #akpr-records-panel .akpr-pending-summary{grid-template-columns:1fr}}
+
+/* Yalnızca sevkiyat ön kayıt ürünleri ve mal kabul tam ekran sayımı. */
+#ak-pre-receiving .akpr-products{margin:18px 0;padding:14px;border:1px solid #496179;border-radius:15px}
+#ak-pre-receiving .akpr-product-edit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:10px 0;padding:14px;border:1px solid #465c73;border-radius:13px;background:#1c3045}
+#ak-pre-receiving .akpr-product-edit label{display:grid;gap:5px;min-width:0}
+#ak-pre-receiving .akpr-product-edit input,#ak-pre-receiving .akpr-product-edit select{box-sizing:border-box;width:100%;padding:11px;background:#24374e;color:white;border:1px solid #586f84;border-radius:9px}
+#ak-pre-receiving .akpr-line-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+@media(max-width:550px){#ak-pre-receiving .akpr-product-edit{grid-template-columns:1fr}}
+#akpr-count-overlay[hidden]{display:none!important}
+body.akpr-count-open{overflow:hidden!important}
+#akpr-count-overlay{position:fixed;inset:0;z-index:2147483640;background:#101c2b;color:#f0f5fc;display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain;font-family:inherit}
+#akpr-count-overlay *{box-sizing:border-box}
+#akpr-count-overlay .akpr-count-head{padding:calc(env(safe-area-inset-top,0px) + 17px) 18px 17px;background:#192c42;border-bottom:1px solid #39516b;display:flex;flex-direction:column;gap:9px}
+#akpr-count-overlay .akpr-count-head strong{font-size:19px}
+#akpr-count-overlay .akpr-count-head small{color:#bccde0}
+#akpr-count-overlay .akpr-count-back{align-self:flex-start;border:1px solid #526982;background:#263c53;color:white;border-radius:10px;padding:9px 12px;font:inherit}
+#akpr-count-overlay .akpr-progress{font-size:14px;color:#d0dfec}
+#akpr-count-overlay .akpr-progressbar{height:6px;border-radius:8px;background:#43556a;overflow:hidden}
+#akpr-count-overlay .akpr-progressbar span{display:block;height:100%;background:#4cbb8a}
+#akpr-count-overlay .akpr-count-main{width:min(100%,700px);margin:0 auto;flex:1;padding:22px 18px;display:flex;flex-direction:column;gap:19px}
+#akpr-count-overlay .akpr-count-product{padding:22px;background:#1d3147;border:1px solid #415b73;border-radius:17px}
+#akpr-count-overlay .akpr-count-product small{color:#b9ccdc}
+#akpr-count-overlay .akpr-count-product h2{font-size:clamp(22px,5vw,31px);margin:12px 0 22px;color:#fff}
+#akpr-count-overlay .akpr-expected{border-top:1px solid #42576b;padding-top:15px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#akpr-count-overlay .akpr-expected strong{font-size:23px;color:#fff}
+#akpr-count-overlay label{font-weight:600;display:flex;flex-direction:column;gap:9px;color:#ecf4fa}
+#akpr-count-overlay input,#akpr-count-overlay textarea{width:100%;background:#20364d;color:#fff;border:1px solid #587087;border-radius:12px;padding:14px;font:inherit;font-size:18px}
+#akpr-count-overlay #akpr-count-difference{color:#b5e4cb;font-weight:600}
+#akpr-count-overlay #akpr-count-error{color:#ffb0b6}
+#akpr-count-overlay .akpr-count-footer{position:sticky;bottom:0;background:#16273a;border-top:1px solid #40576c;display:flex;justify-content:center;gap:10px;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px))}
+#akpr-count-overlay .akpr-count-footer button{min-height:49px}
+#akpr-count-overlay .akpr-count-footer .primary{background:#315e79;color:white;border:1px solid #7496ad}
+#akpr-count-overlay .akpr-summary-line{border:1px solid #3b5268;border-radius:11px;padding:14px;display:grid;gap:7px;background:#1c3045}
+#akpr-count-overlay .akpr-summary-line small{color:#bacddd}
+
+/* Ön kayıt: sırayla tek ürün giriş ve katalog araması */
+#ak-pre-receiving .akpr-saved-products{display:grid;gap:8px}
+#ak-pre-receiving .akpr-saved-item{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;text-align:left;background:#18354b;color:#eff9ff;border:1px solid #3f667a;border-radius:10px;padding:12px;cursor:pointer}
+#ak-pre-receiving .akpr-saved-item span{font-size:12px;color:#b9d5e4}
+#ak-pre-receiving .akpr-catalog-results{grid-column:1/-1;display:grid;gap:4px;max-height:220px;overflow-y:auto}
+#ak-pre-receiving .akpr-catalog-item{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:10px;color:#fff;border-radius:8px;background:#27445b;border:1px solid #456b80;cursor:pointer}
+#ak-pre-receiving .akpr-catalog-item small{color:#b9d5e4}
+
+
+/* AKTİVA - Yalnızca Sevkiyat Ön Kayıt personeli kırmızı buton düzeltmesi.
+   Ana ekran kartları, Çıkış ve Ana Sayfa butonları.
+   Diğer roller ve iş mantığı etkilenmez. */
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > .akpr-nav-card {
+  background:linear-gradient(145deg,#1d344a 0%,#17283b 100%) !important;
+  background-color:#17283b !important;
+  color:#f0f5fb !important;
+  border:1px solid #50657b !important;
+  border-bottom:3px solid #c6a358 !important;
+  box-shadow:0 5px 14px rgba(0,0,0,.18) !important;
+  text-align:left !important;
+  transform:none;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card:hover {
+  background:linear-gradient(145deg,#26435b,#1b3046) !important;
+  border-color:#8598a9 !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card .akpr-nav-icon {
+  background:#29465e !important;
+  color:#e9c66d !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card strong {
+  color:#f1f5fa !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card small {
+  color:#b8c7d7 !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card .akpr-nav-arrow {
+  color:#e9c66d !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-logout {
+  background:#263c50 !important;
+  color:#eaf2f9 !important;
+  border:1px solid #647c92 !important;
+  box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving button.akpr-back {
+  background:#263b51 !important;
+  color:#eaf2f9 !important;
+  border:1px solid #5b748d !important;
+  box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-logout:focus-visible,
+body[data-role="pre_receiving"] #ak-pre-receiving button.akpr-back:focus-visible {
+  outline:2px solid #e6c46e !important;
+  outline-offset:2px;
+}
+
+/* 24.10.2026 - Tam hedefli buton renkleri; sayfa geneli buton kurallarını ezer. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-new,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button#akpr-open-list {
+  background:#21384e !important;
+  background-color:#21384e !important;
+  background-image:none !important;
+  color:#f3f7fc !important;
+  border:1px solid #536b83 !important;
+  border-bottom:3px solid #d5b360 !important;
+  box-shadow:0 4px 12px rgba(0,0,0,.22) !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button#akpr-logout,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-back[data-akpr-back] {
+  background:#2b4157 !important;
+  background-color:#2b4157 !important;
+  background-image:none !important;
+  color:#f2f6fb !important;
+  border:1px solid #698197 !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving nav#akpr-home-nav button:is(#akpr-open-new,#akpr-open-list):is(:hover,:active,:focus) {
+  background:#2c4962 !important;
+  background-image:none !important;
+}
+
+/* 2026-10-24: Ön Kayıt personelinin TÜM işlem butonları. Başka rollere dokunmaz.
+   Genel index.html button:not(.alt) kırmızı stilini sadece bu bölümde geçersiz kılar. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button:not(.akpr-danger) {
+  background:#263e55 !important;
+  background-color:#263e55 !important;
+  background-image:none !important;
+  color:#f1f6fb !important;
+  border:1px solid #5b758e !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-nav-card {
+  background:#1c3349 !important;
+  background-image:none !important;
+  border-bottom:4px solid #d5b360 !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-btn.primary:not(.akpr-danger) {
+  background:#2b5874 !important;
+  background-image:none !important;
+  border-color:#6c91a9 !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.akpr-danger {
+  background:#49303a !important;
+  background-image:none !important;
+  color:#ffdce0 !important;
+  border:1px solid #875564 !important;
+  box-shadow:none !important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button:hover:not(:disabled) {
+  filter:brightness(1.12);
+}
+
+/* AKTİVA: Ön kayıtta araç bekleme süresi – mevcut lacivert görünüm korunur. */
+#ak-pre-receiving .akpr-wait-time,
+body[data-role="count"] #akpr-records-panel .akpr-wait-time{
+ display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;
+ margin-top:8px;padding:7px 10px;border-radius:9px;
+ background:#233b50;color:#d7e7f3;border:1px solid #48657c;
+ font-size:12px;line-height:1.45;
+}
+#ak-pre-receiving .akpr-wait-time strong,
+body[data-role="count"] #akpr-records-panel .akpr-wait-time strong{color:#f2d17c;font-weight:800}
+
+/* Danışma ekranı: yalnızca rol bazlı yeni bölümler */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-report-shortcut {display:block;width:100%;margin:12px 0;background:#21384e!important;background-image:none!important;color:#fff!important;border:1px solid #536b83!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-export {background:#21384e!important;background-image:none!important;color:#fff!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-report-view label {display:block;color:#e4eaf2;margin:12px 0}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-report-view input,body[data-role="pre_receiving"] #ak-pre-receiving #akpr-report-view select {background:#172a3c!important;color:white!important;border:1px solid #536b83!important}
+
+/* AKTİVA Danışma - kayıt kartları; yalnızca danışma rolü */
+body[data-role="pre_receiving"] #akpr-list .akpr-row{display:block;margin:12px 0;padding:15px;border:1px solid #496179;border-radius:15px;background:#1d3146;min-width:0;color:#eaf1f9;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-head{width:100%;min-width:0}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-top{display:flex;justify-content:space-between;align-items:flex-start;gap:9px;flex-wrap:wrap}
+body[data-role="pre_receiving"] #akpr-list .akpr-plate{font-size:19px;color:#f3f7fc;letter-spacing:.3px}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-company{font-size:13px;color:#b6c8d9;margin-top:3px}
+body[data-role="pre_receiving"] #akpr-list .akpr-pill{display:inline-block;background:#31485f;color:#f3d89a;border:1px solid #53677f;white-space:normal}
+body[data-role="pre_receiving"] #akpr-list .akpr-state-outside{color:#e4c88a}
+body[data-role="pre_receiving"] #akpr-list .akpr-state-depot{color:#a9d8f6}
+body[data-role="pre_receiving"] #akpr-list .akpr-state-exited{color:#a9dec9}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:15px;padding-top:12px;border-top:1px solid #3d5268}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts>div,body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+body[data-role="pre_receiving"] #akpr-list small{font-size:11px;color:#abbdd0}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts b{font-size:13px;font-weight:600;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details{margin-top:14px;border-radius:11px;background:#263d53;border:1px solid #4c6680;overflow:hidden}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details>summary{cursor:pointer;padding:12px 14px;font-weight:700;color:#ebf4fc;list-style-position:inside}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details[open]>summary{border-bottom:1px solid #4c6680}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more span{overflow-wrap:anywhere;font-size:12px}
+body[data-role="pre_receiving"] #akpr-list .akpr-actions{margin:0;padding:0 12px 14px}
+body[data-role="pre_receiving"] #akpr-list .akpr-actions button{font-size:12px;max-width:100%;flex:1 1 155px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-search-label input{width:100%;min-width:0}
+@media(max-width:380px){body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more{grid-template-columns:1fr}}
+
+/* AKTİVA Danışma: kompakt operasyon kartları ve tek satırlık filtreler */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary .akpr-stat{font-size:22px!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary .akpr-card,body[data-role="pre_receiving"] #ak-pre-receiving .akpr-compact-status .akpr-card{min-height:88px;box-sizing:border-box}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:5px;border-radius:13px;background:#102235;border:1px solid #425971;margin:12px 0 8px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-tab{border:0;border-radius:9px;background:transparent;color:#bdcddd;font-weight:700;padding:11px 4px;cursor:pointer;font-size:13px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-tab.is-active{background:#35516b;color:#fff;box-shadow:0 1px 5px #07162655}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-advanced-filter{font-size:12px;margin:0 0 10px;color:#aebfd1}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-advanced-filter select{padding:9px 12px!important;font-size:13px!important;background:#20364d!important;color:#edf4fc!important;border:1px solid #506983!important;border-radius:10px!important}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary>div{min-width:0;padding:10px;border:1px solid #425971;border-radius:10px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary small{display:block;font-size:11px;line-height:1.4}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary strong{display:block;margin-top:5px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-empty-state{padding:16px 8px;color:#b9cada;text-align:center;font-size:13px}
+
+/* Beş sayaç: 2+2 ve ortalanmış son kart */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats>.akpr-mini-card{min-width:0;min-height:88px;box-sizing:border-box}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats>.akpr-mini-card:last-child{grid-column:1 / -1;justify-self:center;width:calc(50% - 5px)}
+
+
+/* AKTİVA Danışma: antrasit-lacivert yüzey; diğer roller etkilenmez. */
+body[data-role="pre_receiving"] {
+  background: #192431 !important;
+  background-image: linear-gradient(155deg,#202e3d 0%,#192431 58%,#17212d 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+body[data-role="pre_receiving"] #app,
+body[data-role="pre_receiving"] .wrap {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Danışma > Araç Kayıtları > Geçmiş: mobil tarih alanları taşmasın. */
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates {
+  width:100%; max-width:100%; box-sizing:border-box;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  column-gap:12px !important; row-gap:10px !important;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates > label {
+  display:block; min-width:0; max-width:100%; width:100%;
+  box-sizing:border-box; margin:0; overflow:hidden;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"] {
+  display:block; width:100% !important; min-width:0 !important;
+  max-width:100% !important; box-sizing:border-box !important;
+  padding:11px 8px !important; margin:6px 0 0 !important;
+  font-size:14px !important; line-height:1.35;
+  border:1px solid #59728a !important; border-radius:10px !important;
+  background:#263b51 !important; color:#f1f6fb !important;
+  color-scheme:dark;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]::-webkit-date-and-time-value {
+  min-width:0; text-align:left;
+}
+@media(max-width:390px) {
+  body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates {column-gap:8px !important}
+  body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"] {font-size:12px !important; padding:10px 5px !important}
+}
+
+/* AKTİVA Danışma - iOS tarih seçici ve ana zemin kalıcı düzeltme */
+html:has(body[data-role="pre_receiving"]){background-color:#192431!important}
+body[data-role="pre_receiving"],body[data-role="pre_receiving"] #app,body[data-role="pre_receiving"] main,body[data-role="pre_receiving"] #ak-pre-receiving{background-color:#192431!important;background-image:linear-gradient(160deg,#223244 0%,#192431 65%,#192431 100%)!important;min-height:100vh}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;width:100%!important;max-width:100%!important;min-width:0!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates[style*="display: none"],body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates[style*="display:none"]{display:none!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates>label{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:visible!important;box-sizing:border-box!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]{display:block!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:48px!important;padding:10px 12px!important;font-size:16px!important;-webkit-appearance:none;appearance:none;overflow:hidden!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]::-webkit-date-and-time-value{min-width:0!important;text-align:left!important}
+
+/* AKTİVA Danışma - tek renk standardı ve geniş ekran yerleşimi */
+html:has(body[data-role="pre_receiving"]){background:#151c26!important}
+body[data-role="pre_receiving"],body[data-role="pre_receiving"] #app,body[data-role="pre_receiving"] main,body[data-role="pre_receiving"] #ak-pre-receiving{background:#151c26!important;background-image:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-head{background:#213246!important;border:1px solid #40566b!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user{display:flex;flex-direction:column;gap:3px;margin-top:7px;min-width:0}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user strong{color:#fff;font-size:15px;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user small{color:#b8c8d8;font-size:12px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card{background:#263b50!important;background-image:none!important;border:1px solid #40566b!important;border-bottom:1px solid #40566b!important;box-shadow:none!important;color:#f5f8fb!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card::before,
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card::after{background:none!important;border-color:transparent!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card:focus-visible{outline:2px solid #9fb8ce!important;outline-offset:2px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-mini-card{background:#1e2d3f!important;background-image:none!important;border:1px solid #374c60!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-report-shortcut{background:#263b50!important;border:1px solid #40566b!important;box-shadow:none!important}
+@media(min-width:900px){
+ body[data-role="pre_receiving"] #ak-pre-receiving{max-width:1320px;padding:24px 28px 60px}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card{min-height:142px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status>.akpr-mini-card:last-child{grid-column:auto!important;justify-self:stretch!important;width:auto!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-view .akpr-row{display:flex;align-items:center}
+}
+
+/* AKTİVA Danışma — isim/unvan ve sade kart görünümü, yalnızca pre_receiving. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:14px!important;min-width:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head>div{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  min-width:0!important;flex:1 1 auto!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head h1{
+  font-size:clamp(18px,4.5vw,22px)!important;line-height:1.3!important;
+  margin:0 0 10px!important;overflow-wrap:anywhere!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-user{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  gap:5px!important;width:100%!important;min-width:0!important;margin:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-user-name{
+  display:block!important;width:100%!important;color:#f6f9fc!important;
+  font-size:16px!important;line-height:1.35!important;font-weight:750!important;
+  overflow-wrap:anywhere!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-user-role{
+  display:block!important;color:#b7c9da!important;font-size:12px!important;
+  line-height:1.45!important;white-space:normal!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-logout{
+  flex:0 0 auto!important;align-self:center!important;
+  background:#2b4157!important;color:#f2f6fb!important;
+  border:1px solid #698197!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav button.akpr-nav-card{
+  background:#263b50!important;background-image:none!important;
+  border:1px solid #4c647b!important;border-bottom:1px solid #4c647b!important;
+  border-radius:16px!important;box-shadow:none!important;
+  color:#f1f6fb!important;transform:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav button.akpr-nav-card:hover{
+  background:#2d455b!important;border-color:#7992a9!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-icon{
+  background:#314b63!important;color:#dbe7f1!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-arrow{
+  color:#a9bed0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-card::before,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr-nav-card::after{
+  border-color:transparent!important;background:none!important;
+}
+@media(max-width:390px){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head{padding:15px!important;gap:8px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-logout{padding:9px 12px!important}
+}
+
+/* 26.10.2026 — Danışma ana ekranı son düzeltme; ayrı CSS gerekmez. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card:hover {
+  border:1px solid #4c647b!important;
+  border-bottom:1px solid #4c647b!important;
+  box-shadow:none!important;
+  background-image:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card::before,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card::after {
+  content:none!important;
+  display:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats > .akpr-mini-card:last-child {
+  grid-column:1 / -1!important;
+  width:100%!important;
+  max-width:none!important;
+  justify-self:stretch!important;
+  box-sizing:border-box!important;
+}
+
+/* Danışma: altın renkli alt kenar dahil tüm navigasyon kartları tek renkte. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card {
+  border:1px solid #4c647b !important;
+  border-bottom-width:1px !important;
+  border-bottom-style:solid !important;
+  border-bottom-color:#4c647b !important;
+  box-shadow:none !important;
+}
+
+/* AKTİVA Danışma / Araç Kayıtları — sade durum akışı (2026-10-26) */
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-progress{margin-top:15px;padding:13px 12px 11px;border-radius:11px;background:#172b3f;border:1px solid #3e5870}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:start}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span{font-size:10px;line-height:1.35;color:#aebed0;text-align:center;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span:first-child{text-align:left}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span:last-child{text-align:right}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span.is-current{color:#f1f6fb;font-weight:700}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track span{height:6px;border-radius:20px;background:#41576a}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track span.is-done{background:#4b9d82}
+body[data-role="pre_receiving"] #akpr-list .akpr-quick-action{margin-top:13px;display:flex}
+body[data-role="pre_receiving"] #akpr-list .akpr-main-action{width:100%;min-height:46px;border-radius:11px!important;background:#315c79!important;color:#f4f8fc!important;border:1px solid #63849b!important;box-shadow:none!important;font-size:14px!important;font-weight:700!important}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details{margin-top:10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details>summary{font-size:13px;font-weight:600}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts{gap:12px 10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-row{padding:16px;border-radius:16px}
+
+/* Danışma - ortak bekleme uyarısı ayarları */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-row.akpr-warning-yellow{border-left:4px solid #dba640!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-row.akpr-warning-red{border-left:4px solid #d65b60!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning{font-size:11px;font-weight:750;border-radius:8px;padding:5px 8px;white-space:nowrap}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning.yellow{background:#493c21;color:#ffe3a3}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning.red{background:#4b2830;color:#ffc1c5}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-open-settings{margin-top:0!important}
+
+/* Danışma Ayarları > Araç Bekleme Süresi */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option{display:flex;align-items:center;gap:13px;width:100%;padding:17px 15px;margin-top:14px;border:1px solid #40576b;border-radius:13px;background:#26394a;color:#f2f6fa;text-align:left;cursor:pointer}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-icon{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:11px;background:#344e61;font-size:25px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy strong{font-size:15px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy small{font-size:12px;color:#b9cbd9;line-height:1.4}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option>span:last-child{font-size:25px;color:#c4d4df}
+
+/* AKTİVA Danışma: Ayarlar ve alt sayfaları bağımsız tam ekran göster. */
+body[data-role="pre_receiving"] #ak-pre-receiving [hidden] { display:none !important; }
+body[data-role="pre_receiving"].akpr-settings-fullscreen { overflow:hidden; }
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]),
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) {
+ position:fixed !important; inset:0 !important; z-index:2147483000 !important;
+ box-sizing:border-box !important; width:100vw !important; max-width:none !important;
+ height:100dvh !important; min-height:100vh; overflow-y:auto !important;
+ margin:0 !important; border:0 !important; border-radius:0 !important;
+ padding:calc(env(safe-area-inset-top, 0px) + 22px) max(18px, calc((100vw - 720px) / 2)) calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+ background:#f6f8fb !important; box-shadow:none !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2 {margin-top:24px;}
+
+/* AKTİVA | Danışma tam ekran Ayarlar - kurumsal lacivert / mavi gri */
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]),
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]){
+  --ak-settings-ink:#20384f;
+  color:var(--ak-settings-ink)!important;
+  background:radial-gradient(ellipse 110% 65% at 100% 110%,rgba(127,155,180,.19),transparent 70%),linear-gradient(160deg,#e9f0f7 0%,#f1f5fa 58%,#e5edf6 100%)!important;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) max(18px,calc((100vw - 720px)/2)) calc(env(safe-area-inset-bottom,0px) + 36px)!important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-detail-head,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-detail-head{
+  position:relative;display:flex;align-items:flex-start;
+  margin:-16px calc(-1 * max(18px,(100vw - 720px)/2)) 0!important;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) max(18px,calc((100vw - 720px)/2)) 108px!important;
+  background:linear-gradient(125deg,#1d344c 0%,#284a67 65%,#1c334b 100%)!important;
+  border-radius:0 0 26px 26px;box-shadow:0 14px 28px rgba(26,49,74,.17);
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-detail-head::after,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-detail-head::after{
+  content:'⚙';position:absolute;right:max(20px,calc((100vw - 720px)/2));bottom:13px;
+  font-size:88px;line-height:1;color:rgba(213,229,242,.10);pointer-events:none;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-back,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-back{
+  position:relative;z-index:1;background:rgba(255,255,255,.10)!important;color:#f6f9fc!important;
+  border:1px solid rgba(224,238,250,.33)!important;border-radius:12px!important;
+  box-shadow:none!important;min-height:44px;font-weight:700!important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2{
+  position:relative;z-index:1;margin:-87px 0 8px!important;padding:0 0 0 0!important;
+  font-size:clamp(25px,5.6vw,33px)!important;line-height:1.2;color:#fff!important;
+  text-shadow:none!important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2::before,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2::before{
+  content:'⚙';display:inline-grid;place-items:center;margin-right:12px;
+  width:43px;height:43px;border-radius:13px;background:rgba(255,255,255,.13);font-size:27px;vertical-align:middle;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2::before{content:'◷'}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2 + p.akpr-muted,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) h2 + p.akpr-muted{
+  position:relative;z-index:1;color:#cbddeb!important;margin:0 0 70px!important;font-size:13px!important;line-height:1.5;
+}
+
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-detail-head button{position:relative;z-index:1;background:rgba(255,255,255,.12)!important;color:white!important;border:1px solid rgba(255,255,255,.3)!important;border-radius:12px!important;min-height:44px}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]) .akpr-label{color:#233c55!important}

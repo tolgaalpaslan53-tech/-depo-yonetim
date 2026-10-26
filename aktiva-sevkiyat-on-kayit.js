@@ -483,6 +483,15 @@
        if(button.style.getPropertyPriority(prop)==='important')button.style.removeProperty(prop);
      }
    }
+   // Sarı alt kenarlık farklı global stillerden gelebilir.
+   // Yalnızca Danışma ana sayfasındaki üç gezinme kartını inline öncelikle sabitle.
+   for(const card of root.querySelectorAll('#akpr-home-nav > button.akpr-nav-card')){
+     card.style.setProperty('border','1px solid #4c647b','important');
+     card.style.setProperty('border-bottom','1px solid #4c647b','important');
+     card.style.setProperty('border-bottom-color','#4c647b','important');
+     card.style.setProperty('box-shadow','none','important');
+     card.style.setProperty('background-image','none','important');
+   }
  }
  function updateDanismaUser(){
   const target=$('#akpr-user-name');if(!target)return;

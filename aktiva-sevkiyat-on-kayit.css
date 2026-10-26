@@ -453,3 +453,12 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.ak
   justify-self:stretch!important;
   box-sizing:border-box!important;
 }
+
+/* Danışma: altın renkli alt kenar dahil tüm navigasyon kartları tek renkte. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card {
+  border:1px solid #4c647b !important;
+  border-bottom-width:1px !important;
+  border-bottom-style:solid !important;
+  border-bottom-color:#4c647b !important;
+  box-shadow:none !important;
+}

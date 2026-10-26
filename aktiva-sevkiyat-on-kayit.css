@@ -1702,3 +1702,16 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-settings-view:
   color:#f0f6fc!important;font-size:14px!important;line-height:1.55!important;
   font-weight:500!important;
 }
+
+/* 26.10.2026 — Danışma ayarları: üst bilgilendirme metni ve dişli çakışması. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) .akpr-detail-head::after{
+  top:18px!important;right:max(22px,calc((100vw - 720px)/2))!important;
+  bottom:auto!important;font-size:66px!important;opacity:.65!important;
+  z-index:0!important;pointer-events:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) h2 + p.akpr-muted{
+  position:relative!important;z-index:3!important;
+  color:#ffffff!important;font-size:15px!important;font-weight:600!important;
+  line-height:1.6!important;text-shadow:0 1px 2px rgba(0,0,0,.25)!important;
+  overflow-wrap:break-word!important;
+}

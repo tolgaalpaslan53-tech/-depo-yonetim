@@ -297,3 +297,44 @@ body[data-role="pre_receiving"] #akpr-list-view .akpr-empty-state{padding:16px 8
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats>.akpr-mini-card{min-width:0;min-height:88px;box-sizing:border-box}
 body[data-role="pre_receiving"] #ak-pre-receiving .akpr-five-stats>.akpr-mini-card:last-child{grid-column:1 / -1;justify-self:center;width:calc(50% - 5px)}
+
+
+/* AKTİVA Danışma: antrasit-lacivert yüzey; diğer roller etkilenmez. */
+body[data-role="pre_receiving"] {
+  background: #192431 !important;
+  background-image: linear-gradient(155deg,#202e3d 0%,#192431 58%,#17212d 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+body[data-role="pre_receiving"] #app,
+body[data-role="pre_receiving"] .wrap {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Danışma > Araç Kayıtları > Geçmiş: mobil tarih alanları taşmasın. */
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates {
+  width:100%; max-width:100%; box-sizing:border-box;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  column-gap:12px !important; row-gap:10px !important;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates > label {
+  display:block; min-width:0; max-width:100%; width:100%;
+  box-sizing:border-box; margin:0; overflow:hidden;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"] {
+  display:block; width:100% !important; min-width:0 !important;
+  max-width:100% !important; box-sizing:border-box !important;
+  padding:11px 8px !important; margin:6px 0 0 !important;
+  font-size:14px !important; line-height:1.35;
+  border:1px solid #59728a !important; border-radius:10px !important;
+  background:#263b51 !important; color:#f1f6fb !important;
+  color-scheme:dark;
+}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]::-webkit-date-and-time-value {
+  min-width:0; text-align:left;
+}
+@media(max-width:390px) {
+  body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates {column-gap:8px !important}
+  body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"] {font-size:12px !important; padding:10px 5px !important}
+}

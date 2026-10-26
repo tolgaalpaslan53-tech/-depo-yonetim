@@ -152,9 +152,9 @@
  $('#akpr-add-product')?.addEventListener('click',addProduct);resetProducts();loadCatalog()}
  function showStaffView(view){
   const root=$('#ak-pre-receiving');if(!root)return;
-  const nav=$('#akpr-home-nav'),create=$('#akpr-new-view'),list=$('#akpr-list-view'),report=$('#akpr-report-view'),shortcut=$('#akpr-open-report'),settings=$('#akpr-settings-view'),waitSettings=$('#akpr-wait-settings-view'),settingsShortcut=$('#akpr-open-settings');
+  const nav=$('#akpr-home-nav'),stats=$('#akpr-live-status'),create=$('#akpr-new-view'),list=$('#akpr-list-view'),report=$('#akpr-report-view'),shortcut=$('#akpr-open-report'),settings=$('#akpr-settings-view'),waitSettings=$('#akpr-wait-settings-view'),settingsShortcut=$('#akpr-open-settings');
   if(!nav||!create||!list)return;
-  nav.hidden=view!=='home';if(shortcut)shortcut.hidden=view!=='home';if(settingsShortcut)settingsShortcut.hidden=view!=='home';if(settings)settings.hidden=view!=='settings';if(waitSettings)waitSettings.hidden=view!=='wait-settings';create.hidden=view!=='new';list.hidden=view!=='list';if(report)report.hidden=view!=='report';
+  nav.hidden=view!=='home';if(stats)stats.hidden=view!=='home';if(shortcut)shortcut.hidden=view!=='home';if(settingsShortcut)settingsShortcut.hidden=view!=='home';if(settings)settings.hidden=view!=='settings';if(waitSettings)waitSettings.hidden=view!=='wait-settings';create.hidden=view!=='new';list.hidden=view!=='list';if(report)report.hidden=view!=='report';
   if(view==='list')refresh();if(view==='wait-settings')loadWaitThresholds();
   root.scrollIntoView({behavior:'smooth',block:'start'});
  }

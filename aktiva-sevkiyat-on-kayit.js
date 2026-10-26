@@ -246,7 +246,7 @@
      const history=document.createElement('button');history.type='button';history.className='akpr-btn light';history.textContent='🕘 İşlem Geçmişi';history.onclick=async()=>{
        try{
          const events=await api('/rest/v1/ak_danisma_audit?select=changed_at,actor_id,changed_fields,old_times,new_times&record_id=eq.'+encodeURIComponent(r.id)+'&order=changed_at.desc&limit=100');
-         const ids=[...new Set((events||[]).map(e=>e.actor_id).filter(Boolean))];
+         const ids=[...new Set([...(events||[]).map(e=>e.actor_id),...(!isQr(r)?[r.created_by]:[])].filter(Boolean))];
          const names=new Map();
          if(profile?.id&&profile?.full_name)names.set(profile.id,profile.full_name);
          if(ids.length){
@@ -270,14 +270,27 @@
          dialog.style.cssText='position:fixed;inset:0;z-index:2147483640;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px';
          const panel=document.createElement('div');panel.style.cssText='background:#142333;color:#f2f5f8;border:1px solid #415367;border-radius:18px;width:min(100%,520px);max-height:80vh;overflow:auto;padding:20px;font:inherit';
          const heading=document.createElement('h3');heading.textContent='Araç İşlem Geçmişi';heading.style.margin='0 0 16px';panel.append(heading);
-         if(!events?.length){const empty=document.createElement('p');empty.textContent='Henüz değişiklik bulunmuyor.';panel.append(empty)}
-         for(const event of events||[]){
-           const item=document.createElement('div');item.style.cssText='padding:12px 0;border-top:1px solid #34475a';
+         // İlk kayıt, değişiklik denetim tablosunda INSERT olayı olmasa da
+         // ana kaydın değişmeyen created_at/created_by bilgileriyle gösterilir.
+         const entries=(events||[]).map(event=>{
            const fields=Array.isArray(event.changed_fields)?event.changed_fields:[];
-           const labels=[...new Set(fields.map(field=>descriptions[field]||'Kayıt bilgisi güncellendi'))];
-           const title=document.createElement('strong');title.textContent=labels.join(' · ')||'Kayıt güncellendi';title.style.display='block';item.append(title);
-           const time=document.createElement('div');time.textContent=stamp(event.changed_at);time.style.cssText='opacity:.75;font-size:.88em;margin-top:5px';item.append(time);
-           const person=document.createElement('div');person.textContent='İşlemi yapan: '+(names.get(event.actor_id)||'Personel adı bulunamadı');person.style.cssText='margin-top:7px;font-size:.92em';item.append(person);panel.append(item);
+           const effective=fields.filter(f=>!(f==='status'&&(fields.includes('docked_at')||fields.includes('departed_at'))));
+           const labels=[...new Set(effective.map(field=>descriptions[field]||'Kayıt bilgisi güncellendi'))];
+           return {at:event.changed_at,title:labels.join(' · ')||'Kayıt güncellendi',actor:event.actor_id};
+         });
+         if(r.created_at){
+           entries.push({at:r.created_at,title:isQr(r)?'QR Kod ile Ön Kayıt Oluşturuldu':'Danışma Tarafından Ön Kayıt Oluşturuldu',actor:isQr(r)?null:r.created_by,creation:true});
+         }
+         entries.sort((a,b)=>Date.parse(b.at||0)-Date.parse(a.at||0));
+         if(!entries.length){const empty=document.createElement('p');empty.textContent='Henüz işlem kaydı bulunmuyor.';panel.append(empty)}
+         for(const entry of entries){
+           const item=document.createElement('div');item.style.cssText='padding:12px 0;border-top:1px solid #34475a';
+           const title=document.createElement('strong');title.textContent=entry.title;title.style.display='block';item.append(title);
+           const time=document.createElement('div');time.textContent=stamp(entry.at);time.style.cssText='opacity:.75;font-size:.88em;margin-top:5px';item.append(time);
+           const person=document.createElement('div');
+           person.textContent=entry.creation&&isQr(r)?'Kayıt yöntemi: Şoför QR kodu':
+             (entry.creation?'Kaydı oluşturan: ':'İşlemi yapan: ')+(names.get(entry.actor)||'Personel adı bulunamadı');
+           person.style.cssText='margin-top:7px;font-size:.92em';item.append(person);panel.append(item);
          }
          const close=document.createElement('button');close.type='button';close.textContent='Kapat';close.className='akpr-btn light';close.style.cssText='margin-top:16px;width:100%';close.onclick=()=>dialog.remove();panel.append(close);dialog.append(panel);
          dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.remove()});document.body.append(dialog);

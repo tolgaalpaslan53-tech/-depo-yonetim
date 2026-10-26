@@ -1717,66 +1717,20 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-v
 }
 
 
-/* 26.10.2026 — Danışma: dört ayar sayfasında dinamik yükseklikte başlık alanı.
-   Başlık ve açıklama aynı grid arka planında kalır; uzun metin taşmaz. */
-html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]){
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr)!important;
-  grid-auto-rows:max-content!important;
-  align-content:start!important;
-  position:fixed!important;
+/* 26.10.2026 - Araç Bekleme Süresi: açıklama başlık zemininin içinde.
+   Sabit yükseklik ve grid/pseudo arka plan kullanılmaz. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) .akpr-detail-head{
+  padding-bottom:170px!important;
 }
-html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden])::before{
-  content:""!important;display:block!important;
-  grid-column:1!important;grid-row:1 / 4!important;
-  align-self:stretch!important;
-  margin:-16px calc(-1 * max(18px,(100vw - 720px)/2)) 0!important;
-  border-radius:0 0 26px 26px!important;
-  background:linear-gradient(125deg,#1d344c 0%,#284a67 65%,#1c334b 100%)!important;
-  box-shadow:0 14px 28px rgba(26,49,74,.17)!important;
-  z-index:0!important;pointer-events:none!important;
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) h2{
+  margin-top:-149px!important;
 }
-html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) > .akpr-detail-head{
-  grid-column:1!important;grid-row:1!important;
-  margin:0!important;padding:8px 0 0!important;
-  min-height:70px!important;
-  background:none!important;box-shadow:none!important;border-radius:0!important;
-  position:relative!important;z-index:1!important;
-}
-html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) > .akpr-detail-head::after{
-  top:2px!important;right:0!important;bottom:auto!important;
-  font-size:56px!important;opacity:.35!important;
-}
-html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) > h2{
-  grid-column:1!important;grid-row:2!important;
-  margin:14px 0 12px!important;padding:0!important;
-  position:relative!important;z-index:2!important;
-  font-size:clamp(23px,5.4vw,32px)!important;line-height:1.3!important;
-  color:#fff!important;overflow-wrap:anywhere!important;
-}
-html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) > h2 + p.akpr-muted{
-  grid-column:1!important;grid-row:3!important;
-  margin:0 0 30px!important;padding:0!important;
-  position:relative!important;z-index:2!important;
-  color:#f3f8fc!important;font-size:15px!important;
-  font-weight:600!important;line-height:1.55!important;
-  overflow-wrap:anywhere!important;white-space:normal!important;
-}
-html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view):not([hidden]) > :not(.akpr-detail-head):not(h2):not(p.akpr-muted){
-  min-width:0;
-}
-
-/* 26.10.2026 — Yalnız Araç Bekleme Süresi: açıklama lacivert alanın dışına çıkmasın.
-   Önceki genel ayar düzenlerini ve işlevleri değiştirmez. */
-html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-wait-settings-view:not([hidden])::before{
-  grid-row:1!important;
-  height:410px!important;
-  min-height:410px!important;
-  align-self:start!important;
-  border-radius:0 0 26px 26px!important;
-}
-html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) > h2 + p.akpr-muted{
-  margin-bottom:52px!important;
-  color:#fff!important;
-  text-shadow:none!important;
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-wait-settings-view:not([hidden]) h2 + p.akpr-muted{
+  color:#f3f8fc!important;
+  font-size:15px!important;
+  line-height:1.55!important;
+  font-weight:600!important;
+  margin-bottom:90px!important;
+  position:relative!important;
+  z-index:2!important;
 }

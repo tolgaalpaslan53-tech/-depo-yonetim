@@ -277,3 +277,18 @@ body[data-role="pre_receiving"] #akpr-list .akpr-actions{margin:0;padding:0 12px
 body[data-role="pre_receiving"] #akpr-list .akpr-actions button{font-size:12px;max-width:100%;flex:1 1 155px}
 body[data-role="pre_receiving"] #akpr-list-view .akpr-search-label input{width:100%;min-width:0}
 @media(max-width:380px){body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-more{grid-template-columns:1fr}}
+
+/* AKTİVA Danışma: kompakt operasyon kartları ve tek satırlık filtreler */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary .akpr-stat{font-size:22px!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-summary .akpr-card,body[data-role="pre_receiving"] #ak-pre-receiving .akpr-compact-status .akpr-card{min-height:88px;box-sizing:border-box}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:5px;border-radius:13px;background:#102235;border:1px solid #425971;margin:12px 0 8px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-tab{border:0;border-radius:9px;background:transparent;color:#bdcddd;font-weight:700;padding:11px 4px;cursor:pointer;font-size:13px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-filter-tab.is-active{background:#35516b;color:#fff;box-shadow:0 1px 5px #07162655}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-advanced-filter{font-size:12px;margin:0 0 10px;color:#aebfd1}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-advanced-filter select{padding:9px 12px!important;font-size:13px!important;background:#20364d!important;color:#edf4fc!important;border:1px solid #506983!important;border-radius:10px!important}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary>div{min-width:0;padding:10px;border:1px solid #425971;border-radius:10px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary small{display:block;font-size:11px;line-height:1.4}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-pending-summary strong{display:block;margin-top:5px}
+body[data-role="pre_receiving"] #akpr-list-view .akpr-empty-state{padding:16px 8px;color:#b9cada;text-align:center;font-size:13px}

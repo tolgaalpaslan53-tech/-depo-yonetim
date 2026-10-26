@@ -347,3 +347,26 @@ body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates[style*="disp
 body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates>label{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:visible!important;box-sizing:border-box!important}
 body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]{display:block!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:48px!important;padding:10px 12px!important;font-size:16px!important;-webkit-appearance:none;appearance:none;overflow:hidden!important}
 body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]::-webkit-date-and-time-value{min-width:0!important;text-align:left!important}
+
+/* AKTİVA Danışma - tek renk standardı ve geniş ekran yerleşimi */
+html:has(body[data-role="pre_receiving"]){background:#151c26!important}
+body[data-role="pre_receiving"],body[data-role="pre_receiving"] #app,body[data-role="pre_receiving"] main,body[data-role="pre_receiving"] #ak-pre-receiving{background:#151c26!important;background-image:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-head{background:#213246!important;border:1px solid #40566b!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user{display:flex;flex-direction:column;gap:3px;margin-top:7px;min-width:0}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user strong{color:#fff;font-size:15px;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user small{color:#b8c8d8;font-size:12px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card,
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card{background:#263b50!important;background-image:none!important;border:1px solid #40566b!important;border-bottom:1px solid #40566b!important;box-shadow:none!important;color:#f5f8fb!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card::before,
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card::after{background:none!important;border-color:transparent!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-nav-card:focus-visible{outline:2px solid #9fb8ce!important;outline-offset:2px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-mini-card{background:#1e2d3f!important;background-image:none!important;border:1px solid #374c60!important;box-shadow:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-report-shortcut{background:#263b50!important;border:1px solid #40566b!important;box-shadow:none!important}
+@media(min-width:900px){
+ body[data-role="pre_receiving"] #ak-pre-receiving{max-width:1320px;padding:24px 28px 60px}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-home-nav .akpr-nav-card{min-height:142px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status>.akpr-mini-card:last-child{grid-column:auto!important;justify-self:stretch!important;width:auto!important}
+ body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-view .akpr-row{display:flex;align-items:center}
+}

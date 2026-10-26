@@ -338,3 +338,12 @@ body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="
   body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates {column-gap:8px !important}
   body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"] {font-size:12px !important; padding:10px 5px !important}
 }
+
+/* AKTİVA Danışma - iOS tarih seçici ve ana zemin kalıcı düzeltme */
+html:has(body[data-role="pre_receiving"]){background-color:#192431!important}
+body[data-role="pre_receiving"],body[data-role="pre_receiving"] #app,body[data-role="pre_receiving"] main,body[data-role="pre_receiving"] #ak-pre-receiving{background-color:#192431!important;background-image:linear-gradient(160deg,#223244 0%,#192431 65%,#192431 100%)!important;min-height:100vh}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;width:100%!important;max-width:100%!important;min-width:0!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates[style*="display: none"],body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates[style*="display:none"]{display:none!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates>label{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:visible!important;box-sizing:border-box!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]{display:block!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:48px!important;padding:10px 12px!important;font-size:16px!important;-webkit-appearance:none;appearance:none;overflow:hidden!important}
+body[data-role="pre_receiving"] #akpr-list-view #akpr-history-dates input[type="date"]::-webkit-date-and-time-value{min-width:0!important;text-align:left!important}

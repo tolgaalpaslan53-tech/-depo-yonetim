@@ -278,6 +278,16 @@
            const labels=[...new Set(effective.map(field=>descriptions[field]||'Kayıt bilgisi güncellendi'))];
            return {at:event.changed_at,title:labels.join(' · ')||'Kayıt güncellendi',actor:event.actor_id};
          });
+         // Eski veya denetim kaydı eksik araçlarda, ana tablodaki kesin
+         // çıkış zamanını göster. Olay aktörünü tahmin etme.
+         const exitInAudit=(events||[]).some(event=>{
+           const fields=Array.isArray(event.changed_fields)?event.changed_fields:[];
+           return fields.includes('departed_at') ||
+             (event.new_times&&event.old_times&&event.new_times.departed_at&&!event.old_times.departed_at);
+         });
+         if(r.departed_at&&!exitInAudit){
+           entries.push({at:r.departed_at,title:'Araç Çıkışı Kaydedildi',actor:null,missingAudit:true});
+         }
          if(r.created_at){
            entries.push({at:r.created_at,title:isQr(r)?'QR Kod ile Ön Kayıt Oluşturuldu':'Danışma Tarafından Ön Kayıt Oluşturuldu',actor:isQr(r)?null:r.created_by,creation:true});
          }
@@ -288,7 +298,7 @@
            const title=document.createElement('strong');title.textContent=entry.title;title.style.display='block';item.append(title);
            const time=document.createElement('div');time.textContent=stamp(entry.at);time.style.cssText='opacity:.75;font-size:.88em;margin-top:5px';item.append(time);
            const person=document.createElement('div');
-           person.textContent=entry.creation&&isQr(r)?'Kayıt yöntemi: Şoför QR kodu':
+           person.textContent=entry.missingAudit?'İşlemi yapan: Geçmiş personel kaydı bulunamadı':entry.creation&&isQr(r)?'Kayıt yöntemi: Şoför QR kodu':
              (entry.creation?'Kaydı oluşturan: ':'İşlemi yapan: ')+(names.get(entry.actor)||'Personel adı bulunamadı');
            person.style.cssText='margin-top:7px;font-size:.92em';item.append(person);panel.append(item);
          }

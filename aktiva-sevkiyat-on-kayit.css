@@ -462,3 +462,20 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > but
   border-bottom-color:#4c647b !important;
   box-shadow:none !important;
 }
+
+/* AKTİVA Danışma / Araç Kayıtları — sade durum akışı (2026-10-26) */
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-progress{margin-top:15px;padding:13px 12px 11px;border-radius:11px;background:#172b3f;border:1px solid #3e5870}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:start}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span{font-size:10px;line-height:1.35;color:#aebed0;text-align:center;overflow-wrap:anywhere}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span:first-child{text-align:left}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span:last-child{text-align:right}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-labels span.is-current{color:#f1f6fb;font-weight:700}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track span{height:6px;border-radius:20px;background:#41576a}
+body[data-role="pre_receiving"] #akpr-list .akpr-progress-track span.is-done{background:#4b9d82}
+body[data-role="pre_receiving"] #akpr-list .akpr-quick-action{margin-top:13px;display:flex}
+body[data-role="pre_receiving"] #akpr-list .akpr-main-action{width:100%;min-height:46px;border-radius:11px!important;background:#315c79!important;color:#f4f8fc!important;border:1px solid #63849b!important;box-shadow:none!important;font-size:14px!important;font-weight:700!important}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details{margin-top:10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details>summary{font-size:13px;font-weight:600}
+body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts{gap:12px 10px}
+body[data-role="pre_receiving"] #akpr-list .akpr-row{padding:16px;border-radius:16px}

@@ -192,6 +192,14 @@
    x.dataset.vehicleState=state;
    const summary=document.createElement('div');summary.className='akpr-vehicle-head';
    summary.innerHTML=`<div class="akpr-vehicle-top"><div><strong class="akpr-plate">${E(r.plate||recordNo(r))}</strong><div class="akpr-vehicle-company">${E(r.company||'Firma belirtilmedi')}</div></div><span class="akpr-pill akpr-state-${state}">${E(r.status==='cancelled'?'İptal edildi':r.departed_at?'Çıkış yaptı':r.docked_at?'Depoda':'Dışarıda bekliyor')}</span></div><div class="akpr-vehicle-facts"><div><small>Şoför</small><b>${E(r.driver_name||'Belirtilmedi')}</b></div><div><small>İrsaliye</small><b>${E(r.waybill_number||'—')}</b></div><div><small>Ön kayıt</small><b>${stamp(r.created_at)}</b></div><div><small>Depoya giriş</small><b>${stamp(r.docked_at)}</b></div></div><div class="akpr-wait-time" data-akpr-start="${E(recordedArrival(r))}" data-akpr-end="${E(r.docked_at||(r.status==='cancelled'?r.created_at:''))}">${r.docked_at?'Giriş öncesi bekleme: ':'Bekleme süresi: '}<strong>${elapsedText(recordedArrival(r),r.docked_at||(r.status==='cancelled'?r.created_at:null))}</strong></div>`;
+   if(!receiving){
+     const stage=r.status==='cancelled'?-1:r.departed_at?2:r.docked_at?1:0;
+     const labels=['Ön Kayıt','Perona Gönderildi','Çıkış'];
+     const progress=document.createElement('div');progress.className='akpr-vehicle-progress';
+     progress.setAttribute('aria-label',stage<0?'İptal edilmiş kayıt':'Araç işlem aşaması: '+labels[stage]);
+     progress.innerHTML='<div class="akpr-progress-labels">'+labels.map((label,i)=>'<span class="'+(i===stage?'is-current':'')+'">'+E(label)+'</span>').join('')+'</div><div class="akpr-progress-track">'+labels.map((_,i)=>'<span class="'+(stage>=i?'is-done':'')+'"></span>').join('')+'</div>';
+     summary.append(progress);
+   }
    if(receiving){x.innerHTML=`<div><strong>${E(r.plate||recordNo(r))}</strong> · ${E(r.company||"Firma belirtilmedi")}<div class="akpr-muted">Kayıt No: ${E(recordNo(r))} · Kayıt: ${stamp(r.created_at)} · Geliş: ${stamp(recordedArrival(r))} · ${E(r.driver_name||'Şoför belirtilmedi')} · İrsaliye: ${E(r.waybill_number||'—')}</div><div class="akpr-muted">Perona gönderilme: ${stamp(r.docked_at)} · Çıkış: ${stamp(r.departed_at)}</div><div class="akpr-muted">${r.operation_note?"Operasyon notu: "+E(r.operation_note)+" · ":""}${E(r.notes||'')}${r.cancellation_reason?" · İptal nedeni: "+E(r.cancellation_reason):""}</div><div class="akpr-wait-time" data-akpr-start="${E(recordedArrival(r))}" data-akpr-end="${E(r.docked_at||(r.status==='cancelled'?r.created_at:''))}">${r.docked_at?'Perona gönderilene kadar bekleme: ':'Bekleme süresi: '}<strong>${elapsedText(recordedArrival(r),r.docked_at||(r.status==='cancelled'?r.created_at:null))}</strong></div></div><div><span class="akpr-pill">${statusText(r)}</span></div>`; }else{x.append(summary);}
    const details=document.createElement('details');details.className='akpr-vehicle-details';
    const title=document.createElement('summary');title.textContent='İşlem detayları ve seçenekler';details.append(title);
@@ -307,7 +315,19 @@
        }catch(e){alert('Geçmiş okunamadı: '+e.message)}
      };b.append(history);
    }
-   if(receiving){x.append(b)}else{if(b.childElementCount)details.append(b);x.append(details)}host.append(x)
+   if(receiving){x.append(b)}else{
+     // Yalnızca o an uygulanabilir ana işlem kartın üzerinde görünür;
+     // diğer mevcut işlemler açılır detay bölümünde korunur.
+     const main=[...b.children].find(el=>el.tagName==='BUTTON'&&(
+       el.textContent.includes('Perona Gönderildi')||el.textContent.includes('Araç Çıkışını Kaydet')));
+     if(main){
+       const quick=document.createElement('div');quick.className='akpr-quick-action';
+       main.classList.add('akpr-main-action');quick.append(main);
+       x.append(quick);
+     }
+     if(b.childElementCount)details.append(b);
+     x.append(details);
+   }host.append(x)
   }
  }
  const istanbulDate=t=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t));

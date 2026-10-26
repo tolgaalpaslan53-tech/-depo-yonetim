@@ -1,0 +1,29 @@
+/* AKTİVA Danışma: yalnızca ana sayfa kartları ve istatistik yerleşimi.
+   Mevcut JS, Supabase, Mal Kabul ve forklift bildirimlerine dokunmaz. */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav .akpr-nav-card,
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav .akpr-nav-card:hover,
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav .akpr-nav-card:focus {
+  border-bottom: 1px solid #50677e !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+/* Eski temanın dekoratif sarı çizgileri pseudo elementle eklenmişse kaldır. */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav .akpr-nav-card::before,
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-home-nav .akpr-nav-card::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+/* Beşinci istatistik kartı iki sütuna yayılır; tek başına ortada kalmaz. */
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status.akpr-five-stats {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status.akpr-five-stats > :nth-child(5) {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+}

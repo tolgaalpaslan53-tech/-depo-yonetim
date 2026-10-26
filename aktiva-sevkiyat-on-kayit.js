@@ -87,7 +87,7 @@
  const statusText=r=>r.status==='cancelled'?'İptal edildi':r.departed_at?'Çıkış yaptı':r.status==='completed'?'Tamamlandı':r.status==='counting'?'Sayım devam ediyor':r.status==='at_dock'?'Perona Gönderildi':'Bekliyor';
 
  const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
- function markup(){return `<section id="ak-pre-receiving"><div class="akpr-head"><div><h1>📋 AKTİVA · Danışma</h1><div class="akpr-user"><strong id="akpr-user-name">Danışma Personeli</strong><small>Danışma Personeli</small></div></div><button type="button" class="akpr-btn" id="akpr-logout">Çıkış</button></div>
+ function markup(){return `<section id="ak-pre-receiving"><div class="akpr-head"><div><h1>📋 AKTİVA · Danışma</h1><div class="akpr-user"><strong id="akpr-user-name">Danışma Personeli</strong><small class="akpr-user-role">Danışma Personeli</small></div></div><button type="button" class="akpr-btn" id="akpr-logout">Çıkış</button></div>
  <p class="akpr-muted" id="akpr-network-status" role="status" style="margin:4px 2px 12px"></p>
  <nav class="akpr-home-nav" id="akpr-home-nav" aria-label="Sevkiyat işlemleri" style="margin:0 0 14px"><button type="button" id="akpr-open-new" class="akpr-nav-card" style="min-height:146px"><span class="akpr-nav-icon" aria-hidden="true">＋</span><strong>Yeni Araç Kaydı</strong><small>Gelen aracın ve irsaliyenin ön kaydını oluştur</small><span class="akpr-nav-arrow" aria-hidden="true">›</span></button><button type="button" id="akpr-open-qr" class="akpr-nav-card" style="min-height:146px"><span class="akpr-nav-icon" aria-hidden="true">▦</span><strong>Şoför QR Kodu</strong><small>A4 çıktısını görüntüle ve yazdır</small><span class="akpr-nav-arrow" aria-hidden="true">›</span></button><button type="button" id="akpr-open-list" class="akpr-nav-card" style="min-height:146px"><span class="akpr-nav-icon" aria-hidden="true">▤</span><strong>Araç Kayıtları</strong><small>Araç kayıtlarını ve QR başvurularını yönet</small><span class="akpr-nav-arrow" aria-hidden="true">›</span></button></nav>
  <div class="akpr-grid akpr-compact-status akpr-five-stats" id="akpr-live-status" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 14px"><div class="akpr-card akpr-mini-card" style="padding:14px 15px;margin:0"><div class="akpr-muted">Bugünkü Ön Kayıt</div><div class="akpr-stat" id="akpr-total">—</div></div><div class="akpr-card akpr-mini-card" style="padding:14px 15px;margin:0"><div class="akpr-muted">Bugün Depoya Giren</div><div class="akpr-stat" id="akpr-in-dock" style="font-size:22px">—</div></div><div class="akpr-card akpr-mini-card" style="padding:14px 15px;margin:0"><div class="akpr-muted">Dışarıda Bekleyenler</div><div class="akpr-stat" id="akpr-queue" style="font-size:22px">—</div></div><div class="akpr-card akpr-mini-card" style="padding:14px 15px;margin:0"><div class="akpr-muted">Depodaki Araçlar</div><div class="akpr-stat" id="akpr-onsite" style="font-size:22px">—</div></div><div class="akpr-card akpr-mini-card" style="padding:14px 15px;margin:0"><div class="akpr-muted">Bugün Çıkış Yapanlar</div><div class="akpr-stat" id="akpr-done" style="font-size:22px">—</div></div></div><button type="button" id="akpr-open-report" class="akpr-btn light alt akpr-report-shortcut">📊 Excel Raporları</button>
@@ -473,25 +473,15 @@
   applySource();if(cache.length)drawReceiving(cache);else refresh();
  }
  // Only the four pre-registration navigation controls; strong inline styling bypasses conflicting global button CSS.
+ // Danışma menüsünde eski sarı vurguları yeniden yazma; renkler CSS'de yönetilir.
  function applyPreRegistrationButtonTheme(){
    if(document.body.dataset.role!=='pre_receiving')return;
-   const styles=[
-     ['#akpr-open-new','#21384e','#f3f7fc','#d5b360'],
-     ['#akpr-open-list','#21384e','#f3f7fc','#d5b360'],
-     ['#akpr-open-report','#21384e','#f3f7fc','#d5b360'],
-     ['#akpr-export','#21384e','#f3f7fc','#d5b360'],
-     ['#akpr-logout','#2b4157','#f3f7fc','#698197'],
-     ['#ak-pre-receiving .akpr-back','#2b4157','#f3f7fc','#698197']
-   ];
-   for(const [selector,bg,fg,edge] of styles){
-     document.querySelectorAll(selector).forEach(el=>{
-       el.style.setProperty('background',bg,'important');
-       el.style.setProperty('background-color',bg,'important');
-       el.style.setProperty('background-image','none','important');
-       el.style.setProperty('color',fg,'important');
-       el.style.setProperty('border-color',edge,'important');
-       el.style.setProperty('box-shadow','none','important');
-     });
+   const root=$('#ak-pre-receiving');if(!root)return;
+   for(const button of root.querySelectorAll('button')){
+     for(const prop of ['background','background-color','background-image','color','border-color','border-bottom','box-shadow']){
+       // Önceki sürümün JS üzerinden eklediği inline !important renkleri temizle.
+       if(button.style.getPropertyPriority(prop)==='important')button.style.removeProperty(prop);
+     }
    }
  }
  function updateDanismaUser(){

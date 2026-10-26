@@ -425,3 +425,31 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav .akpr
   html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head{padding:15px!important;gap:8px!important}
   html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-logout{padding:9px 12px!important}
 }
+
+/* 26.10.2026 — Danışma ana ekranı son düzeltme; ayrı CSS gerekmez. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card:hover {
+  border:1px solid #4c647b!important;
+  border-bottom:1px solid #4c647b!important;
+  box-shadow:none!important;
+  background-image:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card::before,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav > button.akpr-nav-card::after {
+  content:none!important;
+  display:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats > .akpr-mini-card:last-child {
+  grid-column:1 / -1!important;
+  width:100%!important;
+  max-width:none!important;
+  justify-self:stretch!important;
+  box-sizing:border-box!important;
+}

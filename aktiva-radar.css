@@ -25,3 +25,19 @@
 #akr-panel .akr-footer{color:#aebfd1;flex-wrap:wrap}
 #akr-panel .akr-error{color:#ffb3b3!important}
 @media(max-width:460px){#akr-panel.akr{padding:14px}#akr-panel .akr-top{align-items:flex-start}#akr-panel .akr-metrics{gap:7px}#akr-panel .akr-metrics>div{padding:10px 8px}#akr-panel .akr-bars{height:90px}#akr-panel .akr-open{font-size:12px}}
+
+/* Koyu tema kesin öncelik: uygulama teması / genel kart stillerini bastırır */
+html body #akr-panel.akr, html body #akr-panel.akr.akr-detail-open {background:#1b2b3d !important;background-color:#1b2b3d !important;color:#f1f6fc !important;border-color:#38536b !important}
+html body #akr-panel.akr .akr-metrics > div {background:#23394f !important;background-color:#23394f !important;border-color:#405b73 !important}
+html body #akr-panel.akr h2,html body #akr-panel.akr h3,html body #akr-panel.akr .akr-metrics strong,html body #akr-panel.akr .akr-status {color:#f5f8fd !important}
+html body #akr-panel.akr p,html body #akr-panel.akr .akr-metrics small,html body #akr-panel.akr .akr-note,html body #akr-panel.akr .akr-footer {color:#b8c9db !important}
+html body #akr-panel.akr .akr-eyebrow {color:#8bb7d7 !important}
+html body #akr-panel.akr button.akr-open,html body #akr-panel.akr button.akr-retry,html body #akr-panel.akr .akr-footer button {background:#29445e !important;color:#fff !important;border:1px solid #52708b !important;box-shadow:none !important;text-shadow:none !important}
+html body #akr-panel.akr .akr-alert {background:#3b342a !important}
+html body #akr-panel.akr .akr-alert strong {color:#ffe1a2 !important}
+html body #akr-panel.akr .akr-alert p {color:#e2cfad !important}
+html body #akr-panel.akr .akr-detail {border-top-color:#40586e !important}
+html body #akr-panel.akr .akr-bars {height:95px !important;border-bottom-color:#4a6680 !important}
+html body #akr-panel.akr .akr-bar {background:#66add7 !important}
+html body #akr-panel.akr .akr-bar-col > span {color:#e0effc !important}
+html body #akr-panel.akr .akr-bar-col small {color:#b5c9db !important}

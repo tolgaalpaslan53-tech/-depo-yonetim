@@ -479,3 +479,19 @@ body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details{margin-top:10px
 body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-details>summary{font-size:13px;font-weight:600}
 body[data-role="pre_receiving"] #akpr-list .akpr-vehicle-facts{gap:12px 10px}
 body[data-role="pre_receiving"] #akpr-list .akpr-row{padding:16px;border-radius:16px}
+
+/* Danışma - ortak bekleme uyarısı ayarları */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-row.akpr-warning-yellow{border-left:4px solid #dba640!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-row.akpr-warning-red{border-left:4px solid #d65b60!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning{font-size:11px;font-weight:750;border-radius:8px;padding:5px 8px;white-space:nowrap}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning.yellow{background:#493c21;color:#ffe3a3}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-wait-warning.red{background:#4b2830;color:#ffc1c5}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-open-settings{margin-top:0!important}
+
+/* Danışma Ayarları > Araç Bekleme Süresi */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option{display:flex;align-items:center;gap:13px;width:100%;padding:17px 15px;margin-top:14px;border:1px solid #40576b;border-radius:13px;background:#26394a;color:#f2f6fa;text-align:left;cursor:pointer}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-icon{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:11px;background:#344e61;font-size:25px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy strong{font-size:15px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option-copy small{font-size:12px;color:#b9cbd9;line-height:1.4}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-settings-option>span:last-child{font-size:25px;color:#c4d4df}

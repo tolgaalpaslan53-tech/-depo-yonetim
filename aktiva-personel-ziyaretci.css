@@ -38,3 +38,10 @@
 #akpv-overlay [data-stat="inside"]:focus-visible{outline:2px solid #9bc6f1;outline-offset:3px}
 #akpv-overlay #akpv-list-section,#akpv-overlay #akpv-history-section{margin-top:12px}
 @media(max-width:620px){#akpv-overlay .akpv-list-controls button{min-width:100%}}
+
+/* AKTIVA - separated daily operations and management/report actions */
+.akpv-hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.akpv-hub>button{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;background:#f6f8fc;border:1px solid #dce4ee;border-radius:14px;padding:14px;color:#24334a;cursor:pointer;min-width:0}
+.akpv-hub>button>span{font-size:22px}.akpv-hub>button>strong{font-size:13px}.akpv-hub>button>small{font-size:11px;color:#64748b}.akpv-hub>button[aria-expanded=true]{border-color:#779fc9;background:#edf4fc}
+#akpv-list-section[hidden],#akpv-history-section[hidden],#akpv-report-panel[hidden]{display:none!important}
+@media(max-width:520px){.akpv-hub{grid-template-columns:repeat(2,minmax(0,1fr))}.akpv-hub>button:last-child{grid-column:1/-1}}

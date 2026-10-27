@@ -49,3 +49,101 @@
 /* 27.10.2026 - Arama sonucunu doğrudan alanın altında gösteren mobil düzen */
 #akpv-overlay .akpv-head{background:#111a27;padding:17px 20px}#akpv-overlay .akpv-head p{font-size:12px}#akpv-overlay .akpv-body{padding:16px 20px}#akpv-overlay .akpv-stats>div{padding:11px 13px}#akpv-overlay .akpv-stats strong{font-size:23px}#akpv-overlay .akpv-actions{margin:17px 0 4px;display:block}#akpv-overlay #akpv-search{width:100%;box-sizing:border-box;min-height:48px}#akpv-overlay .akpv-search-help{font-size:12px;color:#b9c9dc;margin:7px 0 10px}#akpv-overlay #akpv-list-section{margin:8px 0 14px}#akpv-overlay .akpv-item{padding:13px;gap:10px}#akpv-overlay .akpv-item-actions{align-items:center}#akpv-overlay .akpv-item-actions .akpv-more{min-width:42px;font-size:23px;line-height:1}#akpv-overlay .akpv-management[hidden]{display:none!important}#akpv-overlay .akpv-management{display:flex;gap:7px;width:100%;flex-wrap:wrap;justify-content:flex-end}#akpv-overlay .akpv-hub{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}#akpv-overlay .akpv-hub>button{min-height:93px;padding:12px!important;gap:5px;align-items:flex-start;text-align:left}#akpv-overlay .akpv-hub>button:last-child{grid-column:auto}#akpv-overlay .akpv-hub>button>strong{font-size:13px}#akpv-overlay .akpv-hub>button>small{color:#c0d0e2;font-size:11px}#akpv-overlay .akpv-empty button{margin:8px 0 0;display:block;padding:10px 13px!important}#akpv-overlay .akpv-report{margin:10px 0}
 @media(max-width:620px){#akpv-overlay .akpv-head{padding:14px 15px}#akpv-overlay .akpv-body{padding:13px 15px}#akpv-overlay .akpv-head h2{font-size:18px;line-height:1.25}#akpv-overlay .akpv-stats{gap:7px}#akpv-overlay .akpv-stats>div{padding:10px 8px}#akpv-overlay .akpv-stats small{font-size:11px!important;min-height:29px}#akpv-overlay .akpv-stats strong{font-size:22px}#akpv-overlay .akpv-item-actions{width:100%}#akpv-overlay .akpv-item-actions>button[data-action]{flex:1}#akpv-overlay .akpv-management{justify-content:flex-start}}
+
+/* AKTIVA 2.0 | Danisma arac modulu: kurumsal modal basligi.
+   Genel uygulamadaki `header` kurallari bu basliga sizmasin. */
+#akpv-overlay .akpv-shell > header.akpv-head {
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex-wrap:nowrap!important;
+  gap:14px!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:20px 24px!important;
+  background:linear-gradient(115deg,#24344a 0%,#1a2b40 65%,#172638 100%)!important;
+  border:0!important;
+  border-bottom:1px solid #41566f!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+#akpv-overlay .akpv-shell > header.akpv-head::after {
+  content:"";
+  position:absolute;
+  left:24px;
+  bottom:-1px;
+  width:62px;
+  height:2px;
+  border-radius:2px;
+  background:#d63b46;
+  pointer-events:none;
+}
+#akpv-overlay .akpv-shell > header.akpv-head > div {
+  flex:1 1 auto;
+  min-width:0;
+  max-width:100%;
+}
+#akpv-overlay .akpv-shell > header.akpv-head small {
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.075em;
+  line-height:1.25;
+  color:#a6bad1!important;
+}
+#akpv-overlay .akpv-shell > header.akpv-head h2 {
+  color:#f5f8fd!important;
+  font-size:clamp(17px,2.1vw,22px)!important;
+  line-height:1.22!important;
+  letter-spacing:-.02em;
+  font-weight:750;
+  margin:7px 0 4px!important;
+  overflow-wrap:break-word;
+}
+#akpv-overlay .akpv-shell > header.akpv-head p {
+  margin:0!important;
+  color:#b7c9dd!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+  font-weight:400;
+}
+#akpv-overlay .akpv-shell > header.akpv-head #akpv-close {
+  flex:0 0 40px;
+  display:grid!important;
+  place-items:center!important;
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  min-height:40px!important;
+  padding:0!important;
+  margin:0!important;
+  background:rgba(174,195,218,.09)!important;
+  border:1px solid #5b728e!important;
+  border-radius:50%!important;
+  color:#eaf2fc!important;
+  font-size:20px!important;
+  font-weight:400!important;
+  line-height:1!important;
+  box-shadow:none!important;
+  -webkit-tap-highlight-color:transparent;
+}
+#akpv-overlay .akpv-shell > header.akpv-head #akpv-close:hover {
+  background:#40546d!important;
+  border-color:#9aadc3!important;
+}
+#akpv-overlay .akpv-shell > header.akpv-head #akpv-close:active {
+  transform:scale(.97);
+}
+@media(max-width:620px) {
+  #akpv-overlay .akpv-shell > header.akpv-head {
+    padding:18px 16px!important;
+    gap:10px!important;
+  }
+  #akpv-overlay .akpv-shell > header.akpv-head h2 {
+    font-size:17px!important;
+    line-height:1.27!important;
+  }
+  #akpv-overlay .akpv-shell > header.akpv-head::after {left:16px;width:52px;}
+}

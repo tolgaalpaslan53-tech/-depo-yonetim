@@ -1773,3 +1773,23 @@ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-wait-settings-
   margin-bottom:22px!important;
   padding-bottom:28px!important;
 }
+
+/* AKTİVA Danışma v20261027 — operasyon ana sayfası ve açılır işlem menüsü */
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-bar{display:flex;align-items:center;gap:12px;margin:10px 0 12px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-toggle{display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:8px 15px;background:#263b50!important;color:#f5f8fb!important;border:1px solid #526a81!important;border-radius:12px;font-size:19px;font-weight:800;cursor:pointer}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-toggle span{font-size:13px;letter-spacing:.1px;font-weight:650}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-caption{font-size:13px;color:#c7d6e4;font-weight:600}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-panel{position:relative;z-index:5;padding:13px;background:#203044;border:1px solid #40576e;border-radius:16px;margin:0 0 14px;box-shadow:0 12px 26px #0003}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-title{color:#f5f8fb;font-weight:750;font-size:14px;margin:0 0 9px}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-menu-panel #akpr-home-nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;margin:0!important}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-menu-panel .akpr-nav-card{min-height:85px!important;padding:12px!important;text-align:left!important;display:flex!important;align-items:flex-start!important;flex-direction:column!important;gap:3px!important}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-menu-panel .akpr-nav-card small{font-size:11px;line-height:1.4}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-menu-panel .akpr-nav-icon{font-size:21px!important}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-extras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:9px}
+body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-link{background:#263b50!important;color:#f5f8fb!important;border:1px solid #40566b!important;border-radius:11px;padding:13px;text-align:left;font-size:13px;font-weight:700;cursor:pointer}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-open-report,body[data-role="pre_receiving"] #ak-pre-receiving #akpr-open-settings{display:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-menu-panel[hidden]{display:none!important}
+body[data-role="pre_receiving"] #ak-pre-receiving[data-akpr-view]:not([data-akpr-view="home"]) .akpr-menu-bar,body[data-role="pre_receiving"] #ak-pre-receiving[data-akpr-view]:not([data-akpr-view="home"]) #akpr-menu-panel,body[data-role="pre_receiving"] #ak-pre-receiving[data-akpr-view]:not([data-akpr-view="home"]) #akr-panel{display:none!important}
+@media(max-width:420px){body[data-role="pre_receiving"] #ak-pre-receiving #akpr-menu-panel #akpr-home-nav{grid-template-columns:1fr!important}body[data-role="pre_receiving"] #ak-pre-receiving .akpr-menu-caption{font-size:12px}}
+
+body[data-role="pre_receiving"] #ak-pre-receiving #akpr-live-status[hidden]{display:none!important}

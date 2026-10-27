@@ -30,3 +30,11 @@
 #akpv-overlay .akpv-report-fields label{display:grid;gap:5px;color:#d7e7f8;font-size:12px}
 #akpv-overlay .akpv-report-fields button{min-height:43px;padding:9px 15px!important;background:#275f50!important;border-color:#5bb697!important}
 @media(max-width:680px){#akpv-overlay .akpv-report-fields{grid-template-columns:1fr 1fr}#akpv-overlay .akpv-report-fields label:first-child,#akpv-overlay .akpv-report-fields button{grid-column:1/-1}}
+/* Araç listesi ve hareket geçmişi isteğe bağlı açılır; ana ekran sade kalır. */
+#akpv-overlay #akpv-list-section[hidden],#akpv-overlay #akpv-history-section[hidden]{display:none!important}
+#akpv-overlay .akpv-list-controls{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 8px}
+#akpv-overlay .akpv-list-controls button{padding:12px 16px!important;flex:1;min-width:190px;text-align:center}
+#akpv-overlay [data-stat="inside"]{cursor:pointer}
+#akpv-overlay [data-stat="inside"]:focus-visible{outline:2px solid #9bc6f1;outline-offset:3px}
+#akpv-overlay #akpv-list-section,#akpv-overlay #akpv-history-section{margin-top:12px}
+@media(max-width:620px){#akpv-overlay .akpv-list-controls button{min-width:100%}}

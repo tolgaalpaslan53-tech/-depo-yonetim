@@ -18,3 +18,15 @@
 #akpv-overlay .akpv-shell .akpv-tabs {flex-wrap:wrap;}
 #akpv-overlay .akpv-shell .akpv-tabs button {white-space:nowrap;padding:9px 13px!important;}
 @media(max-width:620px){#akpv-overlay .akpv-shell .akpv-stats small{font-size:12px;line-height:1.3;}#akpv-overlay .akpv-shell .akpv-tabs{gap:7px;}}
+
+/* AKTİVA | Personel ve ziyaretçi kartları ve rapor paneli */
+#akpv-overlay .akpv-shell{max-width:980px;background:#162335;border-color:#4b6077}
+#akpv-overlay .akpv-item{background:linear-gradient(125deg,#263b53,#1d3046);border-radius:16px;padding:19px;border-color:#4a6078}
+#akpv-overlay .akpv-item strong{font-size:19px;letter-spacing:.4px}
+#akpv-overlay .akpv-item-actions .akpv-delete{background:#56363e!important;border-color:#a46b77!important;color:#ffe7e8!important}
+#akpv-overlay .akpv-report{background:#213449;border:1px solid #4a627d;border-radius:15px;padding:17px;margin:18px 0}
+#akpv-overlay .akpv-report>strong{display:block;margin-bottom:12px;font-size:16px}
+#akpv-overlay .akpv-report-fields{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;align-items:end;gap:10px}
+#akpv-overlay .akpv-report-fields label{display:grid;gap:5px;color:#d7e7f8;font-size:12px}
+#akpv-overlay .akpv-report-fields button{min-height:43px;padding:9px 15px!important;background:#275f50!important;border-color:#5bb697!important}
+@media(max-width:680px){#akpv-overlay .akpv-report-fields{grid-template-columns:1fr 1fr}#akpv-overlay .akpv-report-fields label:first-child,#akpv-overlay .akpv-report-fields button{grid-column:1/-1}}

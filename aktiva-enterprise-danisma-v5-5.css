@@ -1,0 +1,131 @@
+/* AKTİVA Danışma V5.5 — iOS ve responsive son kullanışlılık katmanı.
+   Yalnızca pre_receiving: mevcut iş mantığı, bildirimler ve diğer roller korunur.
+   v4/v5/v5.2/v5.3/v5.4 katmanlarından sonra yüklenmelidir. */
+
+/* Tarih denetimleri: Safari'nin iç ölçüleri kartı genişletemez. Görünen değer
+   ayrı çizilir; gerçek native input aynı yerde ve dokunulabilir durumdadır. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(
+  #akpr-report-view,#akpr-new-view,#akpr-list-view
+) { box-sizing:border-box!important; min-width:0!important; max-width:100%!important; }
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view {
+  overflow:visible!important; width:100%!important; max-width:min(100%,980px)!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-report-view,#akpr-list-view) .akpr-grid,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-list-view #akpr-history-dates {
+  min-width:0!important; max-width:100%!important; box-sizing:border-box!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-report-view,#akpr-list-view,#akpr-new-view) label:has(> .akv55-date-shell) {
+  display:flex!important; flex-direction:column!important; gap:7px!important;
+  min-width:0!important; max-width:100%!important; width:100%!important;
+  overflow:visible!important; box-sizing:border-box!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-shell {
+  display:flex!important; position:relative!important; isolation:isolate;
+  align-items:center!important; justify-content:space-between!important;
+  width:100%!important; min-width:0!important; max-width:100%!important;
+  height:52px!important; min-height:52px!important; margin:0!important;
+  padding:0 14px!important; box-sizing:border-box!important;
+  overflow:hidden!important; border:1px solid #d5dfec!important;
+  border-radius:13px!important; background:#f8fafc!important;
+  color:#23354c!important; box-shadow:none!important; cursor:pointer!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-shell:focus-within {
+  border-color:#6c96c6!important; box-shadow:0 0 0 3px rgba(76,128,192,.15)!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-text {
+  display:block!important; position:relative!important; z-index:0!important;
+  min-width:0!important; flex:1 1 auto!important; overflow:hidden!important;
+  text-overflow:ellipsis!important; white-space:nowrap!important;
+  color:#21344a!important; font-size:15px!important; font-weight:750!important;
+  line-height:1.3!important; pointer-events:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-shell.akv55-empty .akv55-date-text {
+  color:#71849c!important; font-weight:600!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-icon {
+  flex:0 0 auto!important; margin-left:8px!important; width:21px!important; height:21px!important;
+  color:#6d8096!important; pointer-events:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-shell > input[type="date"],
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-shell > input[type="datetime-local"] {
+  position:absolute!important; inset:0!important; display:block!important;
+  width:100%!important; height:100%!important; min-width:0!important; max-width:100%!important;
+  min-height:0!important; max-height:100%!important; margin:0!important; padding:0!important;
+  border:0!important; border-radius:0!important; box-shadow:none!important;
+  opacity:0.001!important; cursor:pointer!important; z-index:1!important;
+  box-sizing:border-box!important; -webkit-appearance:auto!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view label:has(input[name="arrival_at"])::after {
+  content:"İsteğe bağlı · Kutuya dokunarak tarihi ve saati seçin"!important;
+  color:#74869c!important; margin-top:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export-msg:empty {
+  display:none!important;
+}
+
+/* Boş rapor bilgi alanı ve taşmış eski native input görünümlerini sınırla. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view > label,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid > label {
+  box-sizing:border-box!important; width:100%!important; min-width:0!important; max-width:100%!important;
+}
+
+/* Açılır menü: daha zarif kenarlık ve içerikten ayrılan, genişliği kontrol edilen panel. */
+@media (max-width:700px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-scrim {
+    background:rgba(10,24,42,.42)!important;
+    backdrop-filter:blur(4px)!important; -webkit-backdrop-filter:blur(4px)!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel {
+    width:min(82vw,330px)!important; max-width:calc(100vw - 40px)!important;
+    box-shadow:-12px 0 36px rgba(8,22,39,.18)!important;
+  }
+  /* iPhone home göstergesiyle sekmeler birbirine girmesin. */
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom {
+    position:fixed!important; left:0!important; right:0!important; bottom:0!important;
+    width:100%!important; box-sizing:border-box!important;
+    padding:6px 8px max(20px,env(safe-area-inset-bottom,0px))!important;
+    transform:none!important; z-index:2147483100!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving {
+    padding-bottom:calc(158px + env(safe-area-inset-bottom,0px))!important;
+    scroll-padding-top:0!important; scroll-padding-bottom:calc(145px + env(safe-area-inset-bottom,0px))!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(
+    #akpr-new-view,#akpr-list-view,#akpr-report-view,
+    #akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view
+  ):not([hidden]) {
+    scroll-margin-top:0!important;
+    padding-bottom:32px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view .akpr-actions {
+    position:relative!important; padding-bottom:8px!important; scroll-margin-bottom:142px!important;
+  }
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-body {
+    padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+@media(max-width:355px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-shell {
+    padding-inline:10px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-text {
+    font-size:14px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .akv55-date-shell {
+    transition:none!important;
+  }
+}
+/* Önceki sürümlerdeki #akpr-report-view input konumlandırma önceliğini kesin olarak aş. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akv55-date-shell > input[type="date"],
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-list-view .akv55-date-shell > input[type="date"],
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view .akv55-date-shell > input[type="datetime-local"] {
+  position:absolute!important;inset:0!important;left:0!important;top:0!important;
+  display:block!important;flex:none!important;width:100%!important;height:100%!important;
+  min-width:0!important;max-width:100%!important;min-height:0!important;max-height:100%!important;
+  box-sizing:border-box!important;margin:0!important;padding:0!important;opacity:0.001!important;
+  color:transparent!important;-webkit-text-fill-color:transparent!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  z-index:1!important;cursor:pointer!important;
+}

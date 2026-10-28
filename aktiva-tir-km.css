@@ -79,3 +79,73 @@ html body.akbim-open{overflow:hidden!important}
  #akbim-overlay .akbim-record{flex-wrap:wrap}
  #akbim-overlay .akbim-record-km{margin-left:auto}
 }
+
+/* AKTİVA · Tır Hareketleri v2: menü ve ayrı akışlar (V5.8 uyumu) */
+html body[data-role="pre_receiving"] #ak-pre-receiving .ake3-drawer-panel > #akbim-menu{min-height:66px!important}
+html body #akpv-overlay .akbim-cars-link strong{font-weight:800}
+#akbim-overlay{background:#f3f6fa;color:#24354d}
+#akbim-overlay .akbim-head{background:linear-gradient(116deg,#21344e,#16253b);border-bottom:3px solid #d82744;padding-top:24px;padding-bottom:23px}
+#akbim-overlay #akbim-close{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);color:#fff}
+#akbim-overlay #akbim-close:hover{background:rgba(255,255,255,.15)}
+#akbim-overlay .akbim-nav{position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:stretch;justify-content:center;gap:7px;padding:10px max(14px,calc((100vw - 890px)/2));border-bottom:1px solid #dfe6ef;box-shadow:0 4px 14px #23324f0b}
+#akbim-overlay .akbim-nav button{flex:1;max-width:270px;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:0;border-radius:11px;padding:12px 9px;color:#63738c;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap}
+#akbim-overlay .akbim-nav button[aria-current="page"]{background:#ce2a44;color:#fff;box-shadow:0 6px 13px #ce2a4420}
+#akbim-overlay .akbim-nav button span{font-size:18px;line-height:1}
+#akbim-overlay [data-akbim-page][hidden]{display:none!important}
+#akbim-overlay .akbim-content{padding-top:19px}
+#akbim-overlay .akbim-stats{margin-bottom:16px}
+#akbim-overlay .akbim-stat{border-top-width:3px}
+#akbim-overlay .akbim-stat:nth-child(1){border-top-color:#22b983}
+#akbim-overlay .akbim-stat:nth-child(2){border-top-color:#cf2a46}
+#akbim-overlay .akbim-stat:nth-child(3){border-top-color:#498fe1}
+#akbim-overlay .akbim-card{border-radius:18px}
+#akbim-overlay .akbim-plate-hub{padding-bottom:20px}
+#akbim-overlay .akbim-plate-hub #akbim-plate-search{margin:7px 0 16px}
+#akbim-overlay .akbim-plates{display:grid;gap:11px}
+#akbim-overlay .akbim-plate-row{border:1px solid #dee7f0;border-radius:14px;padding:15px;background:#fff;box-shadow:0 5px 15px #23324b07}
+#akbim-overlay .akbim-plate-overview{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+#akbim-overlay .akbim-plate-overview strong{font-size:19px;color:#253751;letter-spacing:-.2px}
+#akbim-overlay .akbim-state{display:inline-flex;padding:5px 9px;border-radius:99px;background:#f0f3f7;color:#5a6980;font-size:11px;font-weight:800}
+#akbim-overlay .akbim-state.akbim-inside{background:#e8f7f0;color:#148557}
+#akbim-overlay .akbim-state.akbim-outside{background:#f0f3f7;color:#63758e}
+#akbim-overlay .akbim-plate-row p{font-size:12px;margin:8px 0 12px;color:#73839b}
+#akbim-overlay .akbim-plate-row p b{color:#263a54}
+#akbim-overlay .akbim-quick{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#akbim-overlay .akbim-quick button{border:1px solid #cfe4da;border-radius:11px;background:#eaf8f1;color:#127a54;font-size:13px;font-weight:800;min-height:44px;cursor:pointer}
+#akbim-overlay .akbim-quick button+button{border-color:#f0d7dc;background:#fff0f2;color:#bf2942}
+#akbim-overlay .akbim-quick button:active{transform:scale(.985)}
+#akbim-overlay .akbim-outline-wide{display:flex;gap:9px;justify-content:center;align-items:center;width:100%;min-height:49px;margin-top:16px;border:1.5px dashed #bdcde1;background:#f6f8fc;border-radius:12px;color:#334963;font-size:14px;font-weight:800;cursor:pointer}
+#akbim-overlay .akbim-outline-wide span{font-size:20px;color:#d12643}
+#akbim-overlay .akbim-back{background:transparent;border:0;padding:8px 0 17px;color:#465e7c;font-size:14px;font-weight:800;cursor:pointer}
+#akbim-overlay .akbim-report-detail{margin-top:20px;border:1px solid #dbe7f2;background:#f4f8fc;border-radius:12px;padding:15px}
+#akbim-overlay .akbim-report-detail strong{font-size:14px;color:#273d57}
+#akbim-overlay .akbim-report-detail p{margin-top:6px;font-size:12px}
+#akbim-overlay .akbim-driver-field{position:relative}
+#akbim-overlay .akbim-driver-field>label{display:block}
+#akbim-overlay .akbim-driver-options[hidden]{display:none!important}
+#akbim-overlay .akbim-driver-options{position:relative;display:grid;margin-top:6px;border:1px solid #dbe3ed;border-radius:12px;background:white;box-shadow:0 10px 25px #23324a0d;padding:4px;max-height:200px;overflow:auto}
+#akbim-overlay .akbim-driver-options button{display:block;text-align:left;padding:11px 12px;border:0;border-bottom:1px solid #edf0f5;background:#fff;color:#2a3d57;min-height:40px;font-size:14px;font-weight:650;cursor:pointer;border-radius:7px}
+#akbim-overlay .akbim-driver-options button:last-child{border-bottom:0}
+#akbim-overlay .akbim-driver-options button:hover{background:#f3f6fa}
+#akbim-overlay .akbim-driver-field .akbim-field-help{font-size:11px;margin-top:8px;color:#8593a5}
+#akbim-overlay :is(input:not([type="radio"]), textarea){font-size:16px;min-height:49px}
+#akbim-overlay .akbim-message:not(:empty){padding:10px 12px;border-radius:10px;background:#eaf8f1}
+#akbim-overlay .akbim-message.akbim-error:not(:empty){background:#fff0f2}
+#akbim-overlay :is(button,input):focus-visible{outline:3px solid #75a6e9;outline-offset:2px}
+@media(max-width:640px){
+ #akbim-overlay .akbim-head{padding:20px 16px}
+ #akbim-overlay .akbim-head h2{font-size:27px}
+ #akbim-overlay .akbim-nav{gap:3px;padding:8px 9px}
+ #akbim-overlay .akbim-nav button{font-size:11px;line-height:1.15;gap:3px;padding:10px 4px;white-space:normal}
+ #akbim-overlay .akbim-nav button span{font-size:16px}
+ #akbim-overlay .akbim-content{padding:16px 14px max(30px,env(safe-area-inset-bottom))}
+ #akbim-overlay .akbim-card{padding:20px 16px}
+ #akbim-overlay .akbim-stats{gap:9px}
+ #akbim-overlay .akbim-stat{padding:13px 9px}
+ #akbim-overlay .akbim-plate-overview strong{font-size:17px}
+ #akbim-overlay .akbim-quick button{font-size:12px;padding:9px 4px}
+ #akbim-overlay .akbim-record{flex-wrap:wrap}
+ #akbim-overlay .akbim-actions{flex-wrap:wrap}
+ #akbim-overlay .akbim-actions button:first-child{min-width:65%}
+}
+@media(max-width:355px){#akbim-overlay .akbim-nav button span{display:none}#akbim-overlay .akbim-nav button{font-size:10px}#akbim-overlay .akbim-quick{grid-template-columns:1fr}}

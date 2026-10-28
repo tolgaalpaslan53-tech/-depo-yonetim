@@ -12,6 +12,29 @@ const nf=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0});
 const km=n=>Number.isFinite(Number(n))?nf.format(Number(n))+' km':'—';
 const addDay=d=>{const [y,m,day]=d.split('-').map(Number);return new Date(Date.UTC(y,m-1,day+1)).toISOString().slice(0,10)};
 function plate(s){const t=String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const m=t.match(/^(\d{2})([A-Z]{1,3})(\d{1,5})$/);return m?m[1]+' '+m[2]+' '+m[3]:t;}
+function compactPlate(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function formatPlateInput(s){
+ const text=compactPlate(s).slice(0,10); // Türkiye plakası: 2 rakam + 1-3 harf + 1-5 rakam.
+ const m=text.match(/^(\d{2})([A-Z]{1,3})(\d{0,5})$/);
+ if(m)return m[1]+' '+m[2]+(m[3]?' '+m[3]:'');
+ if(/^\d{0,2}$/.test(text))return text;
+ return text; // Eksik/geçersiz metni kaydetmeye izin verme; kayıt doğrulaması aynen geçerli.
+}
+function formatPlateField(field){
+ const old=field.value,formatted=formatPlateInput(old);
+ if(old===formatted)return formatted;
+ const oldCaret=field.selectionStart;
+ const atEnd=oldCaret===null||oldCaret===old.length;
+ const charCount=oldCaret===null?0:compactPlate(old.slice(0,oldCaret)).length;
+ field.value=formatted;
+ if(typeof field.setSelectionRange==='function'){
+  let pos=formatted.length;
+  if(!atEnd){pos=0;let count=0;while(pos<formatted.length&&count<charCount){if(/[A-Z0-9]/.test(formatted[pos]))count++;pos++}while(formatted[pos]===' ')pos++;}
+  try{field.setSelectionRange(pos,pos)}catch{}
+ }
+ return formatted;
+}
+
 const tidy=s=>String(s||'').trim().replace(/\s+/g,' ');
 let loading=false, listTicket=0, lookupTicket=0, latestRow=null, history=[], open=false, lastFocused=null;
 async function api(method='GET',query={},payload=null){
@@ -60,7 +83,7 @@ function template(){
    <section data-akbim-page="home">
     <div class="akbim-stats"><div class="akbim-stat"><span>Bugün Giriş</span><strong id="akbim-today-in">—</strong></div><div class="akbim-stat"><span>Bugün Çıkış</span><strong id="akbim-today-out">—</strong></div><div class="akbim-stat"><span>Bugün Toplam</span><strong id="akbim-today-all">—</strong></div></div>
     <section class="akbim-card akbim-plate-hub"><div class="akbim-section-header"><div><h3>Kayıtlı Tırlar</h3><p>Plakayı bulun ve giriş ya da çıkış işlemini hemen başlatın.</p></div></div>
-     <label for="akbim-plate-search">Plaka ara</label><input id="akbim-plate-search" type="search" maxlength="20" autocomplete="off" placeholder="Plaka yazın (örn. 48 ABC 123)" aria-label="Kayıtlı tır plakası ara">
+     <label for="akbim-plate-search">Plaka ara</label><input id="akbim-plate-search" type="search" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Örn. 48ABC123 veya 48 ABC 123" aria-label="Kayıtlı tır plakası ara">
      <div class="akbim-plates" id="akbim-plates" aria-live="polite"><div class="akbim-empty">Plaka girerek kayıtlı tır arayın.</div></div>
      <button type="button" id="akbim-new" class="akbim-outline-wide"><span aria-hidden="true">＋</span> Yeni Plaka ile Giriş / Çıkış</button>
      <p class="akbim-message" id="akbim-hub-message" role="status" aria-live="polite"></p>
@@ -83,7 +106,7 @@ function template(){
    </section>
    <section data-akbim-page="history" hidden>
     <section class="akbim-card"><div class="akbim-section-header"><div><h3>Giriş-Çıkış Geçmişi</h3><p>Plakaya göre geçmiş hareketleri inceleyin.</p></div><button type="button" class="akbim-light akbim-refresh" id="akbim-refresh">Yenile</button></div>
-     <input id="akbim-search" type="search" maxlength="20" placeholder="Plakaya göre ara" aria-label="Plakaya göre geçmiş ara"><div class="akbim-history" id="akbim-history"><div class="akbim-empty">Geçmiş yükleniyor…</div></div><p class="akbim-hint">Son 100 hareket gösterilir. Excel'de tarih aralığındaki tüm hareketler alınır.</p>
+     <input id="akbim-search" type="search" maxlength="20" autocapitalize="characters" spellcheck="false" placeholder="Plakaya göre ara" aria-label="Plakaya göre geçmiş ara"><div class="akbim-history" id="akbim-history"><div class="akbim-empty">Geçmiş yükleniyor…</div></div><p class="akbim-hint">Son 100 hareket gösterilir. Excel'de tarih aralığındaki tüm hareketler alınır.</p>
     </section>
    </section>
    <section data-akbim-page="report" hidden>
@@ -102,9 +125,15 @@ function template(){
  $('#akbim-plates').addEventListener('click',e=>{const btn=e.target.closest('button[data-akbim-direction]');if(btn)beginRecord(btn.dataset.akbimPlate,btn.dataset.akbimDirection)});
  const form=$('#akbim-form');form.addEventListener('submit',save);
  form.addEventListener('reset',()=>{lookupTicket++;latestRow=null;setTimeout(()=>{if(currentView==='record')void lookup(plate($('#akbim-plate').value));info('');},0)});
- $('#akbim-plate').addEventListener('input',e=>{clearTimeout(plateTimer);latestRow=null;const p=plate(e.target.value);$('#akbim-prev').textContent=p?'Son KM kontrol ediliyor…':'Son kilometreyi görmek için plakayı girin.';plateTimer=setTimeout(()=>void lookup(p),300)});
+ $('#akbim-plate').addEventListener('input',e=>{
+  clearTimeout(plateTimer);lookupTicket++;latestRow=null;
+  const p=plate(formatPlateField(e.target));const complete=/^\d{2} [A-Z]{1,3} \d{1,5}$/.test(p);
+  $('#akbim-prev').textContent=complete?'Son KM kontrol ediliyor…':p?'Son kilometre için plakayı tamamlayın.':'Son kilometreyi görmek için plakayı girin.';
+  if(complete)plateTimer=setTimeout(()=>void lookup(p),300);
+ });
  $('#akbim-plate').addEventListener('blur',e=>e.target.value=plate(e.target.value));
- let searchTimer=0;$('#akbim-plate-search').addEventListener('input',()=>{
+ let searchTimer=0;$('#akbim-plate-search').addEventListener('input',e=>{
+  formatPlateField(e.target);
   clearTimeout(searchTimer);
   // Devam eden sorguları anında geçersiz kıl; temizlenen aramada eski liste geri gelmesin.
   searchTicket++;
@@ -113,7 +142,7 @@ function template(){
   el.innerHTML='<div class="akbim-empty">Plakalar aranıyor…</div>';
   searchTimer=setTimeout(()=>void loadPlates(),240);
  });
- $('#akbim-search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>void loadHistory(),240)});
+ $('#akbim-search').addEventListener('input',e=>{formatPlateField(e.target);clearTimeout(searchTimer);searchTimer=setTimeout(()=>void loadHistory(),240)});
  $('#akbim-refresh').onclick=()=>void loadHistory();$('#akbim-export').onclick=()=>void exportExcel();
  $('#akbim-driver').addEventListener('focus',()=>void loadDrivers());
  $('#akbim-driver').addEventListener('input',()=>{clearTimeout(driverTimer);driverTimer=setTimeout(()=>void loadDrivers(),230)});
@@ -154,7 +183,11 @@ async function lookup(p){const id=++lookupTicket,box=$('#akbim-prev');if(!box)re
   box.innerHTML=latestRow?`Son kayıt: <strong>${km(latestRow.odometer_km)}</strong> · ${latestRow.direction==='entry'?'Giriş':'Çıkış'} · ${esc(datetime(latestRow.created_at))}`:'Bu plaka için önceki hareket bulunmuyor.';
  }catch(e){if(id===lookupTicket&&open&&currentView==='record'){latestRow=null;box.textContent='Son KM alınamadı: '+e.message}}
 }
-function plateTerm(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9\s]/g,'').trim().replace(/\s+/g,'*')}
+function plateTerm(s){
+ const text=compactPlate(s),m=text.match(/^(\d{2})([A-Z]{1,3})(\d{0,5})$/);
+ // '*' PostgREST LIKE joker: separators may be present or absent in older records.
+ return m?m[1]+'*'+m[2]+'*'+m[3]:text.split('').join('*');
+}
 function plateSearchHint(value){
  const compact=String(value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
  if(!compact)return 'Plaka girerek kayıtlı tır arayın.';
@@ -171,7 +204,7 @@ async function loadPlates(){
  try{
   const params={select:'plate,direction,odometer_km,created_at',order:'created_at.desc,id.desc',limit:400,plate:'ilike.*'+term+'*'};
   const rows=await api('GET',params);if(id!==searchTicket||!open||currentView!=='home')return;
-  const uniq=new Map();for(const r of rows){if(!uniq.has(r.plate))uniq.set(r.plate,r);if(uniq.size>=35)break}
+  const uniq=new Map(),wanted=compactPlate(raw);for(const r of rows){if(!compactPlate(r.plate).startsWith(wanted))continue;if(!uniq.has(r.plate))uniq.set(r.plate,r);if(uniq.size>=35)break}
   const list=[...uniq.values()];el.innerHTML=list.map(r=>`<article class="akbim-plate-row"><div class="akbim-plate-overview"><strong>${esc(r.plate)}</strong><span class="akbim-state ${r.direction==='entry'?'akbim-inside':'akbim-outside'}">${r.direction==='entry'?'Depoda':'Depo dışında'}</span></div><p>Son KM: <b>${km(r.odometer_km)}</b> · ${esc(datetime(r.created_at))}</p><div class="akbim-quick"><button type="button" data-akbim-direction="entry" data-akbim-plate="${esc(r.plate)}">↘ Giriş Kaydet</button><button type="button" data-akbim-direction="exit" data-akbim-plate="${esc(r.plate)}">↗ Çıkış Kaydet</button></div></article>`).join('')||'<div class="akbim-empty">Bu plakaya ait kayıt bulunamadı. Yeni plaka ile giriş / çıkış yapabilirsiniz.</div>';
  }catch(err){if(id===searchTicket&&open&&currentView==='home')el.innerHTML='<div class="akbim-empty">Plakalar alınamadı: '+esc(err.message)+'</div>'}
 }
@@ -199,7 +232,7 @@ async function save(e){e.preventDefault();if(loading||!valid())return;const form
 }
 async function loadHistory(){if(!open||!valid()||currentView!=='history')return;const id=++listTicket,el=$('#akbim-history');if(!el)return;el.innerHTML='<div class="akbim-empty">Hareketler yükleniyor…</div>';
  try{const q=plateTerm($('#akbim-search')?.value||'');const params={select:'id,plate,direction,odometer_km,driver_name,created_at,note',order:'created_at.desc,id.desc',limit:100};if(q)params.plate='ilike.*'+q+'*';
-  const rows=await api('GET',params);if(id!==listTicket||!open||currentView!=='history')return;history=rows;
+  const fetched=await api('GET',params);if(id!==listTicket||!open||currentView!=='history')return;const wanted=compactPlate($('#akbim-search')?.value||'');const rows=wanted?fetched.filter(r=>compactPlate(r.plate).includes(wanted)):fetched;history=rows;
   el.innerHTML=rows.map(r=>`<article class="akbim-record"><span class="akbim-direction ${r.direction==='entry'?'entry':'exit'}">${r.direction==='entry'?'↘ Giriş':'↗ Çıkış'}</span><div class="akbim-record-main"><strong>${esc(r.plate)}</strong><small>${esc(datetime(r.created_at))}${r.driver_name?' · '+esc(r.driver_name):''}${r.note?' · '+esc(r.note):''}</small></div><strong class="akbim-record-km">${km(r.odometer_km)}</strong></article>`).join('')||'<div class="akbim-empty">Bu plakaya ait hareket bulunamadı.</div>';
  }catch(err){if(id===listTicket&&open&&currentView==='history')el.innerHTML='<div class="akbim-empty">Hareketler alınamadı: '+esc(err.message)+'</div>'}
 }

@@ -1,0 +1,484 @@
+/* AKTİVA Modern Enterprise Danışma v3 — sadece pre_receiving rolü, görünüm katmanı */
+body[data-role="pre_receiving"]{background:#f1f4f9!important;color:#182638!important}
+body[data-role="pre_receiving"]:before{display:none!important}
+body[data-role="pre_receiving"] .wrap,body[data-role="pre_receiving"] #app{background:#f1f4f9!important;max-width:none!important;width:100%!important;margin:0!important;padding:0!important;overflow:visible!important;color:#182638!important}
+body[data-role="pre_receiving"] #app{min-height:100dvh!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving{--ake3-red:#c91430;--ake3-ink:#17263b;--ake3-border:#e1e6ee;--ake3-muted:#66778d;box-sizing:border-box;display:block!important;position:relative;max-width:1580px!important;min-height:100dvh;margin:0 auto!important;padding:18px 22px 34px 268px!important;background:#f1f4f9!important;color:var(--ake3-ink)!important;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving *,html body[data-role="pre_receiving"] #app #ak-pre-receiving *:before,html body[data-role="pre_receiving"] #app #ak-pre-receiving *:after{box-sizing:border-box}
+/* Navigation and page state. Original core action buttons remain in DOM. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-menu-wrap,html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-home-nav,html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-open-report,html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-open-settings{display:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-yard-extra{display:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving [hidden]{display:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) .ake3-hero-row,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) .ake3-kpis-head,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) #akpr-live-status,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) .ake3-middle,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) .ake3-lower{display:none!important}
+/* Header */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head{display:flex!important;align-items:center!important;gap:18px!important;justify-content:space-between!important;min-height:76px!important;margin:0 0 13px!important;padding:11px 16px!important;border:1px solid var(--ake3-border)!important;border-radius:17px!important;background:#fff!important;color:var(--ake3-ink)!important;box-shadow:0 4px 18px #263b5910!important}
+.ake3-brand,.ake3-rail-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.ake3-brand img,.ake3-rail-brand img{height:36px;width:36px;object-fit:contain;flex:none}
+.ake3-brand strong,.ake3-rail-brand strong{display:block;font-size:21px;letter-spacing:.3px;font-weight:850;line-height:1.1}
+.ake3-brand small,.ake3-rail-brand small{display:block;font-size:10px;color:#6d7b8c;margin-top:4px}
+.ake3-header-title{min-width:0;margin-right:auto;border-left:1px solid #e2e7ef;padding-left:18px}
+.ake3-header-title strong{display:block;font-size:18px;font-weight:850;letter-spacing:-.45px;line-height:1.3;color:#17263b}
+.ake3-header-title small{display:block;font-size:11px;color:#64748b;margin-top:3px}
+.ake3-header-tools{display:flex;align-items:center;gap:9px}
+.ake3-icon-btn,.ake3-hamburger{display:grid!important;place-items:center!important;flex:none;cursor:pointer}
+.ake3-icon-btn svg,.ake3-hamburger svg{width:21px;height:21px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.ake3-icon-btn,html body[data-role="pre_receiving"] #app #ak-pre-receiving button.ake3-hamburger{border:0!important;background:transparent!important;color:#26384f!important;padding:9px!important;min-width:39px;min-height:39px;border-radius:11px!important}
+.ake3-person{display:flex;align-items:center;gap:6px;padding:0 9px;border-radius:12px;background:#f5f7fa;min-height:44px}
+.ake3-avatar{display:grid;place-items:center;background:#e7eef6;width:32px;height:32px;border-radius:50%;color:#2c4763}
+.ake3-avatar svg{width:19px;height:19px}
+html body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:2px!important}
+html body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user strong{display:block;color:#19283c!important;font-size:11px!important;font-weight:800;line-height:1.2}
+html body[data-role="pre_receiving"] #ak-pre-receiving .akpr-user small{display:block;color:#718297!important;font-size:10px!important;line-height:1.2}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button#akpr-logout{background:transparent!important;border:1px solid #e2e7ed!important;color:#43566d!important;font-size:11px!important;min-height:39px;padding:8px 11px!important;border-radius:11px!important;box-shadow:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-hamburger{display:none!important}
+/* Desktop left rail */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-rail{display:flex!important;flex-direction:column;position:absolute;left:0;top:0;bottom:0;width:246px;padding:22px 12px 16px;background:#132239;color:#f4f7fc;border:0;border-radius:0;min-height:100dvh;z-index:1}
+.ake3-rail-brand{padding:5px 12px 24px;border-bottom:1px solid #304058;margin-bottom:18px}
+.ake3-rail-brand strong{font-size:23px;color:#fff}
+.ake3-rail-brand small{color:#adbdcf}
+.ake3-rail-nav{display:grid;gap:6px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-rail-nav button{display:flex!important;align-items:center;gap:11px;width:100%;text-align:left;background:#1c3049!important;color:#dce6f2!important;border:1px solid #314760!important;border-radius:12px!important;padding:12px 11px!important;min-height:46px;box-shadow:none!important;font:inherit;font-size:12px;font-weight:650;line-height:1.25;cursor:pointer}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-rail-nav button.ake3-selected{background:#c70e2b!important;border-color:#d82542!important;color:#fff!important;box-shadow:0 5px 13px #a4142d35!important}
+.ake3-rail-nav button svg{width:19px;height:19px;flex:none}
+.ake3-system{display:flex;align-items:center;gap:9px;border:1px solid #374e69;border-radius:12px;margin-top:auto;padding:13px;color:#d0e0ee;font-size:11px}
+.ake3-live-dot{width:9px;height:9px;border-radius:100%;background:#2ac78c;box-shadow:0 0 0 3px #2ac78c20}
+.ake3-live-dot.ake3-offline{background:#dc9c3b;box-shadow:none}
+/* Hero and connection tile */
+.ake3-hero-row{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;margin-bottom:15px}
+.ake3-hero{position:relative;min-height:154px;border-radius:16px;background:#18263b url('aktiva-tir-gercekci.webp') center 52%/cover no-repeat;overflow:hidden;isolation:isolate;box-shadow:0 4px 15px #1a304015}
+.ake3-hero-shade{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:20px 26px;background:linear-gradient(90deg,rgba(11,25,43,.78),rgba(9,25,42,.25) 65%,transparent);color:#fff}
+.ake3-hero-shade strong{font-size:12px;font-weight:750;letter-spacing:.4px;color:#e6ebf6}
+.ake3-hero-shade h2{font-size:clamp(22px,2.7vw,30px);line-height:1.1;letter-spacing:-.5px;margin:5px 0!important;color:#fff!important;font-weight:850}
+.ake3-hero-shade p{font-size:12px;color:#e8eef7;margin:0!important}
+.ake3-date{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:9px;border:1px solid var(--ake3-border);border-radius:16px;background:#fff;padding:18px;box-shadow:0 4px 15px #192e4710}
+.ake3-date>span:first-child{font-size:12px;color:#495a71;line-height:1.4}
+.ake3-date>strong{font-size:27px;letter-spacing:-1px}
+.ake3-connection{display:flex;align-items:center;gap:6px;background:#e7f8ef;color:#12805e;border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800}
+.ake3-connection i{width:7px;height:7px;border-radius:100%;background:#20ac79}
+/* Live KPI: exactly four, core's fifth metric redistributed by DOM without data loss */
+.ake3-kpis-head{display:flex;align-items:center;justify-content:space-between;margin:14px 0 11px;color:#1a283e!important}
+.ake3-kpis-head strong{font-size:16px;font-weight:850;color:#1a283e!important}
+.ake3-kpis-head span{color:#738298;font-size:11px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:11px!important;margin:0 0 15px!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status>.ake3-kpi{display:grid!important;grid-template-rows:auto auto;align-content:center;gap:7px;position:relative;min-height:88px!important;padding:13px 11px 12px 58px!important;background:#fff!important;border:1px solid var(--ake3-border)!important;border-top:1px solid var(--ake3-border)!important;border-radius:14px!important;box-shadow:0 5px 14px #1e334b12!important}
+.ake3-kpi-icon{display:grid;place-items:center;position:absolute;left:12px;top:17px;width:35px;height:35px;color:#fff;border-radius:10px;background:#e21d39}
+.ake3-kpi-icon svg{width:22px;height:22px}
+.ake3-kpi-icon-1{background:#1cad74}.ake3-kpi-icon-2{background:#ff991d}.ake3-kpi-icon-3{background:#318be5}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status .akpr-muted{font-size:11px!important;line-height:1.27!important;color:#4f6077!important;font-weight:700}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status .akpr-stat{font-size:26px!important;line-height:1!important;color:#17263b!important;font-weight:850!important}
+/* Radar and quick actions */
+.ake3-middle{display:grid;grid-template-columns:minmax(0,1.38fr) minmax(0,.9fr);gap:14px;align-items:stretch;margin-bottom:14px}
+.ake3-radar-slot{min-width:0;min-height:225px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr{height:100%;min-height:224px;margin:0!important;padding:17px!important;background:#fff!important;color:#17263b!important;border:1px solid var(--ake3-border)!important;border-radius:16px!important;box-shadow:0 5px 16px #23395111!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-eyebrow{font-size:10px!important;color:#c31932!important;letter-spacing:1px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr h2{color:#1b2b40!important;font-size:18px!important;line-height:1.2}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr p{color:#60748b!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-open{border:0!important;background:transparent!important;color:#be1932!important;font-weight:750!important;font-size:11px!important;box-shadow:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-content{position:relative}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-metrics>div{background:#f7f9fc;border-radius:10px;border:1px solid #e8edf3;padding:10px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-metrics strong{font-size:21px!important;color:#192e44!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-metrics small{font-size:10px!important;color:#57677d!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-status{display:flex;align-items:center;gap:10px;margin-top:12px;color:#198964!important;font-size:13px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:#14a96e!important;border:5px solid #a5f0cc!important;box-shadow:0 0 0 7px #e1f9ee!important;color:white}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot:after{content:'✓';font-size:15px;font-weight:900}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot.medium{background:#bd7b11!important;border-color:#ffe4a6!important;box-shadow:0 0 0 7px #fff0d8!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot.medium:after{content:'!'}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot.high{background:#be263b!important;border-color:#ffb8c0!important;box-shadow:0 0 0 7px #ffe8eb!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot.high:after{content:'!'}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-footer{font-size:10px!important;color:#75859b!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-quick{background:#fff;border:1px solid var(--ake3-border);border-radius:16px;box-shadow:0 5px 16px #23395111;padding:15px;min-width:0}
+.ake3-quick h3,.ake3-recent h3,.ake3-chart h3{font-size:15px;font-weight:850;color:#17283c!important;margin:1px 0 12px!important}
+.ake3-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button[data-ake-action]{font-family:inherit;cursor:pointer}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-quick-grid button{min-height:80px;border:1px solid #e1e7ef!important;border-radius:12px!important;background:#f8fafc!important;box-shadow:0 3px 10px #10253b0e!important;color:#1c2c3f!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:9px!important;font-size:11px!important;line-height:1.3;font-weight:750;text-align:center}
+.ake3-quick-grid svg{width:27px;height:27px;color:#ca1932}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-quick-grid button:hover{border-color:#c91430!important;transform:translateY(-1px)}
+/* Recent real activity and chart generated from the existing counters */
+.ake3-lower{display:grid;grid-template-columns:minmax(0,1.38fr) minmax(0,.9fr);gap:14px;margin:0 0 15px}
+.ake3-recent,.ake3-chart{min-width:0;background:#fff;border:1px solid var(--ake3-border);border-radius:16px;box-shadow:0 4px 16px #1c314b11;padding:15px}
+.ake3-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-panel-head button{display:flex;align-items:center;gap:4px;border:0!important;background:transparent!important;color:#c01631!important;font-size:11px!important;padding:5px!important;box-shadow:none!important}
+.ake3-panel-head svg{width:13px;height:13px}
+.ake3-recent-list{display:grid;gap:0}
+.ake3-recent-row{display:grid;grid-template-columns:25px minmax(70px,1fr) minmax(90px,.85fr) minmax(0,.95fr) 45px;align-items:center;gap:7px;border-top:1px solid #ecf0f5;padding:9px 0;font-size:11px;min-width:0}
+.ake3-recent-row:first-child{border:0}
+.ake3-recent-icon{display:grid;place-items:center;color:#2a668e}.ake3-recent-icon svg{width:18px;height:18px}
+.ake3-recent-plate{color:#1c2a3c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.ake3-recent-status{font-weight:750;white-space:nowrap;font-size:10px}.ake3-recent-status.in{color:#169867}.ake3-recent-status.out{color:#b9283d}.ake3-recent-status.new{color:#287bb5}
+.ake3-recent-company{color:#6d7e90;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+.ake3-recent-time{color:#526179;font-size:10px;text-align:right}
+.ake3-placeholder{font-size:12px;color:#6c7c8f;margin:10px 0}
+.ake3-chart-inner{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:14px;align-items:end;min-height:94px}
+.ake3-chart-bars{height:83px;border-bottom:1px solid #dce3eb;display:flex;align-items:end;justify-content:space-evenly;gap:10px;padding:0 10px;background:repeating-linear-gradient(to top,transparent 0 24%,#e9edf4 24.5%,transparent 25%)}
+.ake3-chart-bars .ake3-bar{width:20%;max-width:38px;min-width:9px;border-radius:4px 4px 0 0;min-height:4px;transition:height .18s ease}
+.ake3-chart-legend{display:grid;gap:7px;align-content:center}.ake3-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#485970;white-space:nowrap}.ake3-legend-item i{width:9px;height:9px;border-radius:3px;flex:none}
+.ake3-yard-pill{font-size:10px;color:#7c8a9d;padding-top:12px}.ake3-yard-pill strong{color:#182a40}
+/* Detail screens keep their existing logic and forms */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view{background:#fff!important;color:#24374e!important;border:1px solid #e0e6ee!important;box-shadow:0 5px 20px #0e23330f!important;border-radius:16px!important;margin:10px 0!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view h2,html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view h3{color:#1a2b42!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view .akpr-muted{color:#64748b!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view .akpr-label{color:#253850!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view input,html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view select,html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view textarea{color:#1b2a3b!important;background:#fff!important;border:1px solid #cbd7e5!important}
+.ake3-bottom,.ake3-drawer{display:none}
+/* Medium-width desktop/tablet */
+@media(min-width:701px) and (max-width:1150px){
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving{padding-left:222px!important;padding-right:16px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-rail{width:207px}
+ .ake3-hero-row{grid-template-columns:minmax(0,1fr) 150px}
+ .ake3-header-title strong{font-size:15px}
+ .ake3-brand{display:none}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status>.ake3-kpi{padding-left:49px!important}
+ .ake3-kpi-icon{left:8px;width:30px;height:30px}
+ .ake3-kpi-icon svg{width:19px;height:19px}
+}
+/* Mobile: mirror reference composition without horizontal overflow */
+@media(max-width:700px){
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving{width:100%!important;max-width:none!important;min-height:100dvh!important;padding:0 12px 100px!important;margin:0!important;background:#f3f5f9!important;overflow-x:clip!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-rail{display:none!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head{min-height:66px!important;padding:10px 13px!important;margin:0 -12px!important;border:0!important;border-radius:0!important;background:#152238!important;color:#fff!important;box-shadow:none!important;gap:9px!important}
+ .ake3-brand{display:flex;gap:7px}
+ .ake3-brand img{width:31px;height:31px}
+ .ake3-brand strong{font-size:17px;color:white}
+ .ake3-brand small{font-size:9px;color:#c6d2e1}
+ .ake3-header-title{display:none}
+ .ake3-person{display:none}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-header-tools{gap:3px!important;margin-left:auto}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving button.ake3-icon-btn,html body[data-role="pre_receiving"] #app #ak-pre-receiving button.ake3-hamburger{color:#f6f8fc!important;background:transparent!important;display:grid!important;width:36px;min-width:36px;padding:7px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving button#akpr-logout{display:none!important}
+ .ake3-hero-row{display:block;margin:0 -12px 12px}
+ .ake3-hero{height:108px;min-height:108px;border-radius:0 0 14px 14px;box-shadow:none;background-position:center 51%}
+ .ake3-hero-shade{padding:12px 16px;justify-content:center;background:linear-gradient(90deg,#0b182ac9,rgba(10,22,37,.46) 62%,#0c192908)}
+ .ake3-hero-shade strong{font-size:18px;letter-spacing:0}
+ .ake3-hero-shade h2{font-size:15px!important;letter-spacing:0;margin:1px 0 3px!important}
+ .ake3-hero-shade p{display:none}
+ .ake3-date{display:none}
+ .ake3-kpis-head{display:none}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;margin:0 0 12px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status>.ake3-kpi{min-height:75px!important;padding:10px 9px 9px 47px!important;border-radius:12px!important;gap:4px!important}
+ .ake3-kpi-icon{left:9px;top:11px;width:30px;height:30px;border-radius:8px}
+ .ake3-kpi-icon svg{width:20px;height:20px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status .akpr-muted{font-size:10px!important;color:#35465c!important;line-height:1.22!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status .akpr-stat{font-size:24px!important}
+ .ake3-middle{display:flex;flex-direction:column;gap:13px;margin:0 0 13px}
+ .ake3-radar-slot{min-height:0}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr{background:#152238!important;border:1px solid #283b54!important;min-height:0!important;border-radius:14px!important;padding:14px!important;color:#fff!important;box-shadow:none!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-eyebrow{display:none}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-top{align-items:center!important;gap:10px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr h2{font-size:16px!important;color:#fff!important;line-height:1.2;margin:0!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-top p{display:none}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-open{font-size:0!important;min-width:30px!important;width:30px;height:30px;border-radius:10px!important;background:#20314b!important;color:#fff!important;padding:0!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-open:after{content:'›';font-size:23px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-metrics{display:none!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-status{margin-top:9px;background:#23344c!important;border-radius:12px;padding:10px!important;color:#fff!important;gap:12px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot{width:49px;height:49px;border:6px solid #39d486!important;background:#10995f!important;box-shadow:0 0 12px #1fc57885!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-status strong{color:#56dd9e!important;font-size:14px!important;line-height:1.45!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot.medium{border-color:#ffc65b!important;background:#a6781f!important;box-shadow:0 0 11px #f0b93380!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr-dot.high{border-color:#ff8799!important;background:#b6233f!important;box-shadow:0 0 11px #de3a5d80!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akr .akr-footer{display:none!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-quick{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+ .ake3-quick h3{font-size:15px!important;margin:0 0 10px!important}
+ .ake3-quick-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-quick-grid button{min-height:81px;border-radius:11px!important;background:#fff!important;padding:8px 3px!important;gap:7px!important;font-size:10px!important;line-height:1.2!important;font-weight:720;overflow-wrap:anywhere}
+ .ake3-quick-grid svg{width:23px;height:23px}
+ .ake3-lower{display:none}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:fixed;bottom:0;left:0;right:0;z-index:80;background:#fff;border-top:1px solid #e3e8f1;box-shadow:0 -4px 15px #10263c18;padding:6px 8px max(6px,env(safe-area-inset-bottom));gap:3px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) .ake3-bottom{display:none!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom button{background:transparent!important;color:#24374e!important;border:0!important;box-shadow:none!important;padding:7px 2px!important;min-width:0!important;min-height:47px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px!important;line-height:1.1!important;border-radius:11px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom button.ake3-selected{background:#c41430!important;color:#fff!important}
+ .ake3-bottom svg{width:21px;height:21px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer:not([hidden]){display:block;position:fixed;inset:0;z-index:120}
+ .ake3-drawer-scrim{position:absolute;inset:0;border:0;background:#041222a6!important}
+ .ake3-drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(88vw,315px);padding:22px 13px max(22px,env(safe-area-inset-bottom));background:#13233a;color:#fff;box-shadow:-7px 0 30px #0004;overflow:auto}
+ .ake3-drawer-title{display:flex;justify-content:space-between;align-items:center;padding:0 8px 15px;font-size:17px;margin-bottom:13px;border-bottom:1px solid #354961}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title button{width:35px;height:35px;background:#263b54!important;color:#fff!important;border:0!important;font-size:25px!important;border-radius:9px!important;padding:0!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel>button[data-ake-action]{display:flex;align-items:center;gap:12px;width:100%;min-height:49px;padding:12px!important;background:#1e334c!important;color:#e8eef7!important;border:1px solid #39516a!important;border-radius:11px!important;margin:6px 0;text-align:left;font-size:13px!important}
+ .ake3-drawer-panel>button svg{width:21px;height:21px;flex-shrink:0}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view{margin:12px 0!important;padding:14px!important}
+}
+@media(max-width:365px){html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status>.ake3-kpi{padding-left:43px!important}.ake3-kpi-icon{left:6px;width:28px;height:28px}.ake3-quick-grid{gap:4px}.ake3-quick-grid svg{width:20px;height:20px}}
+@media(prefers-reduced-motion:reduce){.ake3-chart-bars .ake3-bar{transition:none!important}html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-quick-grid button:hover{transform:none}}
+/* Eski Danışma CSS'indeki yüksek öncelikli >div, :last-child ve Radar kurallarıyla uyum */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head>.ake3-brand{
+ display:flex!important;flex-direction:row!important;align-items:center!important;gap:9px!important;flex:0 0 auto!important;min-width:0!important
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head>.ake3-header-title{
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;flex:1 1 auto!important;min-width:0!important;margin:0!important
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head>.ake3-header-tools{
+ display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex:0 0 auto!important;min-width:0!important
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head .ake3-person{
+ display:flex!important;flex-direction:row!important;align-items:center!important;flex:0 0 auto!important;min-width:0!important
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-user-name{color:#26384d!important;font-size:11px!important;line-height:1.2!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-user-role{color:#617389!important;font-size:10px!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-live-status.akpr-five-stats>.ake3-kpi:last-child{grid-column:auto!important;justify-self:stretch!important;width:auto!important;max-width:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-metrics>div{background:#f7f9fc!important;border-color:#e7ecf3!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-metrics strong{color:#192e44!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-metrics small{color:#62748c!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status{color:#168763!important}
+@media(max-width:700px){
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head>.ake3-header-title{display:none!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head>.ake3-header-tools{display:flex!important;flex:0 0 auto!important;flex-direction:row!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-head .ake3-person{display:none!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-brand strong{color:#fff!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-brand small{color:#c8d2e0!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status{color:#fff!important}
+}
+/* Ekran değiştiğinde özgün [hidden] davranışı statik !important kurallarının önüne geçer. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) #akpr-live-status.akpr-five-stats{display:none!important}
+/* Kaynak dosyada aşağıda yüklenen eski koyu body temasının önüne geçer. */
+html body[data-role="pre_receiving"]{background:#f1f4f9!important;background-image:none!important;color:#172638!important}
+html body[data-role="pre_receiving"] #app{background:#f1f4f9!important;background-image:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving{background:#f1f4f9!important;background-image:none!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view:not([hidden]){animation:ake3-enter .17s ease-out both}
+@keyframes ake3-enter{from{opacity:.78;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view:not([hidden]){animation:none!important}}
+.ake3-logo{width:39px;height:39px;display:grid;place-items:center;flex-shrink:0}
+.ake3-logo svg{width:100%;height:100%}
+@media(max-width:700px){.ake3-logo{width:32px;height:32px}}
+/* Duruma göre doğru Radar etiketi; sadece normal durumdayken Normal ibaresini gösterir. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status:has(.akr-dot:not(.high):not(.medium)) strong:before{content:'Normal';display:block;color:#13ab70;font-size:16px;font-weight:850;line-height:1.3}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status:has(.akr-dot.medium) strong{color:#a66b0a!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status:has(.akr-dot.high) strong{color:#be263e!important}
+@media(max-width:700px){
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status strong{font-size:11px!important;color:#d4deea!important;line-height:1.4!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status:has(.akr-dot.medium) strong{color:#ffd596!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status:has(.akr-dot.high) strong{color:#ffa9b6!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status:has(.akr-dot:not(.high):not(.medium)) strong:before{font-size:16px;color:#40e19a}
+}
+/* Masaüstü: referanstaki büyük Radar halkası ve yanında üç gerçek zamanlı ölçüm */
+@media(min-width:701px){
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-content:has(.akr-metrics){display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1fr);gap:7px 16px;align-items:center;min-height:158px}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-metrics{grid-column:2;grid-row:1;display:grid;grid-template-columns:1fr!important;gap:4px!important;margin:0!important;align-self:center}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-metrics>div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 11px!important;border-radius:10px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-metrics strong{font-size:17px!important;line-height:1.2!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status{grid-column:1;grid-row:1;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px!important;margin:0!important;text-align:center}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-dot{width:93px;height:93px;border:13px solid #b9f2d8!important;background:#15ac6c!important;box-shadow:0 0 0 17px #e9f9f1!important;margin:15px 0 5px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-dot:after{font-size:38px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-dot.medium{background:#b8891d!important;border-color:#ffe5a0!important;box-shadow:0 0 0 17px #fff5db!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-dot.high{background:#b4233c!important;border-color:#ffc0cd!important;box-shadow:0 0 0 17px #fff0f3!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status strong{font-size:10px!important;color:#678098!important;line-height:1.3}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-status:has(.akr-dot:not(.high):not(.medium)) strong:before{font-size:17px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-footer{grid-column:1 / -1;margin-top:4px!important}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-alert{grid-column:1/-1}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-detail{grid-column:1/-1}
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving #akr-panel.akr .akr-note{grid-column:1/-1}
+}
+
+/* AKTİVA v4 — Danışma mobil: tek ana navigasyon, açılır son hareketler, kalıcı alt çubuk. */
+@media(max-width:700px){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-quick{display:none!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-lower{display:block!important;margin:6px 0 15px}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-chart{display:none!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-recent{padding:0!important;overflow:hidden!important;border-radius:15px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-recent-content{display:none!important;padding:0 13px 12px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-recent-expanded .ake3-recent-content{display:block!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-recent-content .ake3-panel-head{display:flex!important;margin-top:3px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-recent-content .ake3-panel-head h3{display:none!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-recent-row{grid-template-columns:22px minmax(70px,1fr) minmax(70px,1fr) 42px!important;gap:6px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-recent-company{display:none!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom,
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving:not(.ake3-is-home) .ake3-bottom{display:grid!important;z-index:2147483100!important;}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving{padding-bottom:calc(95px + env(safe-area-inset-bottom))!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+  html body[data-role="pre_receiving"] #akpv-overlay:not([hidden]){z-index:2147483000!important;padding-bottom:calc(85px + env(safe-area-inset-bottom))!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer:not([hidden]){z-index:2147483200!important}
+  html body[data-role="pre_receiving"] #ak-pre-receiving #akpr-settings-view:not([hidden]),
+  html body[data-role="pre_receiving"] #ak-pre-receiving #akpr-wait-settings-view:not([hidden]),
+  html body[data-role="pre_receiving"] #ak-pre-receiving #akpr-list-settings-view:not([hidden]),
+  html body[data-role="pre_receiving"] #ak-pre-receiving #akpr-form-settings-view:not([hidden]){padding-bottom:calc(105px + env(safe-area-inset-bottom))!important}
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving button.ake3-recent-toggle{display:none!important}
+@media(max-width:700px){
+ html body[data-role="pre_receiving"] #app #ak-pre-receiving button.ake3-recent-toggle{display:flex!important;align-items:center!important;gap:11px!important;width:100%!important;min-height:66px!important;padding:12px!important;background:#fff!important;color:#20334b!important;text-align:left!important;border:0!important;box-shadow:none!important;font:inherit!important;cursor:pointer!important}
+ .ake3-recent-toggle svg{width:23px;height:23px;color:#c91633;flex-shrink:0}
+ .ake3-recent-toggle span{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+ .ake3-recent-toggle strong{font-size:13px;font-weight:800}
+ .ake3-recent-toggle small{font-size:10px;color:#687c91}
+ .ake3-recent-toggle svg:last-child{width:19px;height:19px;color:#76889d;transform:rotate(90deg);transition:transform 180ms ease}
+ .ake3-recent-expanded .ake3-recent-toggle svg:last-child{transform:rotate(-90deg)}
+}
+@media(prefers-reduced-motion:reduce){.ake3-recent-toggle svg{transition:none!important}}
+
+
+/* AKTİVA Danışma / Modern Enterprise — mobil Ek İşlemler menüsü.
+   Yalnızca görsel katman. Mevcut data-ake-action ve JS olayları korunur. */
+@media (max-width:700px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer:not([hidden]) {
+    display:block!important;
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483200!important;
+    isolation:isolate;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-scrim {
+    position:absolute!important;
+    inset:0!important;
+    background:rgba(8,20,36,.58)!important;
+    backdrop-filter:blur(3px);
+    -webkit-backdrop-filter:blur(3px);
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel {
+    position:absolute!important;
+    top:0!important;
+    right:0!important;
+    bottom:0!important;
+    left:auto!important;
+    width:min(89vw,350px)!important;
+    max-width:100%!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:10px!important;
+    padding:0 15px max(22px,env(safe-area-inset-bottom))!important;
+    box-sizing:border-box!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    background:#f3f5f9!important;
+    color:#24364d!important;
+    border-radius:20px 0 0 20px!important;
+    box-shadow:-14px 0 48px rgba(4,17,35,.23)!important;
+    animation:ake-menu-enter .2s cubic-bezier(.2,.7,.3,1) both;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title {
+    position:relative!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    flex:0 0 auto!important;
+    min-height:124px!important;
+    box-sizing:border-box!important;
+    margin:0 -15px 10px!important;
+    padding:calc(30px + env(safe-area-inset-top)) 20px 23px!important;
+    background:linear-gradient(142deg,#17283f 0%,#203650 100%)!important;
+    border:0!important;
+    border-bottom:3px solid #c91936!important;
+    border-radius:20px 0 0 0!important;
+    color:#fff!important;
+    box-shadow:0 5px 15px rgba(20,40,70,.09)!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title strong {
+    display:block!important;
+    padding-left:13px!important;
+    border-left:3px solid #e62243!important;
+    font-size:21px!important;
+    letter-spacing:-.5px!important;
+    font-weight:800!important;
+    line-height:1.25!important;
+    color:#fff!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title strong::after {
+    content:'Danışma yönetim seçenekleri';
+    display:block;
+    margin-top:7px;
+    color:#b9c9db;
+    font-weight:500;
+    font-size:11px;
+    line-height:1.3;
+    letter-spacing:0;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title button[data-ake-action="close-drawer"] {
+    width:39px!important;
+    height:39px!important;
+    min-width:39px!important;
+    min-height:39px!important;
+    display:grid!important;
+    place-items:center!important;
+    padding:0!important;
+    border:1px solid #657990!important;
+    border-radius:13px!important;
+    background:rgba(255,255,255,.09)!important;
+    color:#fff!important;
+    box-shadow:none!important;
+    font-size:25px!important;
+    line-height:1!important;
+    font-weight:400!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title + button[data-ake-action="records"]::before {
+    content:'ARAÇ VE KAYIT YÖNETİMİ';
+    position:absolute;
+    left:2px;
+    top:-24px;
+    font-size:10px;
+    letter-spacing:1px;
+    font-weight:800;
+    color:#728298;
+    pointer-events:none;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action] {
+    display:flex!important;
+    flex:0 0 auto!important;
+    position:relative!important;
+    align-items:center!important;
+    gap:12px!important;
+    width:100%!important;
+    min-height:65px!important;
+    margin:0!important;
+    padding:10px 13px!important;
+    box-sizing:border-box!important;
+    border:1px solid #e0e6ee!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    color:#23354b!important;
+    box-shadow:0 4px 13px rgba(23,42,67,.045)!important;
+    text-align:left!important;
+    font-size:13px!important;
+    font-weight:750!important;
+    line-height:1.25!important;
+    letter-spacing:0!important;
+    transition:background .15s ease,transform .15s ease;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action] > svg {
+    box-sizing:content-box!important;
+    width:22px!important;
+    height:22px!important;
+    flex:0 0 22px!important;
+    padding:10px!important;
+    border-radius:12px!important;
+    background:#fff0f2!important;
+    color:#c91433!important;
+    stroke:currentColor!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action]:not([data-ake-action="logout"])::after {
+    content:'›';
+    margin-left:auto;
+    font-size:25px;
+    line-height:1;
+    font-weight:400;
+    color:#8897aa;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="records"] {
+    margin-top:20px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="settings"] {
+    margin-top:12px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="logout"] {
+    margin-top:auto!important;
+    margin-bottom:8px!important;
+    border-color:#f3dce1!important;
+    background:#fff9fa!important;
+    color:#b71431!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="logout"] > svg {
+    color:#b71431!important;
+    background:#fce9ed!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action]:active {
+    transform:scale(.985);
+    background:#f8fafc!important;
+  }
+  @keyframes ake-menu-enter {
+    from { transform:translateX(16px); opacity:.92; }
+    to { transform:translateX(0); opacity:1; }
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel {animation:none!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action] {transition:none!important}
+}

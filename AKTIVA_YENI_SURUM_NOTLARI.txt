@@ -1,1 +1,0 @@
-ILK ASAMA: Excel urun katalogu, arama, depo pozisyonu, koli hesabi ve cihaz-ici barkod eslestirme. Barkod kamera entegrasyonu, Supabase merkezi eslestirme, Excel yukleme ve irsaliye OCR henuz eklenmedi. Canliya almadan once test edin. Forklift gorevleri degistirilmedi.

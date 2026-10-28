@@ -63,10 +63,7 @@ function mountMenu(){
  if(secondary&&!$('#akbim-legacy-link',secondary)){
   const b=document.createElement('button');b.id='akbim-legacy-link';b.type='button';b.className='akpr-menu-link';b.innerHTML='🚛 <span>Tır Hareketleri</span>';b.onclick=openPanel;secondary.append(b);
  }
- // Araçlar ekranında da ulaşılabilir; mevcut araçların verisi veya işlemleri değiştirilmez.
- const cars=$('#akpv-overlay');if(cars&&!$('#akbim-cars-link',cars)){
-  const target=$('.akpv-hub',cars);if(target){const b=document.createElement('button');b.type='button';b.id='akbim-cars-link';b.className='akbim-cars-link';b.innerHTML='<span>🚛</span><strong>Tır Hareketleri</strong><small>Giriş · Çıkış · KM</small>';b.onclick=openPanel;target.append(b)}
- }
+ // Tır Hareketleri yalnızca Danışma menüsünden açılır; araç kayıt ekranına eklenmez.
 }
 /* Görünüm yönetimi: plaka seçimi, hareket kaydı, geçmiş ve rapor birbirinden ayrıdır. */
 let currentView='home', searchTicket=0, driverTicket=0, plateTimer=0, driverTimer=0;

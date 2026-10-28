@@ -147,3 +147,18 @@
   }
   #akpv-overlay .akpv-shell > header.akpv-head::after {left:16px;width:52px;}
 }
+
+/* 28.10.2026 - İşlevsel araç kaydı, tır modülünden ayrı. */
+#akpv-overlay .akpv-actions{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:stretch;margin:18px 0 7px!important;}
+#akpv-overlay .akpv-actions #akpv-search{min-width:0;width:100%;height:auto;min-height:48px;}
+#akpv-overlay .akpv-actions #akpv-new{display:inline-flex!important;align-items:center;justify-content:center;white-space:nowrap;min-height:48px;padding:12px 18px!important;background:#d4193e!important;color:#fff!important;border:1px solid #d4193e!important;border-radius:12px!important;font-size:14px;font-weight:750!important;box-shadow:0 4px 12px rgba(160,23,52,.11)!important;}
+#akpv-overlay .akpv-actions #akpv-new:hover{background:#b81234!important;border-color:#b81234!important;}
+#akpv-overlay .akpv-actions #akpv-new:focus-visible{outline:3px solid #709ee5!important;outline-offset:2px!important;}
+#akpv-overlay .akpv-search-help{margin:8px 0 14px!important;line-height:1.5;}
+#akpv-overlay .akpv-hub{grid-template-columns:repeat(2,minmax(0,1fr));}
+#akpv-overlay .akpv-hub>button:last-child{grid-column:auto;}
+#akpv-overlay #akpv-form:not([hidden]){scroll-margin-top:20px;}
+@media(max-width:620px){
+ #akpv-overlay .akpv-actions{grid-template-columns:minmax(0,1fr);gap:9px;}
+ #akpv-overlay .akpv-actions #akpv-new{width:100%;}
+}

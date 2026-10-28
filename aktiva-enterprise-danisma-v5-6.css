@@ -1,0 +1,127 @@
+/* AKTİVA Danışma V5.6 — görsel tutarlılık ve mobil gezinme düzeltmeleri.
+   Son V5.5 stilinden sonra gelir. Yalnızca pre_receiving rolü.
+   Kayıt, veri ve bildirim akışına müdahale etmez. */
+
+/* Birbiri üzerine binen tarih alanı ve etiket boşlukları. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-list-view {
+  min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view > label:has(#akpr-excel-status) {
+  margin-top:16px!important;margin-bottom:17px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akv55-date-shell,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-list-view .akv55-date-shell {
+  height:51px!important;min-height:51px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid > label {
+  min-width:0!important;max-width:100%!important;margin:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export-msg:empty {display:none!important}
+
+/* Form altındaki aksiyonlar son içerik olsun; fixed menünün arkasına saklanmasın. */
+@media(max-width:700px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving {
+    scroll-padding-bottom:calc(114px + env(safe-area-inset-bottom,0px))!important;
+    overflow-x:clip!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(
+    #akpr-new-view,#akpr-list-view,#akpr-report-view,
+    #akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view
+  ):not([hidden]) {scroll-margin-top:0!important;max-width:100%!important;}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view .akpr-actions {
+    margin-bottom:16px!important;scroll-margin-bottom:116px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom {
+    box-sizing:border-box!important;width:100%!important;max-width:100vw!important;
+    padding-top:7px!important;padding-bottom:max(14px,env(safe-area-inset-bottom,0px))!important;
+    z-index:2147483100!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom button {
+    min-width:0!important;white-space:nowrap!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view {
+    overflow:visible!important;
+  }
+}
+
+/* Ek İşlemler: PWA'da solda anlamsız büyük koyu şerit yerine
+   hafif karartma ve neredeyse tam genişlikte, sağdan açılan net panel. */
+@media(max-width:700px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer:not([hidden]) {
+    position:fixed!important;inset:0!important;z-index:2147483200!important;
+    isolation:isolate!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-scrim {
+    position:absolute!important;inset:0!important;
+    background:rgba(7,20,38,.38)!important;
+    backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel {
+    box-sizing:border-box!important;left:auto!important;right:0!important;
+    width:calc(100vw - 28px)!important;max-width:420px!important;
+    top:0!important;bottom:0!important;
+    padding:0 14px max(20px,env(safe-area-inset-bottom,0px))!important;
+    border-radius:18px 0 0 18px!important;
+    background:#f3f6fa!important;
+    box-shadow:-10px 0 38px rgba(6,20,40,.19)!important;
+    overflow-y:auto!important;overflow-x:hidden!important;
+    overscroll-behavior:contain;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title {
+    min-height:100px!important;
+    margin:0 -14px 10px!important;
+    padding:max(20px,env(safe-area-inset-top,0px)) 16px 18px!important;
+    border-radius:18px 0 0 0!important;
+    gap:10px!important;
+    box-shadow:none!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title strong {
+    font-size:19px!important;line-height:1.24!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title strong::after {
+    font-size:11px!important;margin-top:5px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action] {
+    min-height:58px!important;padding:9px 12px!important;
+    border-radius:13px!important;gap:11px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action] > svg {
+    width:20px!important;height:20px!important;flex-basis:20px!important;
+    padding:9px!important;border-radius:11px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="records"] {
+    margin-top:21px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="settings"] {
+    margin-top:8px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="logout"] {
+    margin-top:auto!important;margin-bottom:5px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel button:focus-visible {
+    outline:3px solid #8fb1d6!important;outline-offset:3px!important;
+  }
+}
+@media(max-width:370px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel {
+    width:calc(100vw - 20px)!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title strong {
+    font-size:18px!important;
+  }
+}
+@media(max-height:620px) and (max-width:700px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title {
+    min-height:86px!important;padding-block:15px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action] {
+    min-height:52px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel {
+    animation:none!important;
+  }
+}

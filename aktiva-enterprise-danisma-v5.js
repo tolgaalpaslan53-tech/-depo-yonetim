@@ -11,7 +11,8 @@ function apply(){
 function scrollActiveView(){
   if(document.body.dataset.role!=='pre_receiving') return;
   const report=$('#akpr-report-view');
-  if(report && !report.hidden){ report.scrollIntoView({block:'start',behavior:'smooth'}); }
+  // V5.6: no scrollIntoView here. Navigation is handled by the core SPA.
+  // Programmatic scrolling to the report caused iOS to hide the page header.
 }
 document.addEventListener('DOMContentLoaded',()=>{apply(); setTimeout(apply,600);});
 document.addEventListener('aktiva:session-changed',()=>setTimeout(apply,180));

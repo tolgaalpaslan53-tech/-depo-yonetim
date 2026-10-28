@@ -1,0 +1,81 @@
+/* AKTİVA Danışma: tır giriş-çıkış ve KM (izole arayüz). */
+html body[data-role="pre_receiving"] #ak-pre-receiving .ake3-drawer-panel > #akbim-menu {
+ display:flex!important;align-items:center;gap:18px;width:100%!important;min-height:73px!important;padding:14px 18px!important;margin:0 0 13px!important;background:#fff!important;color:#24354d!important;border:1px solid #dbe3ed!important;border-radius:17px!important;box-shadow:0 8px 19px rgba(26,41,65,.035)!important;text-align:left!important;font-size:16px!important;font-weight:750!important;position:relative!important;cursor:pointer;
+}
+html body[data-role="pre_receiving"] #ak-pre-receiving .ake3-drawer-panel > #akbim-menu svg{width:37px;height:37px;flex:none;padding:8px;border-radius:12px;background:#ffeff2;color:#c91538}
+html body[data-role="pre_receiving"] #ak-pre-receiving .ake3-drawer-panel > #akbim-menu::after{content:'›';font-size:28px;color:#94a3b8;margin-left:auto;font-weight:400}
+html body[data-role="pre_receiving"] #ak-pre-receiving .ake3-drawer-panel > #akbim-menu:focus-visible{outline:3px solid #ed4564;outline-offset:2px}
+#akpv-overlay .akpv-hub > .akbim-cars-link{display:flex;flex-direction:column;text-align:left;justify-content:center;gap:4px;min-height:94px;border-radius:18px;background:#fff;border:1px solid #dce5ef;padding:13px 16px;color:#22334c;box-shadow:0 4px 14px #19294109;cursor:pointer}
+#akpv-overlay .akbim-cars-link span{font-size:24px}#akpv-overlay .akbim-cars-link strong{font-size:15px}#akpv-overlay .akbim-cars-link small{font-size:12px;color:#738198}
+html body.akbim-open{overflow:hidden!important}
+#akbim-overlay[hidden]{display:none!important}
+#akbim-overlay{position:fixed;inset:0;z-index:2147483400;background:#f2f5fa;color:#22334c;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;box-sizing:border-box}
+#akbim-overlay *{box-sizing:border-box}
+#akbim-overlay .akbim-shell{min-height:100%;outline:0}
+#akbim-overlay .akbim-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:25px max(20px,calc((100vw - 890px)/2)) 23px;background:linear-gradient(115deg,#213650,#14263f);color:#fff;border-bottom:4px solid #db2445}
+#akbim-overlay .akbim-head small{display:block;letter-spacing:2px;font-size:10px;font-weight:800;color:#b5c3d5;margin-bottom:6px}
+#akbim-overlay .akbim-head h2{font-size:clamp(24px,4.8vw,32px);line-height:1.15;letter-spacing:-.6px;margin:0;color:#fff;font-weight:850}
+#akbim-overlay .akbim-head p{font-size:13px;color:#becbdc;margin:7px 0 0}
+#akbim-overlay #akbim-close{flex:none;background:#314660;border:1px solid #5f7088;color:#fff;border-radius:15px;width:48px;height:48px;display:grid;place-items:center;font-size:29px;font-weight:300;padding:0;cursor:pointer}
+#akbim-overlay .akbim-content{width:min(100%,910px);margin:0 auto;padding:23px 20px max(34px,env(safe-area-inset-bottom))}
+#akbim-overlay .akbim-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:21px}
+#akbim-overlay .akbim-stat{min-width:0;background:#fff;border:1px solid #dae3ec;border-top:4px solid #d52345;box-shadow:0 7px 15px #1a2f4a0b;border-radius:17px;padding:15px 12px}
+#akbim-overlay .akbim-stat:nth-child(2){border-top-color:#20b57b}#akbim-overlay .akbim-stat:nth-child(3){border-top-color:#5396e7}
+#akbim-overlay .akbim-stat span{display:block;color:#65758a;font-weight:700;font-size:12px;line-height:1.3;min-height:32px}
+#akbim-overlay .akbim-stat strong{display:block;font-size:27px;line-height:1.15;margin-top:6px;color:#22344d}
+#akbim-overlay .akbim-card{background:#fff;border-radius:19px;border:1px solid #d9e3ee;padding:24px;margin:0 0 18px;box-shadow:0 7px 18px #1a2f4a07}
+#akbim-overlay .akbim-card-title,#akbim-overlay .akbim-section-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px}
+#akbim-overlay h3{font-size:21px;font-weight:850;color:#22344d;letter-spacing:-.5px;line-height:1.2;margin:0 0 7px}
+#akbim-overlay .akbim-card p{font-size:13px;color:#718199;line-height:1.55;margin:0}
+#akbim-overlay .akbim-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 14px}
+#akbim-overlay .akbim-full{grid-column:1/-1}
+#akbim-overlay label{min-width:0;display:block;font-size:13px;color:#455873;font-weight:750}
+#akbim-overlay label>span:not(.akbim-type>span){color:#c91e3d}
+#akbim-overlay :is(input:not([type=radio]),textarea){display:block;width:100%;max-width:100%;border:1.5px solid #d3dfed;border-radius:13px;padding:13px 15px;margin-top:9px;font-family:inherit;font-weight:600;font-size:15px;line-height:1.4;color:#24354d;background:#f7f9fc;outline:none;box-shadow:none;min-height:50px;appearance:none}
+#akbim-overlay input::placeholder,#akbim-overlay textarea::placeholder{color:#9ba8b9}
+#akbim-overlay :is(input,textarea):focus-visible{border-color:#5b91d3!important;box-shadow:0 0 0 3px #5594de22!important}
+#akbim-overlay textarea{resize:vertical;min-height:78px}
+#akbim-overlay input[type=date]{color-scheme:light}
+#akbim-overlay .akbim-prev{background:#f0f5fb;border:1px solid #d9e5f1;border-radius:12px;padding:12px 15px;color:#64768f;font-size:13px;line-height:1.6}
+#akbim-overlay .akbim-prev strong{color:#20334e}
+#akbim-overlay .akbim-field-title{display:block;margin-bottom:9px}
+#akbim-overlay .akbim-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#akbim-overlay .akbim-type{cursor:pointer}
+#akbim-overlay .akbim-type input{position:absolute;opacity:0;width:1px;height:1px}
+#akbim-overlay .akbim-type span{display:block;text-align:center;padding:15px 9px;border-radius:12px;border:1.5px solid #d9e2ed;background:#f6f8fb;color:#445672;font-size:13px;font-weight:800;line-height:1.35}
+#akbim-overlay .akbim-type input:checked+span{background:#fff0f2;border-color:#cd2545;color:#b61a38;box-shadow:0 0 0 1px #cd254540}
+#akbim-overlay .akbim-type input:focus-visible+span{outline:3px solid #5b91d3;outline-offset:2px}
+#akbim-overlay .akbim-actions{display:flex;gap:10px;margin-top:23px}
+#akbim-overlay button{font-family:inherit}
+#akbim-overlay .akbim-actions button,#akbim-overlay .akbim-export{min-height:48px;border:0;border-radius:13px;padding:13px 18px;background:linear-gradient(110deg,#d12d46,#ba1e39);color:white;font-size:14px;font-weight:850;cursor:pointer}
+#akbim-overlay .akbim-actions button:first-child{flex:1}
+#akbim-overlay button.akbim-light{background:#eff3f8;color:#455876;border:1px solid #dae3ec;min-height:43px;border-radius:12px;padding:10px 17px;font-size:13px;font-weight:800;cursor:pointer}
+#akbim-overlay button:disabled{opacity:.55;cursor:not-allowed}
+#akbim-overlay .akbim-message{min-height:22px;color:#13795b!important;margin-top:12px!important;font-size:13px!important}
+#akbim-overlay .akbim-message.akbim-error{color:#b71c3d!important}
+#akbim-overlay .akbim-section-header{margin-bottom:15px}
+#akbim-overlay .akbim-refresh{white-space:nowrap}
+#akbim-overlay #akbim-search{margin:0 0 14px}
+#akbim-overlay .akbim-history{display:grid;gap:9px}
+#akbim-overlay .akbim-record{display:flex;align-items:center;gap:11px;border:1px solid #e1e8ef;border-radius:13px;padding:11px 13px;min-width:0}
+#akbim-overlay .akbim-direction{white-space:nowrap;border-radius:9px;padding:7px 9px;font-size:11px;font-weight:850;color:#b41b39;background:#fff0f2}
+#akbim-overlay .akbim-direction.entry{background:#e9f8f0;color:#15815c}
+#akbim-overlay .akbim-record-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
+#akbim-overlay .akbim-record-main strong{font-size:13px;font-weight:850}
+#akbim-overlay .akbim-record-main small{color:#8290a5;font-size:11px;overflow-wrap:anywhere}
+#akbim-overlay .akbim-record-km{white-space:nowrap;font-size:13px;color:#223751}
+#akbim-overlay .akbim-empty{padding:18px;text-align:center;color:#788aa0;border:1px dashed #d3dfeb;border-radius:12px;font-size:13px}
+#akbim-overlay .akbim-hint{margin-top:10px!important}
+#akbim-overlay .akbim-export{width:100%;margin-top:20px}
+@media (max-width:640px){
+ #akbim-overlay .akbim-content{padding:18px 14px max(30px,env(safe-area-inset-bottom))}
+ #akbim-overlay .akbim-head{padding:21px 19px}
+ #akbim-overlay .akbim-card{padding:19px 16px}
+ #akbim-overlay .akbim-fields{grid-template-columns:1fr;gap:15px}
+ #akbim-overlay .akbim-stat{padding:13px 10px}
+ #akbim-overlay .akbim-stat span{font-size:10px;min-height:29px}
+ #akbim-overlay .akbim-stat strong{font-size:25px}
+ #akbim-overlay h3{font-size:19px}
+ #akbim-overlay .akbim-record{flex-wrap:wrap}
+ #akbim-overlay .akbim-record-km{margin-left:auto}
+}

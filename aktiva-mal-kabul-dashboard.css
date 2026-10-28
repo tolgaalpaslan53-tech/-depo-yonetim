@@ -328,12 +328,11 @@ body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-greet
 #akd-dashboard[data-akd-page="home"].akd-no-photo .akd-greeting{background-image:none!important}
 #akd-dashboard[data-akd-page="home"] .akd-greeting h1{font-weight:800!important;font-size:clamp(22px,4.6vw,30px)!important;line-height:1.18!important;color:#fff!important;margin:0 0 9px!important;position:relative;padding-left:13px;border-left:5px solid #ec1739}
 #akd-dashboard[data-akd-page="home"] .akd-greeting p{color:#e4e9f1!important;font-size:13px!important;max-width:350px!important;margin:0!important}
-/* Kart düzeni: Üstte bugünkü durum, ardından Radar ve hızlı işlemler. */
+/* Mal Kabul: fotoğraf, günlük durum, Radar, sevkiyatlar ve günlük bilgi. */
 #akd-dashboard[data-akd-page="home"] .akd-panel:has(.akd-kpis){order:1}
 #akd-dashboard[data-akd-page="home"] #akr-panel{order:2;flex-shrink:0;margin:0!important}
-#akd-dashboard[data-akd-page="home"] .akd-actions{order:3}
+#akd-dashboard[data-akd-page="home"] .akd-panel:has(.akd-shipments){order:3}
 #akd-dashboard[data-akd-page="home"] #akd-daily-tip{order:4;margin:0!important}
-#akd-dashboard[data-akd-page="home"] .akd-panel:has(.akd-shipments){order:5}
 #akd-dashboard[data-akd-page="home"].akd-hide-daily #akd-daily-tip,
 #akd-dashboard[data-akd-page="home"].akd-hide-recent .akd-panel:has(.akd-shipments){display:none!important}
 body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-panel{background:#fff!important;border:1px solid #dce2ec!important;border-radius:18px!important;padding:17px!important;color:#192b45!important;box-shadow:0 4px 20px #20345a0c!important;margin:0!important}
@@ -416,3 +415,8 @@ body[data-role="count"].akd-home #akd-dashboard button.akd-pref-reset{background
 body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-actions button.akd-action strong{color:#172a44!important;-webkit-text-fill-color:#172a44!important;opacity:1!important}
 body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-actions button.akd-action small{color:#66758c!important;-webkit-text-fill-color:#66758c!important;opacity:1!important}
 body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-actions button.akd-action b{color:#64748b!important;-webkit-text-fill-color:#64748b!important}
+
+/* 28.10.2026: Tek gezinme düzeni — alt menü temel sayfalar, yan menü ek modüller. */
+#akd-dashboard .akd-sidebar .akd-nav .akd-ico{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 29px!important}
+#akd-dashboard .akd-sidebar .akd-nav .akd-ico .akd-svg{width:23px!important;height:23px!important;stroke:currentColor!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-nav:focus-visible{outline:2px solid #f9cbd5!important;outline-offset:3px!important}

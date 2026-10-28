@@ -1,0 +1,238 @@
+/* AKTİVA Danışma Enterprise v5 — Raporlar ve Araçlar ekranı tasarım birliği */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)!important;
+  border:1px solid #dfe6f0!important;
+  border-radius:28px!important;
+  box-shadow:0 18px 46px rgba(23,38,56,.09)!important;
+  padding:24px!important;
+  margin:18px auto 18px!important;
+  max-width:980px!important;
+  min-height:auto!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-detail-head{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;margin:0 0 18px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-back{
+  background:#2c4662!important;color:#fff!important;border:1px solid #476684!important;border-radius:16px!important;
+  box-shadow:0 8px 18px rgba(44,70,98,.16)!important;padding:12px 18px!important;font-weight:700!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view h2{
+  margin:0!important;color:#20334a!important;font-size:34px!important;line-height:1.1!important;letter-spacing:-.03em!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view h2::before{
+  content:'📊';display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;
+  background:linear-gradient(145deg,#eff4fb,#fff);margin-right:14px;vertical-align:middle;box-shadow:inset 0 0 0 1px #dfe7f1;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view>.akpr-muted:first-of-type{
+  display:block!important;margin:0 0 22px!important;color:#697b92!important;font-size:15px!important;line-height:1.55!important;max-width:780px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;margin:0 0 14px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view label{
+  display:grid!important;gap:8px!important;color:#77879b!important;font-size:13px!important;font-weight:700!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view input,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view select{
+  width:100%!important;box-sizing:border-box!important;background:#fff!important;color:#1f2f45!important;border:1px solid #d4dde8!important;
+  border-radius:18px!important;padding:16px 18px!important;font-size:18px!important;font-weight:700!important;min-height:60px!important;
+  box-shadow:0 2px 0 rgba(27,43,65,.02), 0 6px 18px rgba(35,52,72,.05)!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view input:focus,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view select:focus{
+  outline:none!important;border-color:#789dca!important;box-shadow:0 0 0 4px rgba(120,157,202,.17)!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-excel-status{margin:0 0 18px!important}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;
+  background:linear-gradient(180deg,#df1f3f 0%,#c71331 100%)!important;color:#fff!important;border:1px solid #b9112d!important;
+  border-radius:18px!important;padding:15px 22px!important;min-height:58px!important;font-size:17px!important;font-weight:800!important;
+  box-shadow:0 14px 28px rgba(199,19,49,.2)!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export::before{content:'⬇';font-size:16px;line-height:1}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export-msg{
+  margin-top:14px!important;padding:14px 16px!important;border-radius:16px!important;background:#f5f8fc!important;border:1px solid #e3e9f2!important;color:#6b7b8e!important;min-height:20px!important;
+}
+
+/* Personel ve ziyaretçi araçları yeni açık tasarım */
+html body[data-role="pre_receiving"].akpv-open{overflow:hidden!important}
+html body[data-role="pre_receiving"] #akpv-overlay{
+  background:rgba(18,28,43,.22)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  align-items:stretch!important;justify-content:flex-end!important;padding:0!important;color:#20334a!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell{
+  width:min(100%,1080px)!important;max-width:none!important;min-height:100dvh!important;border-radius:0!important;
+  background:#f2f5fa!important;border:0!important;box-shadow:-16px 0 60px rgba(12,20,31,.18)!important;display:flex!important;flex-direction:column!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell>header.akpv-head{
+  background:linear-gradient(115deg,#23344b 0%,#18283d 74%,#132035 100%)!important;border-bottom:0!important;padding:30px 30px 24px!important;position:relative!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell>header.akpv-head::after{
+  content:'';position:absolute;left:30px;bottom:0;width:86px;height:3px;border-radius:999px;background:#ed314c;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-head small{color:#a9bbd0!important;font-size:14px!important;letter-spacing:.06em!important;text-transform:uppercase!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-head h2{color:#fff!important;font-size:44px!important;line-height:1.05!important;margin:8px 0 8px!important;font-weight:800!important;letter-spacing:-.04em!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-head p{color:#c9d4e0!important;font-size:19px!important;line-height:1.4!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-head #akpv-close{
+  width:74px!important;height:74px!important;min-width:74px!important;min-height:74px!important;border-radius:50%!important;background:rgba(255,255,255,.06)!important;
+  border:1px solid rgba(141,167,196,.55)!important;color:#eff4fb!important;font-size:44px!important;line-height:1!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-body{
+  flex:1 1 auto!important;overflow:auto!important;padding:26px 30px 120px!important;background:#f2f5fa!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;margin-bottom:18px!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats>div{
+  position:relative;background:#fff!important;border:1px solid #dbe3ee!important;border-radius:24px!important;padding:18px 20px 20px!important;
+  box-shadow:0 14px 30px rgba(33,51,74,.06)!important;min-height:110px!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats>div:nth-child(1){border-top:5px solid #da253f!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats>div:nth-child(2){border-top:5px solid #2fc279!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats>div:nth-child(3){border-top:5px solid #5396f3!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats small{color:#63758d!important;font-size:15px!important;font-weight:700!important;line-height:1.35!important;display:block!important;min-height:auto!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats strong{color:#1d3148!important;font-size:48px!important;line-height:1.06!important;margin-top:12px!important;display:block!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-actions{display:block!important;margin:0 0 8px!important}
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-search{
+  width:100%!important;background:#fff!important;color:#20334a!important;border:2px solid #d7e0ea!important;border-radius:22px!important;min-height:68px!important;
+  font-size:20px!important;padding:18px 22px!important;box-shadow:0 8px 22px rgba(29,49,72,.05)!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-search::placeholder{color:#7a8da4!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-search-help{color:#6a7d94!important;font-size:18px!important;line-height:1.45!important;margin:16px 0 18px!important}
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-msg{
+  color:#6a7d94!important;background:transparent!important;font-size:15px!important;min-height:18px!important;margin-bottom:8px!important
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:18px!important;margin:20px 0 0!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button{
+  min-height:168px!important;background:#fff!important;border:1px solid #dbe3ee!important;border-radius:24px!important;padding:22px!important;
+  box-shadow:0 14px 30px rgba(33,51,74,.06)!important;color:#20334a!important;align-items:flex-start!important;gap:12px!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button>span{font-size:40px!important;line-height:1!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button>strong{font-size:24px!important;line-height:1.12!important;color:#20334a!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button>small{font-size:18px!important;line-height:1.35!important;color:#72839a!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button[aria-expanded="true"]{background:#f8fbff!important;border-color:#90afd3!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-report,
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-history-section,
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-list-section,
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-form{
+  background:#fff!important;border:1px solid #dbe3ee!important;border-radius:26px!important;box-shadow:0 14px 30px rgba(33,51,74,.06)!important;padding:22px!important;margin:18px 0 0!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-report>strong,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-history-title,
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-form-title{color:#20334a!important;font-size:26px!important;line-height:1.15!important;margin:0 0 16px!important;font-weight:800!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields{grid-template-columns:1.1fr 1fr 1fr auto!important;gap:14px!important;align-items:end!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields label,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-fields label{display:grid!important;gap:8px!important;color:#6d7f96!important;font-size:14px!important;font-weight:700!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell input,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell select{
+  background:#fff!important;color:#20334a!important;border:1px solid #d5dfea!important;border-radius:18px!important;padding:15px 16px!important;min-height:56px!important;
+  box-shadow:0 5px 18px rgba(29,49,72,.04)!important;font-size:17px!important;font-weight:650!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell input:focus,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell select:focus{outline:none!important;border-color:#7fa0c8!important;box-shadow:0 0 0 4px rgba(127,160,200,.16)!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields button,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-form-actions button,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions button,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-empty button{
+  min-height:56px!important;border-radius:16px!important;padding:14px 18px!important;font-size:16px!important;font-weight:800!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-export,
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-save,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions button[data-action="enter"]{
+  background:linear-gradient(180deg,#df1f3f 0%,#c71331 100%)!important;border:1px solid #b9112d!important;color:#fff!important;box-shadow:0 14px 26px rgba(199,19,49,.18)!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-save-enter,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions button[data-action="exit"],
+html body[data-role="pre_receiving"] #akpv-overlay #akpv-cancel,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions .akpv-edit,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions .akpv-delete,
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-more{
+  background:#29425d!important;border:1px solid #4a6684!important;color:#fff!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:14px!important;background:#fff!important;border:1px solid #dbe3ee!important;border-radius:22px!important;padding:18px 18px 16px!important;box-shadow:0 8px 24px rgba(33,51,74,.05)!important;margin-bottom:12px!important;
+}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item strong{color:#1f2f45!important;font-size:22px!important;letter-spacing:-.01em!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item small{color:#6e8097!important;font-size:15px!important;line-height:1.5!important;margin:6px 0 8px!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-status{display:inline-flex!important;align-items:center!important;gap:7px!important;font-size:14px!important;color:#73849a!important;background:#f6f9fc!important;border:1px solid #e1e8f1!important;padding:7px 10px!important;border-radius:999px!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-status.inside{color:#127955!important;background:#eef9f4!important;border-color:#cfeedd!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions{align-items:flex-start!important;justify-content:flex-end!important;flex-direction:column!important;gap:10px!important;min-width:230px!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions>button{width:100%!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-more{width:100%!important;font-size:22px!important;line-height:1!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-management{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;width:100%!important;justify-content:stretch!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-history{background:#fff!important;border:1px solid #e3e9f2!important;border-radius:18px!important;padding:16px 18px!important;color:#65778f!important;gap:8px!important;margin-bottom:10px!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-history strong{color:#20334a!important;font-size:18px!important}
+html body[data-role="pre_receiving"] #akpv-overlay .akpv-empty{color:#6e8097!important;font-size:16px!important;line-height:1.5!important}
+
+/* Mobil */
+@media(max-width:860px){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view{padding:20px!important;border-radius:24px!important;margin:14px 0 18px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view h2{font-size:28px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid{grid-template-columns:1fr!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-head h2{font-size:34px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-head p{font-size:17px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats{grid-template-columns:1fr!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub{grid-template-columns:1fr 1fr!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields{grid-template-columns:1fr 1fr!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields label:first-child,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields button{grid-column:1/-1!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-item{grid-template-columns:1fr!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions{min-width:0!important;width:100%!important}
+}
+@media(max-width:620px){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view{padding:18px 16px!important;border-radius:22px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-detail-head{margin-bottom:14px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-back{padding:11px 15px!important;border-radius:14px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view h2{font-size:22px!important;line-height:1.14!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view h2::before{width:44px;height:44px;margin-right:10px;border-radius:14px}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view>.akpr-muted:first-of-type{font-size:14px!important;margin-bottom:18px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view input,
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view select{min-height:54px!important;font-size:16px!important;padding:14px 15px!important}
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export{display:flex!important;width:100%!important;font-size:16px!important}
+
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell>header.akpv-head{padding:22px 18px 18px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell>header.akpv-head::after{left:18px;width:58px}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-head small{font-size:11px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-head h2{font-size:22px!important;line-height:1.1!important;margin:7px 0 6px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-head p{font-size:14px!important;line-height:1.45!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-head #akpv-close{width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;font-size:28px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-body{padding:16px 16px 106px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats{gap:10px!important;margin-bottom:14px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats>div{border-radius:20px!important;padding:15px 16px 16px!important;min-height:auto!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats small{font-size:13px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-stats strong{font-size:36px!important;margin-top:8px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay #akpv-search{min-height:56px!important;font-size:17px!important;padding:15px 16px!important;border-radius:18px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-search-help{font-size:14px!important;margin:12px 0 14px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub{grid-template-columns:1fr 1fr!important;gap:12px!important;margin-top:14px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button{min-height:112px!important;padding:16px 14px!important;border-radius:20px!important;gap:7px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button>span{font-size:26px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button>strong{font-size:17px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-hub>button>small{font-size:12px!important;line-height:1.35!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-report,
+  html body[data-role="pre_receiving"] #akpv-overlay #akpv-history-section,
+  html body[data-role="pre_receiving"] #akpv-overlay #akpv-list-section,
+  html body[data-role="pre_receiving"] #akpv-overlay #akpv-form{border-radius:22px!important;padding:16px!important;margin-top:14px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-report>strong,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-history-title,
+  html body[data-role="pre_receiving"] #akpv-overlay #akpv-form-title{font-size:20px!important;margin-bottom:12px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields{grid-template-columns:1fr!important;gap:12px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell input,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-shell select{min-height:52px!important;padding:14px 15px!important;font-size:16px!important;border-radius:16px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-fields{grid-template-columns:1fr!important;gap:12px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-form-actions{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;margin-top:14px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-item{padding:15px!important;border-radius:18px!important;gap:12px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-item strong{font-size:18px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-item small{font-size:13px!important;margin:5px 0 7px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-status{font-size:12px!important;padding:6px 9px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-item-actions>button,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-more,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-management button,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-report-fields button,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-form-actions button,
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-empty button{min-height:50px!important;font-size:15px!important;padding:12px 14px!important;border-radius:14px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-management{grid-template-columns:1fr 1fr!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-history strong{font-size:15px!important}
+  html body[data-role="pre_receiving"] #akpv-overlay .akpv-history{font-size:13px!important;padding:13px 14px!important;border-radius:16px!important}
+}

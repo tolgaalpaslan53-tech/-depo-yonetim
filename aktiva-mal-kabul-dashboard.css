@@ -299,3 +299,120 @@ body[data-role="count"].akd-home #akd-dashboard #akd-create-mount .ak-line{backg
 #akd-dashboard button.akd-daily-toggle:hover,#akd-dashboard button.akd-daily-toggle:focus-visible{background:#304c65!important;color:#fff!important;border-color:#83a6c4!important}
 #akd-dashboard .akd-daily-detail:not([hidden]){border-top:1px solid #3a4f63;padding-top:12px;margin-top:8px}
 #akd-dashboard .akd-daily-detail[hidden]{display:none!important}
+
+/* AKTİVA Mal Kabul V2: Danışma ile ortak kurumsal görünüm.
+   Yalnızca count dashboard; Supabase, forklift ve push işleyişi değişmez. */
+body[data-role="count"].akd-home,
+body[data-role="count"].akd-home #akd-dashboard{background:#f1f3f8!important;color:#192b45!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-layout{display:block!important;min-height:100dvh!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-content{width:100%;max-width:none!important;padding-bottom:85px}
+body[data-role="count"].akd-home #akd-dashboard .akd-header{
+ background:#14253d!important;border:0!important;border-radius:0!important;
+ height:74px!important;min-height:74px!important;padding:10px 18px!important;
+ display:flex!important;gap:10px!important;overflow:visible!important;color:white!important;
+}
+body[data-role="count"].akd-home #akd-dashboard .akd-brand strong,
+body[data-role="count"].akd-home #akd-dashboard .akd-brand strong em{color:#fff!important;font-size:22px!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-brand small{display:block!important;color:#c2cbd9!important;font-size:10px!important;margin-top:4px}
+body[data-role="count"].akd-home #akd-dashboard .akd-menu{display:inline-flex!important;order:9;margin-left:0!important;align-items:center;justify-content:center;padding:0!important;
+ border:0!important;background:transparent!important;color:#fff!important;font-size:26px!important;min-width:39px;height:42px}
+body[data-role="count"].akd-home #akd-dashboard .akd-person{margin-left:auto!important;background:transparent!important;border:0!important;color:#fff!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-person small{color:#d2dbe7!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-header-actions{margin-left:auto!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-top-btn{border:1px solid #ffffff33!important;background:#ffffff0e!important;color:#fff!important}
+body[data-role="count"].akd-home #akd-dashboard .akd-body{max-width:1120px!important;margin:0 auto!important;padding:16px 18px 26px!important;min-width:0!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-body{display:flex!important;flex-direction:column!important;gap:15px!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-greeting{order:0;position:relative;isolation:isolate;background:#17243c url('aktiva-mal-kabul-banner.webp') right center/cover no-repeat!important;
+ border-radius:19px!important;min-height:185px!important;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:22px!important;overflow:hidden;margin:0!important;color:#fff!important}
+#akd-dashboard[data-akd-page="home"] .akd-greeting::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(11,24,42,.94),rgba(11,24,42,.73) 46%,rgba(11,24,42,.14) 100%)}
+#akd-dashboard[data-akd-page="home"].akd-no-photo .akd-greeting{background-image:none!important}
+#akd-dashboard[data-akd-page="home"] .akd-greeting h1{font-weight:800!important;font-size:clamp(22px,4.6vw,30px)!important;line-height:1.18!important;color:#fff!important;margin:0 0 9px!important;position:relative;padding-left:13px;border-left:5px solid #ec1739}
+#akd-dashboard[data-akd-page="home"] .akd-greeting p{color:#e4e9f1!important;font-size:13px!important;max-width:350px!important;margin:0!important}
+/* Kart düzeni: Üstte bugünkü durum, ardından Radar ve hızlı işlemler. */
+#akd-dashboard[data-akd-page="home"] .akd-panel:has(.akd-kpis){order:1}
+#akd-dashboard[data-akd-page="home"] #akr-panel{order:2;flex-shrink:0;margin:0!important}
+#akd-dashboard[data-akd-page="home"] .akd-actions{order:3}
+#akd-dashboard[data-akd-page="home"] #akd-daily-tip{order:4;margin:0!important}
+#akd-dashboard[data-akd-page="home"] .akd-panel:has(.akd-shipments){order:5}
+#akd-dashboard[data-akd-page="home"].akd-hide-daily #akd-daily-tip,
+#akd-dashboard[data-akd-page="home"].akd-hide-recent .akd-panel:has(.akd-shipments){display:none!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-panel{background:#fff!important;border:1px solid #dce2ec!important;border-radius:18px!important;padding:17px!important;color:#192b45!important;box-shadow:0 4px 20px #20345a0c!important;margin:0!important}
+#akd-dashboard[data-akd-page="home"] .akd-section-head{margin-bottom:11px!important}
+#akd-dashboard[data-akd-page="home"] .akd-section-head h2{color:#192b45!important;font-weight:750!important;font-size:18px!important}
+#akd-dashboard[data-akd-page="home"] .akd-section-head>span{color:#64748b!important;font-size:11px!important}
+#akd-dashboard[data-akd-page="home"] .akd-kpis{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px!important}
+#akd-dashboard[data-akd-page="home"] .akd-kpi{border:1px solid #dfe5ee!important;background:#fff!important;border-radius:15px!important;padding:14px!important;color:#1b2c45!important;min-width:0!important;box-shadow:0 2px 13px #24334c0b}
+#akd-dashboard[data-akd-page="home"] .akd-kpi:nth-child(1){border-top:4px solid #e8173c!important}#akd-dashboard[data-akd-page="home"] .akd-kpi:nth-child(2){border-top:4px solid #16ba87!important}
+#akd-dashboard[data-akd-page="home"] .akd-kpi:nth-child(3){border-top:4px solid #ffab29!important}#akd-dashboard[data-akd-page="home"] .akd-kpi:nth-child(4){border-top:4px solid #3289e0!important}
+#akd-dashboard[data-akd-page="home"] .akd-kpi>span{color:#e8173c!important}#akd-dashboard[data-akd-page="home"] .akd-kpi:nth-child(2)>span{color:#16ba87!important}#akd-dashboard[data-akd-page="home"] .akd-kpi:nth-child(3)>span{color:#ffab29!important}#akd-dashboard[data-akd-page="home"] .akd-kpi:nth-child(4)>span{color:#3289e0!important}
+#akd-dashboard[data-akd-page="home"] .akd-kpi small{color:#64748b!important;font-size:12px!important}#akd-dashboard[data-akd-page="home"] .akd-kpi strong{color:#1b2c45!important;font-size:26px!important}
+#akd-dashboard[data-akd-page="home"] .akd-actions{margin:0!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px!important}
+#akd-dashboard[data-akd-page="home"] .akd-actions-title{grid-column:1/-1;font-size:19px!important;line-height:1.3!important;color:#192b45!important;margin:4px 0 0!important;padding-left:12px;border-left:4px solid #e9183b}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] button.akd-action:not(.alt){background:#fff!important;border:1px solid #dbe1ec!important;color:#1a2b44!important;box-shadow:0 5px 16px #20345a0c!important;min-height:130px!important;border-radius:16px!important;padding:13px 14px!important;gap:5px!important}
+#akd-dashboard[data-akd-page="home"] .akd-action strong{font-size:13px!important;color:#192b45!important;line-height:1.3!important;overflow-wrap:anywhere}
+#akd-dashboard[data-akd-page="home"] .akd-action small{font-size:11px!important;color:#738095!important;line-height:1.35!important}
+#akd-dashboard[data-akd-page="home"] .akd-action b{color:#64748b!important;font-size:22px!important;right:10px!important}
+#akd-dashboard[data-akd-page="home"] .akd-action-ico{display:grid!important;place-items:center!important;background:#ffe8ed!important;color:#df1536!important;width:42px!important;height:42px!important;border-radius:11px!important;font-size:23px!important}
+#akd-dashboard[data-akd-page="home"] .akd-action:nth-of-type(2) .akd-action-ico{background:#e7f1ff!important;color:#2984e2!important}
+#akd-dashboard[data-akd-page="home"] .akd-action:nth-of-type(4) .akd-action-ico{background:#fff2e0!important;color:#e49b1c!important}
+#akd-dashboard[data-akd-page="home"] .akd-shipment{color:#192b45!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] button.akd-shipment:not(.alt){color:#192b45!important;border-bottom:1px solid #e6ebf2!important}
+#akd-dashboard[data-akd-page="home"] .akd-shipment-main strong{color:#1b2d45!important}
+#akd-dashboard[data-akd-page="home"] .akd-shipment-main small,#akd-dashboard[data-akd-page="home"] .akd-shipment time{color:#758197!important}
+#akd-dashboard[data-akd-page="home"] .akd-empty{color:#64748b!important}
+/* Mobil alt menü Danışma ile aynı yerleşimde */
+#akd-dashboard .akd-bottom-nav{display:none}
+@media(max-width:750px){
+ body[data-role="count"].akd-home #akd-dashboard .akd-content{padding-bottom:92px!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-header{height:69px!important;min-height:69px!important;padding:9px 13px!important;gap:5px!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-person{display:none!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-brand strong,body[data-role="count"].akd-home #akd-dashboard .akd-brand strong em{font-size:21px!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-header-actions{margin-left:auto!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-body{padding:12px 12px 26px!important}
+ #akd-dashboard[data-akd-page="home"] .akd-greeting{min-height:175px!important;padding:18px!important}
+ #akd-dashboard[data-akd-page="home"] .akd-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #akd-dashboard[data-akd-page="home"] .akd-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] button.akd-action:not(.alt){min-height:110px!important}
+ #akd-dashboard .akd-bottom-nav{position:fixed!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:3px!important;align-items:stretch!important;bottom:0!important;left:0!important;right:0!important;z-index:65!important;background:#fff!important;box-shadow:0 -4px 20px #1c2c4d14!important;padding:8px 9px max(10px,env(safe-area-inset-bottom))!important;min-height:76px!important;border-top:1px solid #e0e5ef!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-bottom-nav button{border:0!important;border-radius:12px!important;background:transparent!important;color:#293c57!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;gap:2px!important;align-items:center!important;justify-content:center!important;font-size:11px!important;min-width:0!important;white-space:normal!important;line-height:1.22!important;padding:7px 3px!important;text-align:center!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-bottom-nav button span{font-size:24px!important;line-height:1!important;font-weight:700!important}
+ body[data-role="count"].akd-home #akd-dashboard .akd-bottom-nav button.selected{background:#e61538!important;color:#fff!important;font-weight:750!important}
+}
+/* Hamburger: yalnızca Mal Kabul personeline özel menü */
+body[data-role="count"].akd-home #akd-dashboard .akd-sidebar{position:fixed!important;z-index:110!important;top:0!important;left:0!important;bottom:0!important;width:min(340px,86vw)!important;height:100dvh!important;max-height:100dvh!important;padding:16px 14px!important;background:#14253d!important;border-right:0!important;transform:translateX(-105%);transition:transform .22s ease!important;visibility:hidden;overflow-y:auto!important;box-shadow:10px 0 40px #0c18294d!important;display:flex!important}
+body[data-role="count"].akd-home #akd-dashboard.akd-menu-open .akd-sidebar{transform:translateX(0)!important;visibility:visible!important}
+#akd-dashboard .akd-sidebar-brand{height:auto!important;min-height:80px!important;display:flex!important;align-items:center!important;gap:12px!important;justify-content:flex-start!important;border-bottom:1px solid #ffffff2a!important;padding-bottom:13px!important;margin-bottom:10px!important;color:white}
+#akd-dashboard .akd-sidebar-brand img{width:58px!important;height:58px!important;object-fit:contain!important}
+#akd-dashboard .akd-sidebar-brand span{font-size:15px;font-weight:750;flex:1}
+body[data-role="count"].akd-home #akd-dashboard .akd-sidebar-brand button{border:0!important;background:#ffffff16!important;border-radius:10px!important;font-size:25px!important;line-height:1!important;padding:6px 11px!important;box-shadow:none!important;color:white!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-nav:not(.alt){display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;padding:12px 14px!important;gap:12px!important;min-height:50px!important;border:0!important;border-radius:12px!important;background:transparent!important;color:#e9edf4!important;font-size:14px!important;text-align:left!important;box-shadow:none!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-nav.selected:not(.alt){background:#e61538!important;color:#fff!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-nav .akd-ico{font-size:21px!important;width:29px!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-scrim{display:none!important}
+body[data-role="count"].akd-home #akd-dashboard.akd-menu-open button.akd-scrim{display:block!important;position:fixed!important;inset:0!important;z-index:100!important;background:rgba(7,16,31,.58)!important;border:0!important;width:100%!important;height:100%!important;min-height:100dvh!important;box-shadow:none!important;border-radius:0!important}
+/* Kişisel ayarlar */
+#akd-dashboard[data-akd-page="settings"] .akd-body{max-width:780px!important;color:#1b2d45!important}
+#akd-dashboard[data-akd-page="settings"] .akd-settings-head{display:flex;gap:13px;align-items:center;margin:8px 0 20px}
+body[data-role="count"].akd-home #akd-dashboard .akd-settings-head button{border:1px solid #dce3ec!important;background:#fff!important;color:#1b2d45!important;border-radius:13px!important;box-shadow:none!important;font-size:26px!important;width:48px;height:48px;padding:0!important}
+#akd-dashboard .akd-settings-head h1{margin:0!important;font-size:23px!important;color:#1b2d45!important}
+#akd-dashboard .akd-settings-head p{color:#64748b!important;font-size:12px;margin:4px 0 0!important}
+#akd-dashboard .akd-settings-card{background:#fff!important;border:1px solid #dce3ec!important;border-radius:18px!important;padding:16px 19px!important;margin:0 0 14px!important;box-shadow:0 3px 13px #1b2b4512!important}
+#akd-dashboard .akd-settings-card h2{font-size:16px!important;color:#16283f!important;margin:0 0 6px!important}
+#akd-dashboard .akd-pref{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;border-top:1px solid #ecf0f6;color:#172942!important}
+#akd-dashboard .akd-pref span{min-width:0;display:flex;flex-direction:column;gap:4px}
+#akd-dashboard .akd-pref strong{font-size:14px!important;color:#172942!important}
+#akd-dashboard .akd-pref small{color:#64748b!important;font-size:12px!important}
+#akd-dashboard .akd-pref input[type="checkbox"]{margin:0!important;flex:0 0 21px!important;width:21px!important;height:21px!important;min-height:21px!important;accent-color:#e61538!important}
+#akd-dashboard .akd-pref-info{color:#64748b!important;font-size:12px!important;line-height:1.65!important}
+body[data-role="count"].akd-home #akd-dashboard button.akd-pref-reset{background:#fff!important;color:#d41235!important;border:1px solid #f1b7c5!important;box-shadow:none!important;border-radius:12px!important;padding:13px!important;font-weight:700!important;width:100%!important}
+#akd-dashboard.akd-compact[data-akd-page="home"] .akd-greeting{min-height:125px!important}
+#akd-dashboard.akd-compact[data-akd-page="home"] .akd-kpi{padding:9px!important}
+#akd-dashboard.akd-compact[data-akd-page="home"] button.akd-action:not(.alt){min-height:92px!important;padding:9px!important}
+#akd-dashboard.akd-compact[data-akd-page="home"] .akd-body{gap:9px!important}
+#akd-dashboard.akd-large-type[data-akd-page="home"] .akd-kpi small,#akd-dashboard.akd-large-type[data-akd-page="home"] .akd-action strong{font-size:16px!important}
+#akd-dashboard.akd-large-type[data-akd-page="home"] .akd-greeting p{font-size:16px!important}
+@media(prefers-reduced-motion:reduce){#akd-dashboard .akd-sidebar{transition:none!important}}
+/* Last-resort contrast repair against inherited old dark theme rules. */
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-actions button.akd-action strong{color:#172a44!important;-webkit-text-fill-color:#172a44!important;opacity:1!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-actions button.akd-action small{color:#66758c!important;-webkit-text-fill-color:#66758c!important;opacity:1!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="home"] .akd-actions button.akd-action b{color:#64748b!important;-webkit-text-fill-color:#64748b!important}

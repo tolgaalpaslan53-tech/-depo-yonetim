@@ -23,7 +23,18 @@ function panel(){if($('#akpv-overlay'))return;document.body.insertAdjacentHTML('
  $('#akpv-overlay').addEventListener('click',e=>{const tab=e.target.closest('[data-filter]');if(tab){$('#akpv-overlay').dataset.filter=tab.dataset.filter;render()}});
 }
 function toggleSection(which,force){const section=$('#akpv-'+which+'-section'),button=$('#akpv-show-'+which);const show=force===undefined?section.hidden:force;section.hidden=!show;if(button){button.setAttribute('aria-expanded',String(show));button.innerHTML=show?'<span>🕘</span><strong>Geçmişi Gizle</strong><small>Önceki hareketler</small>':'<span>🕘</span><strong>Giriş-Çıkış Geçmişi</strong><small>Önceki hareketler</small>'}}
-function adaptForm(){const f=$('#akpv-form'),t=f.elements.type.value;$('#akpv-owner-label').firstChild.textContent=t==='mudur'?'Araç sahibi / Müdür adı *':t==='servis'?'Servis adı *':'Ziyaretçi adı *';$('#akpv-title-label').hidden=t!=='mudur';$('#akpv-driver-label').hidden=t!=='servis';$('#akpv-visitor-label').hidden=t!=='misafir';f.elements.owner.required=true;f.elements.visitor.required=t==='misafir'}
+function adaptForm(){
+ const f=$('#akpv-form'),t=f.elements.type.value,isGuest=t==='misafir';
+ $('#akpv-owner-label').firstChild.textContent=t==='mudur'?'Araç sahibi / Müdür adı *':t==='servis'?'Servis adı *':'Ziyaretçi adı *';
+ $('#akpv-title-label').hidden=t!=='mudur';
+ $('#akpv-driver-label').hidden=t!=='servis';
+ const visitorLabel=$('#akpv-visitor-label'),visitorInput=f.elements.visitor;
+ visitorLabel.hidden=!isGuest;
+ visitorInput.required=isGuest;
+ visitorInput.disabled=!isGuest;
+ if(!isGuest)visitorInput.value='';
+ f.elements.owner.required=true;
+}
 function openForm(v=null){saveAndEnter=false;editing=v?.id||null;const f=$('#akpv-form');f.reset();f.hidden=false;if(!v&&/^\s*\d{2}/.test(query))f.elements.plate.value=query.trim().toLocaleUpperCase('tr-TR');$('#akpv-form-title').textContent=v?'Araç bilgilerini düzenle':'Yeni araç kaydı';if(v){for(const key of ['type','plate','owner','title','driver','visitor'])f.elements[key].value=v[key]||''}adaptForm();$('#akpv-save-enter').hidden=!!v;f.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function message(s){$('#akpv-msg').textContent=s||''}
 async function load(){if(busy)return;busy=true;try{const [vs,recent,openVisits]=await Promise.all([api('akpv_vehicles','GET',null,'select=*&is_archived=eq.false&order=created_at.desc&limit=1000'),api('akpv_visits','GET',null,'select=*&order=entered_at.desc&limit=200'),api('akpv_visits','GET',null,'select=*&exited_at=is.null&limit=1000')]);vehicles=vs;visits=[...openVisits,...recent.filter(x=>!openVisits.some(a=>a.id===x.id))].sort((a,b)=>Date.parse(b.entered_at)-Date.parse(a.entered_at));message('');render()}catch(e){message('Kayıtlar alınamadı: '+e.message)}finally{busy=false}}

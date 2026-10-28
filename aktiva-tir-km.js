@@ -52,17 +52,17 @@ function template(){
  root.innerHTML=`<section class="akbim-shell" role="dialog" aria-modal="true" aria-labelledby="akbim-title" tabindex="-1">
   <header class="akbim-head"><div><small>AKTİVA · DANIŞMA</small><h2 id="akbim-title">Tır Hareketleri</h2><p>Depo giriş-çıkış ve kilometre yönetimi</p></div><button type="button" id="akbim-close" aria-label="Kapat">×</button></header>
   <nav class="akbim-nav" aria-label="Tır işlemleri">
-    <button type="button" data-akbim-view="home" aria-current="page"><span aria-hidden="true">▦</span> Plaka İşlemleri</button>
-    <button type="button" data-akbim-view="history"><span aria-hidden="true">◷</span> Hareket Geçmişi</button>
-    <button type="button" data-akbim-view="report"><span aria-hidden="true">▥</span> Excel Raporu</button>
+    <button type="button" data-akbim-view="home" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Plaka İşlemleri</button>
+    <button type="button" data-akbim-view="history"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2"/></svg> Hareket Geçmişi</button>
+    <button type="button" data-akbim-view="report"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h7l5 5v15H7zM14 2v6h5M10 12h6M10 16h6"/></svg> Excel Raporu</button>
   </nav>
   <main class="akbim-content">
    <section data-akbim-page="home">
-    <div class="akbim-stats"><div class="akbim-stat"><span>Bugün Giriş</span><strong id="akbim-today-in">—</strong></div><div class="akbim-stat"><span>Bugün Çıkış</span><strong id="akbim-today-out">—</strong></div><div class="akbim-stat"><span>Toplam Hareket</span><strong id="akbim-today-all">—</strong></div></div>
+    <div class="akbim-stats"><div class="akbim-stat"><span>Bugün Giriş</span><strong id="akbim-today-in">—</strong></div><div class="akbim-stat"><span>Bugün Çıkış</span><strong id="akbim-today-out">—</strong></div><div class="akbim-stat"><span>Bugün Toplam</span><strong id="akbim-today-all">—</strong></div></div>
     <section class="akbim-card akbim-plate-hub"><div class="akbim-section-header"><div><h3>Kayıtlı Tırlar</h3><p>Plakayı bulun ve giriş ya da çıkış işlemini hemen başlatın.</p></div></div>
      <label for="akbim-plate-search">Plaka ara</label><input id="akbim-plate-search" type="search" maxlength="20" autocomplete="off" placeholder="Plaka yazın (örn. 48 ABC 123)" aria-label="Kayıtlı tır plakası ara">
      <div class="akbim-plates" id="akbim-plates" aria-live="polite"><div class="akbim-empty">Kayıtlı plakalar yükleniyor…</div></div>
-     <button type="button" id="akbim-new" class="akbim-outline-wide"><span aria-hidden="true">＋</span> Yeni Plaka ile İşlem Yap</button>
+     <button type="button" id="akbim-new" class="akbim-outline-wide"><span aria-hidden="true">＋</span> Yeni Plaka ile Giriş / Çıkış</button>
      <p class="akbim-message" id="akbim-hub-message" role="status" aria-live="polite"></p>
     </section>
    </section>

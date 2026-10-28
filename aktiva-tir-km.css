@@ -149,3 +149,160 @@ html body #akpv-overlay .akbim-cars-link strong{font-weight:800}
  #akbim-overlay .akbim-actions button:first-child{min-width:65%}
 }
 @media(max-width:355px){#akbim-overlay .akbim-nav button span{display:none}#akbim-overlay .akbim-nav button{font-size:10px}#akbim-overlay .akbim-quick{grid-template-columns:1fr}}
+
+
+/* AKTİVA · Tır Hareketleri V3: dar kapsamlı, yüksek öncelikli stil koruması.
+   index.html içindeki eski global `header`, `button:not(.alt)` (important) ve
+   Danışma genel stilleri bu modülün zeminini, sekmelerini ve metinlerini değiştiremez.
+   Yalnız #akbim-overlay ve bu eklentinin menü kartı etkilenir. */
+html body[data-role="pre_receiving"] #akbim-overlay,
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-shell {
+  background:#f1f4f9!important;color:#24354d!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay {
+  position:fixed!important;inset:0!important;z-index:2147483400!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-shell{min-height:100dvh!important}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-head {
+  display:flex!important;flex-wrap:nowrap!important;align-items:center!important;
+  justify-content:space-between!important;gap:12px!important;
+  background:linear-gradient(110deg,#1a2d45,#203850)!important;
+  color:#fff!important;border:0!important;border-bottom:3px solid #d52243!important;
+  border-radius:0!important;box-shadow:none!important;margin:0!important;
+  padding:23px max(18px,calc((100vw - 890px)/2)) 22px!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-head h2{
+  color:#fff!important;margin:0!important;font-size:clamp(23px,4.7vw,30px)!important;
+  letter-spacing:-.6px!important;font-weight:850!important;line-height:1.2!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-head p{
+  color:#bdcbdc!important;margin:7px 0 0!important;font-size:13px!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay #akbim-close {
+  width:46px!important;height:46px!important;min-width:46px!important;
+  padding:0!important;margin:0!important;border:1px solid #61748b!important;
+  border-radius:13px!important;background:#31465d!important;background-image:none!important;
+  color:#fff!important;box-shadow:none!important;font-size:28px!important;
+  display:grid!important;place-items:center!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-nav{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;top:0!important;background:#fff!important;
+  border-bottom:1px solid #dce5ef!important;box-shadow:0 4px 14px #1a2f4a0a!important;
+  padding:11px max(15px,calc((100vw - 890px)/2))!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-nav button{
+  display:flex!important;flex:1!important;min-width:0!important;max-width:none!important;
+  align-items:center!important;justify-content:center!important;gap:8px!important;
+  color:#4b607a!important;background:#f2f5f9!important;background-image:none!important;
+  border:1px solid #e0e7f0!important;border-radius:12px!important;
+  box-shadow:none!important;min-height:47px!important;padding:10px 8px!important;
+  white-space:normal!important;text-align:center!important;
+  font-size:12px!important;font-weight:800!important;line-height:1.25!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-nav button[aria-current="page"]{
+  background:#c92d46!important;background-image:none!important;
+  color:#fff!important;border:1px solid #c92d46!important;
+  box-shadow:0 4px 12px #bc304321!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-nav button svg{
+  flex:none!important;width:17px!important;height:17px!important;display:block!important;
+  stroke:currentColor!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-content{
+  background:#f1f4f9!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-stats .akbim-stat{
+  background:#fff!important;border-color:#dfe6ef!important;
+  box-shadow:0 6px 15px #1a2f4a07!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-card{
+  background:#fff!important;color:#26384f!important;
+  box-shadow:0 7px 22px #1a2f4a08!important;
+  border:1px solid #dce5ee!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-quick button{
+  background:#eaf8f1!important;background-image:none!important;
+  color:#137951!important;border:1px solid #cde8da!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-quick button+button{
+  background:#fff0f2!important;background-image:none!important;
+  color:#b91d3a!important;border:1px solid #f0d7dc!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay button.akbim-outline-wide{
+  background:#edf3f9!important;background-image:none!important;
+  color:#2a405b!important;border:1px solid #cbdaea!important;
+  border-radius:12px!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay button.akbim-outline-wide span{
+  color:#cc2f4a!important;font-size:22px!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay button.akbim-back{
+  background:transparent!important;background-image:none!important;
+  color:#405a7b!important;border:0!important;box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay button.akbim-light,
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-driver-options button{
+  background:#eef3f9!important;background-image:none!important;
+  color:#344c68!important;border:1px solid #dce5ee!important;
+  box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-driver-options button{
+  background:#fff!important;border:0!important;
+  border-bottom:1px solid #edf0f5!important;
+  text-align:left!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay #akbim-save,
+html body[data-role="pre_receiving"] #akbim-overlay #akbim-export{
+  background:linear-gradient(105deg,#cf304a,#b9233e)!important;
+  color:#fff!important;border:1px solid #bb2841!important;
+  box-shadow:0 5px 14px #b9233e16!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay #akbim-save:disabled,
+html body[data-role="pre_receiving"] #akbim-overlay #akbim-export:disabled{opacity:.55!important}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-type span{
+  background:#f4f7fb!important;color:#425571!important;
+  border:1.5px solid #d6e1ee!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay .akbim-type input:checked+span{
+  background:#fff0f2!important;color:#ba2641!important;
+  border-color:#c9304a!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay input:not([type="radio"]),
+html body[data-role="pre_receiving"] #akbim-overlay textarea{
+  background:#f7f9fc!important;color:#24354d!important;
+  border:1.5px solid #d3dfed!important;border-radius:12px!important;
+  box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #akbim-overlay input:focus,
+html body[data-role="pre_receiving"] #akbim-overlay textarea:focus{
+  outline:2px solid #80acdf66!important;outline-offset:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button#akbim-menu,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button#akbim-menu:is(:focus,:hover,:active){
+  background:#fff!important;background-image:none!important;
+  color:#22354f!important;border:1px solid #dbe4ed!important;
+  box-shadow:0 8px 19px #1a294109!important;
+}
+@media(max-width:640px){
+ html body[data-role="pre_receiving"] #akbim-overlay .akbim-head{
+  padding:21px 18px!important;
+ }
+ html body[data-role="pre_receiving"] #akbim-overlay .akbim-nav{
+  gap:7px!important;padding:10px 13px!important;
+ }
+ html body[data-role="pre_receiving"] #akbim-overlay .akbim-nav button{
+  min-height:53px!important;flex-direction:column!important;gap:4px!important;
+  padding:8px 3px!important;font-size:11px!important;
+ }
+ html body[data-role="pre_receiving"] #akbim-overlay .akbim-content{
+  padding:18px 14px max(38px,env(safe-area-inset-bottom))!important;
+ }
+}
+@media(max-width:355px){
+ html body[data-role="pre_receiving"] #akbim-overlay .akbim-nav button{
+  font-size:10px!important;
+ }
+}

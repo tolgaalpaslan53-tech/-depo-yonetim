@@ -1,0 +1,217 @@
+/* AKTİVA Danışma V5.8 — son görsel ince ayar.
+   Yalnızca pre_receiving rolü ve mevcut Enterprise Danışma arayüzü.
+   V5.7 hızlı açılış, Radar, kayıt, Supabase, push ve diğer rollere dokunmaz.
+   V5.6 sonrasında yüklenmelidir. */
+
+/* Küçük ekranlarda Ek İşlemler ayrı bir TAM EKRAN sayfa gibi açılır:
+   soldaki iç içe görünen lacivert şeritler, gereksiz oval köşe ve gölge kaldırılır. */
+@media (max-width:700px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer:not([hidden]) {
+    position:fixed!important;
+    inset:0!important;
+    display:block!important;
+    background:#f3f6fa!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    z-index:2147483200!important;
+    isolation:isolate!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-scrim {
+    background:transparent!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel {
+    position:absolute!important;
+    inset:0!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    min-height:100%!important;
+    height:100%!important;
+    height:100dvh!important;
+    margin:0!important;
+    padding:0 16px max(18px,env(safe-area-inset-bottom,0px))!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#f3f6fa!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title {
+    width:calc(100% + 32px)!important;
+    margin:0 -16px 20px!important;
+    min-height:110px!important;
+    padding:20px 18px!important;
+    border:0!important;
+    border-bottom:3px solid #d71b3a!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:linear-gradient(110deg,#192a41 0%,#213952 100%)!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-title strong {
+    font-size:21px!important;
+    line-height:1.22!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action] {
+    width:100%!important;
+    max-width:560px!important;
+    min-height:60px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding:9px 14px!important;
+    border-radius:15px!important;
+    font-size:14px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="records"] {
+    margin-top:26px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="settings"] {
+    margin-top:6px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel > button[data-ake-action="logout"] {
+    margin-top:auto!important;
+    margin-bottom:12px!important;
+  }
+
+  /* Sabit alt çubuk üzerinde içerik kalmasın; tarih seçicilerin dokunma alanı aynı kalır. */
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-new-view,#akpr-report-view):not([hidden]) {
+    margin-inline:0!important;
+    max-width:100%!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view {
+    padding:18px 16px 26px!important;
+    border-radius:20px!important;
+  }
+}
+
+/* Yeni sevkiyat kaydı: okunur 16px metin, ortak alan yüksekliği, dengeli aralıklar. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form {
+  min-width:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form .akpr-grid {
+  gap:12px 14px!important;
+  margin:12px 0 0!important;
+  min-width:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-form label.akpr-label {
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  gap:6px!important;
+  min-width:0!important;
+  margin:10px 0 5px!important;
+  font-weight:700!important;
+  font-size:13px!important;
+  line-height:1.35!important;
+  color:#43536c!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view .akpr-grid label.akpr-label {
+  margin:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view .akpr-grid input,
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form textarea {
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  padding:11px 14px!important;
+  border-radius:13px!important;
+  border:1px solid #d6e0eb!important;
+  background:#f8fafc!important;
+  color:#24364b!important;
+  box-shadow:none!important;
+  font-size:16px!important;
+  line-height:1.35!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view .akpr-grid input {
+  min-height:49px!important;
+  height:49px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form textarea {
+  min-height:78px!important;
+  resize:vertical!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form input[type="file"] {
+  display:block!important;
+  min-height:52px!important;
+  max-width:100%!important;
+  width:100%!important;
+  padding:8px 9px!important;
+  border-radius:13px!important;
+  color:#41536a!important;
+  font-size:13px!important;
+  background:#f8fafc!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form input[type="file"]::file-selector-button {
+  margin-right:9px;
+  padding:9px 11px;
+  border:0;
+  border-radius:9px;
+  background:#e6edf5;
+  color:#263a50;
+  font-family:inherit;
+  font-weight:750;
+  cursor:pointer;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form :is(input,textarea):focus-visible {
+  outline:2px solid #87a9d0!important;
+  outline-offset:1px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-driver-suggestions:empty {
+  display:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form .akpr-actions {
+  margin-top:17px!important;
+  gap:10px!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-form .akpr-actions button {
+  min-height:48px!important;
+  border-radius:13px!important;
+}
+
+/* Excel filtreleri: tarih görsel katmanına müdahale etmeden seçim alanlarını eşitle. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view label {
+  color:#41536b!important;
+  line-height:1.4!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view select#akpr-excel-status {
+  height:51px!important;
+  min-height:51px!important;
+  padding:10px 13px!important;
+  border-radius:13px!important;
+  background:#f8fafc!important;
+  color:#20344a!important;
+  font-size:16px!important;
+  box-shadow:none!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view button#akpr-export {
+  min-height:52px!important;
+  border-radius:14px!important;
+  box-shadow:0 9px 19px rgba(190,34,58,.13)!important;
+}
+@media(max-width:700px) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view {
+    padding:19px 16px 23px!important;
+    border-radius:20px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid {
+    gap:12px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export {
+    width:100%!important;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-panel,
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-drawer-scrim {
+    animation:none!important;
+    transition:none!important;
+  }
+}

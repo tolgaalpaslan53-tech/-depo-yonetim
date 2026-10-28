@@ -27,7 +27,7 @@ const metricIcons=['clipboard','truck','clock','exit'];
 const qbtn=(act,label,ic,cls='')=>`<button type="button" class="${cls}" data-ake-action="${act}">${svg(ic)}<span>${label}</span></button>`;
 let lastRead=0, fetching=false, tickId=0, chartSignature="";
 function mount(){
- if(document.body.dataset.role!=='pre_receiving'||$('#app')?.classList.contains('hidden'))return;
+ if(document.body.dataset.role!=='pre_receiving')return; // Giriş sırasında gizli uygulamada da kur, eski ekranın görünmesini bekleme.
  const root=$('#ak-pre-receiving');if(!root||root.dataset.akeV3==='ready')return;
  const head=$('.akpr-head',root),stats=$('#akpr-live-status',root),homeNav=$('#akpr-home-nav',root);
  if(!head||!stats||!homeNav||!$('#akpr-logout',head))return;
@@ -117,6 +117,25 @@ async function loadRecent(){const root=$('#ak-pre-receiving');if(!root||document
  }catch(e){if(!root.isConnected)return;host.replaceChildren(textEl('p','ake3-placeholder','Son hareketler şu anda yüklenemiyor. Araç Kayıtları bölümünden görüntüleyebilirsiniz.'));console.warn('Danışma son hareketler:',e.message)}finally{fetching=false}
 }
 function heartbeat(){mount();syncState();moveRadar();updateClock();paintChart();void loadRecent()}
-function start(){if(tickId)return;heartbeat();tickId=setInterval(heartbeat,2500);document.addEventListener('visibilitychange',()=>{if(!document.hidden){lastRead=0;heartbeat()}});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const root=$('#ak-pre-receiving');if(root)closeDrawer(root)}})}
+function start(){
+ if(tickId)return;
+ // İlk kurulumda 2,5 saniyelik döngüyü beklemeden gerçek modülün doğuşuna tepki ver.
+ // Yalnızca #app'in doğrudan çocukları izlenir; alt DOM güncellemeleri gözlenmez.
+ const app=$('#app');
+ if(app){new MutationObserver(changes=>{
+   if(document.body.dataset.role!=='pre_receiving')return;
+   if(!changes.some(x=>[...x.addedNodes].some(n=>n.nodeType===1&&(n.id==='ak-pre-receiving'||n.querySelector?.('#ak-pre-receiving')))))return;
+   heartbeat();
+ }).observe(app,{childList:true});}
+ // Oturum rolü belirlenince, gizli kökü de ilk çizimden önce hazırlamayı dene.
+ document.addEventListener('aktiva:session-changed',()=>{
+   if(document.body.dataset.role==='pre_receiving')queueMicrotask(heartbeat);
+ });
+ heartbeat();
+ // Mevcut veri/sayaç yenilemesi aynen korunur; ilk render bu döngüye bağlı değildir.
+ tickId=setInterval(heartbeat,2500);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){lastRead=0;heartbeat()}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){const root=$('#ak-pre-receiving');if(root)closeDrawer(root)}});
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

@@ -1,0 +1,124 @@
+/* AKTİVA Danışma v5.4 — toplu mobil/masaüstü uyum düzeltmeleri.
+   Yalnızca pre_receiving rolü. Kayıt, SQL, push ve forkliftçi akışlarına müdahale etmez.
+   v5.3'ün hafif geçişleri, alt menü ve mevcut fonksiyonları korunur. */
+
+/* 1. Raporlar: iOS Safari'nin yerel tarih editörü içerik genişliğini büyütmesin. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view{
+  min-width:0!important;max-width:min(100%,980px)!important;width:100%!important;
+  box-sizing:border-box!important;overflow:hidden!important;isolation:isolate;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;min-width:0!important;width:100%!important;max-width:100%!important;
+  box-sizing:border-box!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid>label{
+  min-width:0!important;max-width:100%!important;width:100%!important;box-sizing:border-box!important;
+  overflow:hidden!important;display:flex!important;flex-direction:column!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view :is(input[type="date"],select){
+  display:block!important;position:relative!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  inline-size:100%!important;max-inline-size:100%!important;box-sizing:border-box!important;
+  padding:10px 12px!important;margin:0!important;min-height:49px!important;height:49px!important;
+  color:#24364c!important;background:#f8fafc!important;border:1px solid #d5e0ed!important;
+  border-radius:12px!important;font-family:inherit!important;font-size:16px!important;
+  line-height:1.3!important;color-scheme:light!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view input[type="date"]::-webkit-date-and-time-value{
+  min-width:0!important;max-width:100%!important;text-align:left!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view input[type="date"]::-webkit-datetime-edit{
+  min-width:0!important;padding:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view #akpr-export-msg:empty{display:none!important}
+
+/* 2. Yeni kayıt: datetime-local gerçek veri girilmediyse boş kalmalı (isteğe bağlı).
+   iOS'ta boş alanın niçin boş olduğu açık bir yardımcı açıklamayla belirtilir. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view label:has(input[name="arrival_at"]){
+  display:flex!important;flex-direction:column!important;gap:6px!important;min-width:0!important;
+  color:#3d5068!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view input[name="arrival_at"]{
+  display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;
+  box-sizing:border-box!important;background:#f8fafc!important;color:#21344a!important;
+  color-scheme:light!important;-webkit-text-fill-color:#21344a!important;opacity:1!important;
+  min-height:50px!important;height:50px!important;padding:11px 13px!important;
+  font-size:16px!important;line-height:1.3!important;-webkit-appearance:auto!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view input[name="arrival_at"]::-webkit-date-and-time-value{
+  min-width:0!important;text-align:left!important;color:#21344a!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view label:has(input[name="arrival_at"])::after{
+  content:"İsteğe bağlı · Tarih ve saati seçmek için kutuya dokunun";
+  display:block!important;font-size:11px!important;font-weight:500!important;line-height:1.35!important;
+  color:#8292a6!important;margin:0 0 1px!important;
+}
+
+/* 3. Formlar: sabit alt navigasyona kadar kaydırılabilsin; son butonlar menünün arkasında kalmasın. */
+@media (max-width:700px){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving{
+    padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))!important;
+    scroll-padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(
+    #akpr-new-view,#akpr-list-view,#akpr-report-view,
+    #akpr-settings-view,#akpr-wait-settings-view,#akpr-list-settings-view,#akpr-form-settings-view
+  ):not([hidden]){
+    padding-bottom:24px!important;
+    scroll-margin-top:0!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view .akpr-actions{
+    position:relative!important;z-index:1!important;scroll-margin-bottom:110px;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-submit,
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-new-view #akpr-reset{
+    min-height:48px!important;
+  }
+  /* Klavye açıkken alt bar alan ve dokunma engeli oluşturmasın. */
+  html body[data-role="pre_receiving"]:has(#akpr-new-view :is(input,textarea,select):focus)
+    #app #ak-pre-receiving .ake3-bottom{
+    opacity:0!important;pointer-events:none!important;visibility:hidden!important;
+  }
+  /* Alt menü yalnızca görünür sayfanın navigasyonu; animasyonlardan etkilenmez. */
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .ake3-bottom{
+    position:fixed!important;inset:auto 0 0!important;width:100%!important;
+    padding-bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
+    z-index:2147483100!important;transform:none!important;
+  }
+}
+
+/* 4. Dokunmatik cihazlarda yatay taşmaları ve başlık kesilmelerini önle. */
+html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view{
+  min-width:0!important;max-width:100%!important;
+  scroll-margin-top:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-new-view,#akpr-list-view,#akpr-report-view) :is(input,select,textarea){
+  box-sizing:border-box!important;max-width:100%!important;min-width:0!important;
+}
+html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-new-view,#akpr-list-view,#akpr-report-view) .akpr-grid>label{
+  min-width:0!important;
+}
+
+/* 5. Ekran geçişleri: v5.3'ün 205ms fade/slide efekti sürer;
+   iOS'ta gezinme konumunu hareket ettiren ekstra scroll animasyonu eklenmez. */
+@media (max-width:700px){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving :is(#akpr-new-view,#akpr-list-view,#akpr-report-view){
+    margin-inline:0!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid{
+    display:flex!important;flex-direction:column!important;gap:12px!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view .akpr-grid>label{
+    display:flex!important;width:100%!important;max-width:100%!important;min-width:0!important;
+    flex-direction:column!important;margin:0!important;
+  }
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving #akpr-report-view input[type="date"]{
+    flex:0 0 auto!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  html body[data-role="pre_receiving"] #app #ak-pre-receiving .akpr-detail-view:not([hidden]){
+    animation:none!important;
+  }
+}

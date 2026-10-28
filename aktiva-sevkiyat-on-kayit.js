@@ -202,7 +202,8 @@
   root.dataset.akprView=view;const menuPanel=$('#akpr-menu-panel'),menuToggle=$('#akpr-menu-toggle');if(menuPanel)menuPanel.hidden=true;if(menuToggle)menuToggle.setAttribute('aria-expanded','false');
   nav.hidden=view!=='home';if(stats)stats.hidden=view!=='home';if(shortcut)shortcut.hidden=view!=='home';if(settingsShortcut)settingsShortcut.hidden=view!=='home';if(settings)settings.hidden=view!=='settings';if(waitSettings)waitSettings.hidden=view!=='wait-settings';if(listSettings)listSettings.hidden=view!=='list-settings';if(formSettings)formSettings.hidden=view!=='form-settings';create.hidden=view!=='new';list.hidden=view!=='list';if(report)report.hidden=view!=='report';
   if(view==='list'){applyPersonalPrefs();refresh()}if(view==='wait-settings')loadWaitThresholds();if(view==='list-settings'||view==='form-settings')fillPersonalSettings();if(view==='new')applyPersonalPrefs();
-  root.scrollIntoView({behavior:'smooth',block:'start'});
+  // SPA geçişinde sayfayı en üstten göster; mobilde önceki ekranın kaydırmasını taşıma.
+  window.scrollTo({top:0,left:0,behavior:'instant'});
  }
  const say=(target,msg,error=false)=>{const e=$(target);if(e){e.textContent=msg;e.className='akpr-msg '+(error?'akpr-error':'akpr-ok')}};
  async function upload(file){

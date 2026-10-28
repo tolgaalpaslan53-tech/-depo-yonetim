@@ -30,14 +30,14 @@ function countTrackingStyles(){if(document.getElementById('ak-count-tracking-ent
 const el=document.createElement('style');el.id='ak-count-tracking-enterprise';el.textContent=`
 body[data-role="count"] #ak-fork-host.af-count-visible{background:#edf2f8!important;color:#1b304a!important;padding:calc(env(safe-area-inset-top, 0px) + 12px) 12px calc(env(safe-area-inset-bottom, 0px) + 36px)!important;font:15px system-ui,-apple-system,BlinkMacSystemFont,sans-serif!important;overscroll-behavior:contain}
 body[data-role="count"] #ak-fork-host .akt-count-wrap{max-width:820px;margin:0 auto;border:1px solid #d3deeb;background:#edf2f8;border-radius:22px;box-shadow:0 16px 45px #152b471e;overflow:hidden}
-body[data-role="count"] #ak-fork-host .akt-count-header{background:#172941;color:#fff;padding:27px clamp(18px,5vw,30px) 23px;border-bottom:1px solid #32485d}
+body[data-role="count"] #ak-fork-host .akt-count-header{background:#172941!important;color:#fff!important;padding:20px clamp(16px,4.5vw,27px) 17px!important;border:0!important;border-bottom:2px solid #e61538!important;margin:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;min-height:0!important}
 body[data-role="count"] #ak-fork-host .akt-count-eyebrow{font-size:11px;letter-spacing:2px;color:#a9c7de;font-weight:800;margin-bottom:9px}
 body[data-role="count"] #ak-fork-host .akt-count-header h2{margin:0;color:#fff;font-size:clamp(23px,5.3vw,30px);letter-spacing:-.6px;line-height:1.2;overflow-wrap:normal}
-body[data-role="count"] #ak-fork-host .akt-count-header p{margin:10px 0 0;line-height:1.5;color:#c0cfdf;font-size:13px;max-width:630px}
-body[data-role="count"] #ak-fork-host .akt-count-actions{padding:12px clamp(18px,5vw,30px);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#fff;border-bottom:1px solid #dce5ef}
+body[data-role="count"] #ak-fork-host .akt-count-header p{margin:8px 0 0!important;line-height:1.45;color:#c0cfdf!important;font-size:12px;max-width:630px}
+body[data-role="count"] #ak-fork-host .akt-count-actions{padding:12px 0 0!important;display:flex;align-items:center;justify-content:flex-end;gap:8px;background:transparent!important;border:0!important;box-shadow:none!important}
 body[data-role="count"] #ak-fork-host button.af-quiet{background:#edf3f9!important;border:1px solid #ccd9e8!important;color:#28405b!important;border-radius:11px!important;font-weight:700!important;box-shadow:none!important;min-height:43px}
 body[data-role="count"] #ak-fork-host .akt-count-actions button{padding:10px 14px;font-size:13px;white-space:nowrap}
-body[data-role="count"] #ak-fork-host .akt-count-actions button[data-af="close-count"]{background:#243b56!important;color:#fff!important;border-color:#243b56!important}
+body[data-role="count"] #ak-fork-host .akt-count-actions button[data-af="close-count"]{background:#29445f!important;color:#fff!important;border-color:#60758e!important}
 body[data-role="count"] #ak-fork-host .akt-count-body{padding:22px clamp(15px,4.5vw,30px) 28px}
 body[data-role="count"] #ak-fork-host .af-remain-modern{gap:16px}
 body[data-role="count"] #ak-fork-host .af-remain-stats{gap:11px}
@@ -64,6 +64,11 @@ body[data-role="count"] #ak-fork-host .af-remain-top>b{font-size:13px;background
 body[data-role="count"] #ak-fork-host .af-remain-meta{font-size:12px;color:#697e94;align-items:center;gap:9px}
 body[data-role="count"] #ak-fork-host .af-remain-meta span{overflow-wrap:anywhere}
 body[data-role="count"] #ak-fork-host .af-remain-meta span:last-child{background:#f5f7fa;border:1px solid #e1e7ef;border-radius:7px;padding:5px 8px;white-space:nowrap}
+body[data-role="count"] #ak-fork-host .af-remain-meta span.is-warning{color:#95520f;background:#fff5e5;border-color:#f2d19c;font-weight:700}
+body[data-role="count"] #ak-fork-host .af-remain-meta span.is-critical{color:#ab2538;background:#fff0f2;border-color:#eebbc5;font-weight:700}
+/* Palet Takibi açıkken alttaki gerçek Mal Kabul menüsünün seçili konumu */
+body[data-role="count"].ak-count-pallet-open #akd-dashboard .akd-bottom-nav button.selected:not([data-akd="pallet"]){background:transparent!important;color:#293c57!important;font-weight:500!important}
+body[data-role="count"].ak-count-pallet-open #akd-dashboard .akd-bottom-nav button[data-akd="pallet"]{background:#e61538!important;color:#fff!important;font-weight:750!important}
 body[data-role="count"] #ak-fork-host .af-remain-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #e0e7f1;gap:12px;padding-top:13px}
 body[data-role="count"] #ak-fork-host .af-remain-numbers span{font-size:12px;color:#71869c;gap:4px}
 body[data-role="count"] #ak-fork-host .af-remain-numbers b{font-size:19px;color:#182f4a}
@@ -84,7 +89,7 @@ body[data-role="count"] #ak-fork-host .af-dim{color:#667e96!important;font-size:
 body[data-role="count"] #ak-fork-host .af-empty{color:#71869b;font-size:13px}
 body[data-role="count"] #ak-fork-host .af-note{background:#eaf2fa;color:#496682;border:1px solid #cfdfed}
 body[data-role="count"] #ak-fork-host button:focus-visible,body[data-role="count"] #ak-fork-host input:focus-visible,body[data-role="count"] #ak-fork-host select:focus-visible{outline:3px solid #2b87d4;outline-offset:2px}
-@media(max-width:390px){body[data-role="count"] #ak-fork-host .akt-count-body{padding:16px 13px 24px}body[data-role="count"] #ak-fork-host .akt-count-header{padding:22px 17px}body[data-role="count"] #ak-fork-host .akt-count-actions{padding:11px 13px}body[data-role="count"] #ak-fork-host .af-remain-card{padding:13px!important}body[data-role="count"] #ak-fork-host .af-remain-top strong{font-size:14px}body[data-role="count"] #ak-fork-host .af-remain-top>b{font-size:12px}body[data-role="count"] #ak-fork-host .af-remain-stats .af-stat{padding:13px}body[data-role="count"] #ak-fork-host .af-remain-stats small{font-size:12px}}
+@media(max-width:390px){body[data-role="count"] #ak-fork-host .akt-count-body{padding:16px 13px 24px}body[data-role="count"] #ak-fork-host .akt-count-header{padding:17px 16px!important}body[data-role="count"] #ak-fork-host .akt-count-actions{padding:11px 0 0!important}body[data-role="count"] #ak-fork-host .af-remain-card{padding:13px!important}body[data-role="count"] #ak-fork-host .af-remain-top strong{font-size:14px}body[data-role="count"] #ak-fork-host .af-remain-top>b{font-size:12px}body[data-role="count"] #ak-fork-host .af-remain-stats .af-stat{padding:13px}body[data-role="count"] #ak-fork-host .af-remain-stats small{font-size:12px}}
 `;document.head.appendChild(el)}
 const staffLabel=id=>staffNames[String(id||'').toLowerCase()]||((typeof session!=='undefined'&&session?.user?.id===id&&typeof profile!=='undefined'&&profile?.full_name)?profile.full_name:'Ad soyad bulunamadı');
 function historyRows(){return [...moves].sort((a,b)=>new Date(b.placed_at)-new Date(a.placed_at));}
@@ -130,7 +135,8 @@ function remainingMarkup(isFork){
  const d=ds().find(x=>x.id===p.delivery_id),date=d?.created_at||d?.arrived_at;
  const days=date?Math.max(0,Math.floor((Date.now()-new Date(date).getTime())/86400000)):null;
  const loc=catalogFor(p)?.position;
- out+=`<div class="af-remain-card"><div class="af-remain-top"><div><strong>${esc(p.name)}</strong><small>${esc(d?.supplier||'Firma bilinmiyor')} · ${esc(date?new Date(date).toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'}):'Tarih bilinmiyor')}</small></div><b>${left(p)} palet</b></div><div class="af-remain-meta"><span>Kod: ${esc(p.sku||catalogFor(p)?.code||'—')}</span><span>${days===null?'Bekleme süresi bilinmiyor':days===0?'Bugün geldi':days+' gündür bekliyor'}</span></div><div class="af-remain-numbers"><span>Gelen <b>${Number(p.pallet_count||0)}</b></span><span>Yerleştirilen <b>${moved(p)}</b></span><span>Kalan <b>${left(p)}</b></span></div>${loc?`<div class="af-remain-location">Peron: ${esc(loc)}</div>`:''}${isFork?`<button data-place="${esc(p.id)}">Palet Yerleştir</button>`:''}</div>`;
+ const code=p.sku||catalogFor(p)?.code;const waitLevel=days>=14?'is-critical':days>=7?'is-warning':'';
+ out+=`<div class="af-remain-card"><div class="af-remain-top"><div><strong>${esc(p.name)}</strong><small>${esc(d?.supplier||'Firma bilinmiyor')} · ${esc(date?new Date(date).toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'}):'Tarih bilinmiyor')}</small></div><b>${left(p)} palet</b></div><div class="af-remain-meta">${isFork?`<span>Kod: ${esc(code||'—')}</span>`:(code?`<span>Kod: ${esc(code)}</span>`:'')}<span class="${waitLevel}">${days===null?'Bekleme süresi bilinmiyor':days===0?'Bugün geldi':days+' gündür bekliyor'}</span></div><div class="af-remain-numbers"><span>Gelen <b>${Number(p.pallet_count||0)}</b></span><span>Yerleştirilen <b>${moved(p)}</b></span><span>Kalan <b>${left(p)}</b></span></div>${loc?`<div class="af-remain-location">Peron: ${esc(loc)}</div>`:''}${isFork?`<button data-place="${esc(p.id)}">Palet Yerleştir</button>`:''}</div>`;
  }
  if(!rows.length)out+='<p class="af-empty">Aramanıza uygun bekleyen palet bulunamadı.</p>';
  out+='</div>';
@@ -139,7 +145,7 @@ function remainingMarkup(isFork){
 }
 function updateRemainingOnly(){const host=$('#af-remain-display');if(!host)return;host.innerHTML=remainingMarkup(role()==='fork');bindRemaining();host.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>place(b.dataset.place));host.querySelector('[data-view="placement-history"]')?.addEventListener('click',()=>{view='placement-history';render()});}
 function bindRemaining(){const input=$('#af-remain-search');if(input)input.oninput=e=>{remainingSearch=e.target.value;remainingLimit=10;const host=$('#af-remain-display');if(!host)return;const temp=document.createElement('div');temp.innerHTML=remainingMarkup(role()==='fork');for(const id of ['af-remain-results','af-remain-found']){const old=host.querySelector('#'+id),fresh=temp.querySelector('#'+id);if(old&&fresh)old.innerHTML=fresh.innerHTML;}const oldMore=host.querySelector('#af-remain-more'),newMore=temp.querySelector('#af-remain-more');if(oldMore)oldMore.remove();if(newMore)host.querySelector('#af-remain-results')?.after(newMore);bindRemaining();host.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>place(b.dataset.place));};const sort=$('#af-remain-sort');if(sort)sort.onchange=e=>{remainingSort=e.target.value;remainingLimit=10;updateRemainingOnly()};const more=$('#af-remain-more');if(more)more.onclick=()=>{remainingLimit+=10;updateRemainingOnly()};}
-function render(){const r=role(),el=root();if(view==='positions'&&document.activeElement?.id==='af-search'&&r==='fork'){drawSearch();return;}if(!['fork','count'].includes(r)){closeCountPanel();el.style.display='none';return}styles();if(r==='fork'){forkPolishStyles();forkExtras();}else{countTrackingStyles();}if(r==='fork'){el.hidden=false;el.style.removeProperty('display');}if(r==='count'&&!el.classList.contains('af-count-visible')){el.style.removeProperty('display');return;}el.style.display='block';const isFork=r==='fork';if(!isFork&&!['remaining','placement-history'].includes(view))view='remaining';const title=view==='home'?'Forklift Operasyonu':view==='shipments'?'Sevkiyat İşlemleri':view==='remaining'?'Mal Kabulde Bekleyen Paletler':view==='history'?'İşlem Geçmişi':view==='reports'?'Raporlar':view==='placement-history'?'Palet Yerleştirme Geçmişi':'Ürün Peronları';let html=isFork?`<div class="af-head afv-top"><div class="afv-person"><span class="afv-person-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg></span><div><strong>${esc(profile?.full_name||session?.user?.user_metadata?.full_name||'Personel')}</strong><small>Forklift Personeli</small></div></div><div class="afv-tools"><button type="button" class="af-quiet afv-tool ak-fork-bell" id="akForkBell" aria-label="Bildirim ayarlarını aç" aria-expanded="false" title="Bildirimler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></button><button type="button" class="af-quiet afv-tool" data-af="refresh" aria-label="Yenile" title="Yenile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9a7 7 0 0 1 12-3L20 12M4 12l2.5 6a7 7 0 0 0 12-3"/></svg></button><button type="button" class="af-quiet afv-tool" data-af="logout" aria-label="Çıkış" title="Çıkış"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4H5v16h5M14 7l5 5-5 5M9 12h10"/></svg></button></div></div><h2 class="afv-page-heading">${title}</h2>`:`<section class="akt-count-wrap" role="dialog" aria-modal="true" aria-label="${title}"><header class="akt-count-header"><div class="akt-count-eyebrow">AKTİVA / MAL KABUL</div><h2>${title}</h2><p>${view==='placement-history'?'Paletlerin kim tarafından, ne zaman yerleştirildiğini görüntüleyin.':'Depoda henüz yerleştirilmemiş paletleri ve kalan miktarları takip edin.'}</p></header><div class="akt-count-actions"><button type="button" class="af-quiet" data-af="refresh">↻ Yenile</button><button type="button" class="af-quiet" data-af="close-count">✕ Kapat</button></div><main class="akt-count-body">`;
+function render(){const r=role(),el=root();if(view==='positions'&&document.activeElement?.id==='af-search'&&r==='fork'){drawSearch();return;}if(!['fork','count'].includes(r)){closeCountPanel();el.style.display='none';return}styles();if(r==='fork'){forkPolishStyles();forkExtras();}else{countTrackingStyles();}if(r==='fork'){el.hidden=false;el.style.removeProperty('display');}if(r==='count'&&!el.classList.contains('af-count-visible')){el.style.removeProperty('display');return;}el.style.display='block';const isFork=r==='fork';if(!isFork&&!['remaining','placement-history'].includes(view))view='remaining';const title=view==='home'?'Forklift Operasyonu':view==='shipments'?'Sevkiyat İşlemleri':view==='remaining'?'Mal Kabulde Bekleyen Paletler':view==='history'?'İşlem Geçmişi':view==='reports'?'Raporlar':view==='placement-history'?'Palet Yerleştirme Geçmişi':'Ürün Peronları';let html=isFork?`<div class="af-head afv-top"><div class="afv-person"><span class="afv-person-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg></span><div><strong>${esc(profile?.full_name||session?.user?.user_metadata?.full_name||'Personel')}</strong><small>Forklift Personeli</small></div></div><div class="afv-tools"><button type="button" class="af-quiet afv-tool ak-fork-bell" id="akForkBell" aria-label="Bildirim ayarlarını aç" aria-expanded="false" title="Bildirimler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></button><button type="button" class="af-quiet afv-tool" data-af="refresh" aria-label="Yenile" title="Yenile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9a7 7 0 0 1 12-3L20 12M4 12l2.5 6a7 7 0 0 0 12-3"/></svg></button><button type="button" class="af-quiet afv-tool" data-af="logout" aria-label="Çıkış" title="Çıkış"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4H5v16h5M14 7l5 5-5 5M9 12h10"/></svg></button></div></div><h2 class="afv-page-heading">${title}</h2>`:`<section class="akt-count-wrap" role="region" aria-label="${title}"><header class="akt-count-header"><div class="akt-count-eyebrow">AKTİVA / MAL KABUL</div><h2>${title}</h2><p>${view==='placement-history'?'Paletlerin kim tarafından, ne zaman yerleştirildiğini görüntüleyin.':'Depoda henüz yerleştirilmemiş paletleri ve kalan miktarları takip edin.'}</p><div class="akt-count-actions"><button type="button" class="af-quiet" data-af="refresh">↻ Yenile</button><button type="button" class="af-quiet" data-af="close-count">✕ Kapat</button></div></header><main class="akt-count-body">`;
 if(isFork){
   const entries=[['home','⌂','Anasayfa']];
   const active=view==='placement-history'?'history':view;
@@ -227,13 +233,27 @@ async function loadCatalog(force=false){
 async function load(){if(busy||!['fork','count'].includes(role())||typeof req!=='function'||typeof session==='undefined'||!session)return;busy=true;try{const [p,m]=await Promise.all([req('/rest/v1/aktiva_forklift_progress?select=*&limit=2000'),req('/rest/v1/aktiva_pallet_placements?select=*&limit=10000')]);progress=p;moves=m;loaded=true;message='';const pending=ds().filter(d=>status(d)==='waiting').length;if(role()==='fork'&&lastCount>=0&&pending>lastCount&&alertOn){try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=730;o.start();g.gain.setValueAtTime(.09,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.35);o.stop(ctx.currentTime+.36)}catch(_){}}lastCount=pending;if(view==='placement-history'){updateHistoryOnly()}else render()}catch(e){message='Operasyon verileri yüklenemedi: '+e.message;render()}finally{busy=false}}
 async function place(id){if(role()!=='fork')return;const p=ps().find(x=>x.id===id);if(!p)return;const raw=prompt(`${p.name}\nMal Kabulde ${left(p)} palet var.\nKaç palet yerleştirdiniz?`,'1');if(raw===null)return;const n=Number(raw);if(!Number.isSafeInteger(n)||n<1||n>left(p)){alert('1 ile kalan miktar arasında tam sayı girin.');return}if(!confirm(`${p.name} için ${n} palet yerleştirildi olarak kaydedilsin mi?`))return;try{await req('/rest/v1/rpc/aktiva_place_pallets',{method:'POST',body:{p_product_id:id,p_qty:n}});await load()}catch(e){alert('Palet kaydı yapılamadı: '+e.message)}}
 async function action(id,kind){if(role()!=='fork')return;if(kind==='finish'&&!confirm('Forklift işlemi tamamlansın mı? Yerleştirilmemiş paletler bekleyen listesinde kalır.'))return;try{await req('/rest/v1/rpc/aktiva_fork_action',{method:'POST',body:{p_delivery_id:id,p_action:kind}});await load()}catch(e){alert('Kayıt yapılamadı: '+e.message)}}
+// Palet Takibi, Mal Kabul alt menüsünün üstünde biter. Gerçek menü görünür ve tıklanabilir kalır.
+function syncCountDock(){
+ const pane=document.getElementById('ak-fork-host');
+ if(role()!=='count'||!pane?.classList.contains('af-count-visible'))return;
+ const nav=document.querySelector('#akd-dashboard .akd-bottom-nav');
+ let height=0;
+ if(nav&&getComputedStyle(nav).display!=='none'){
+  const rect=nav.getBoundingClientRect();
+  if(rect.height>0&&rect.top<window.innerHeight)height=Math.max(0,Math.ceil(window.innerHeight-rect.top));
+ }
+ pane.style.setProperty('--akt-count-nav-height',height+'px');
+}
 // Mal Kabul paneli oturum değişiminde veya kapatıldığında gizli kalmalı.
 function closeCountPanel(){
+ document.body.classList.remove('ak-count-pallet-open');
  // Forklift ekranı aynı host'u kullanır; Mal Kabul kapatma işlemi onu gizlememeli.
  if(role()==='fork')return;
  const el=document.getElementById('ak-fork-host');
  if(!el)return;
  el.classList.remove('af-count-visible');
+ el.style.removeProperty('--akt-count-nav-height');
  el.hidden=true;
  // Kapalı paneli CSS !important kurallarına rağmen görünmez tut.
  el.style.setProperty('display','none','important');
@@ -249,7 +269,7 @@ function countLaunchers(){
  header.insertAdjacentElement('afterend',box);
  box.querySelectorAll('[data-count-panel]').forEach(b=>b.addEventListener('click',()=>{
   view=b.dataset.countPanel;expanded=null;movementSearch='';movementLimit=50;
-  const pane=root();document.body.appendChild(pane);pane.hidden=false;pane.classList.add('af-count-visible');pane.style.removeProperty('display');document.body.style.overflow='hidden';
+  const pane=root();document.body.appendChild(pane);pane.hidden=false;pane.classList.add('af-count-visible');pane.style.removeProperty('display');document.body.classList.add('ak-count-pallet-open');document.body.style.overflow='hidden';syncCountDock();
   render();load();loadStaffNames();
  }));
 }
@@ -259,14 +279,23 @@ window.addEventListener('aktiva:open-pallet-tracking',()=>{
  view='remaining';expanded=null;movementSearch='';movementLimit=50;
  const pane=root();document.body.appendChild(pane);pane.hidden=false;
  pane.classList.add('af-count-visible');pane.style.removeProperty('display');
- document.body.style.overflow='hidden';
+ document.body.classList.add('ak-count-pallet-open');document.body.style.overflow='hidden';syncCountDock();
  render();load();loadStaffNames();
 });
 function installCountUI(){
  if($('#ak-count-fork-integration'))return;
  const sheet=document.createElement('style');sheet.id='ak-count-fork-integration';
- sheet.textContent='body[data-role="count"] #ak-fork-host[hidden],body[data-role="count"] #ak-fork-host:not(.af-count-visible){display:none!important}body[data-role="count"] #ak-fork-host.af-count-visible{display:block!important;position:fixed!important;inset:0!important;z-index:2147482000!important;overflow-y:auto!important;overscroll-behavior:contain;background:#edf2f8!important;margin:0!important;padding:calc(env(safe-area-inset-top, 0px) + 14px) 15px calc(env(safe-area-inset-bottom, 0px) + 24px)!important;border:0!important;border-radius:0!important}#ak-count-pallet-links{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0}#ak-count-pallet-links button{padding:14px;text-align:left;border:1px solid #39475a;background:#202b3b;color:#fff;border-radius:12px;font-size:14px;font-weight:650;min-height:52px}';
+ sheet.textContent='body[data-role="count"] #ak-fork-host[hidden],body[data-role="count"] #ak-fork-host:not(.af-count-visible){display:none!important}body[data-role="count"] #ak-fork-host.af-count-visible{display:block!important;position:fixed!important;inset:0!important;bottom:var(--akt-count-nav-height,0px)!important;z-index:2147482000!important;overflow-y:auto!important;overscroll-behavior:contain;background:#edf2f8!important;margin:0!important;padding:calc(env(safe-area-inset-top, 0px) + 14px) 15px calc(env(safe-area-inset-bottom, 0px) + 24px)!important;border:0!important;border-radius:0!important}#ak-count-pallet-links{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0}#ak-count-pallet-links button{padding:14px;text-align:left;border:1px solid #39475a;background:#202b3b;color:#fff;border-radius:12px;font-size:14px;font-weight:650;min-height:52px}';
  document.head.appendChild(sheet);
+ // Alt menü navigasyonu Palet Takibi açıkken de çalışır.
+ document.addEventListener('click',e=>{
+  const button=e.target.closest?.('#akd-dashboard .akd-bottom-nav button[data-akd]');
+  if(button&&role()==='count'&&document.getElementById('ak-fork-host')?.classList.contains('af-count-visible')){
+   if(button.dataset.akd!=='pallet')closeCountPanel();
+  }
+ },true);
+ window.addEventListener('resize',syncCountDock);
+ window.visualViewport?.addEventListener('resize',syncCountDock);
  const app=$('#app');if(app){new MutationObserver(()=>countLaunchers()).observe(app,{childList:true,subtree:true});countLaunchers()}const countUI=$('#aktivaCountUI');if(countUI)new MutationObserver(()=>countLaunchers()).observe(countUI,{attributes:true,attributeFilter:['class','style']});new MutationObserver(()=>{if(role()!=='count')closeCountPanel()}).observe(document.body,{attributes:true,attributeFilter:['data-role']});
 }
 // Forklift oturumu açıldığında paneli ilk veri sorgusunu beklemeden çiz.

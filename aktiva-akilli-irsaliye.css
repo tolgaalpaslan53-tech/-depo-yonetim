@@ -53,3 +53,6 @@ body.akw-open{overflow:hidden!important}
 #akw-overlay .akw-pal-check[data-type=ok]{background:#ddf5e6;color:#176445}
 #akw-overlay .akw-pal-check[data-type=warn]{background:#fff1d5;color:#81550b}
 #akw-overlay .akw-pal-check:empty{display:none}
+/* V4: Belgede palet ürün satırından çıkarılan aday, onaysız kaydedilmez. */
+#akw-overlay #akw-pallet-candidate:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#fff5db;border:1px solid #e9d19f;border-radius:10px;padding:10px 12px;color:#6e4b12;font-size:12px}
+#akw-overlay #akw-pallet-candidate button{background:#f0f6ff;border:1px solid #b5c9e2;color:#1a426e;font-size:12px;min-height:36px;padding:8px 10px}

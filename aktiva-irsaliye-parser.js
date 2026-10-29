@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V3.
+/* AKTIVA / İrsaliye ayrıştırıcı V4.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -9,7 +9,7 @@
  const linesOf=x=>String(x||'').split(/\r?\n/).map(clean).filter(Boolean);
  const signature=x=>fold(x).replace(/[^A-Z0-9]/g,'');
  const qty=s=>{const x=clean(s).replace(/\s/g,'').replace(/\./g,'').replace(/,/g,'.');if(!/^\d+(?:\.0+)?$/.test(x))return null;const n=Number(x);return Number.isSafeInteger(n)&&n>=0&&n<=999999?n:null};
- const heading=x=>/^(?:SIRA(?:\s+NO)?|MALZEME(?:\s+(?:KODU|TANIMI))?|ÜRÜN(?:\s+(?:ADI|KODU))?|STOK\s+KODU|KALEM|BIRIM|MIKTAR|TOPLAM|VERGI|IRSALIYE|BELGE\s+NO|TARIH|SAYFA|VKN|ETTN|TCKN|ARAC\s+PLAKA|ACIKLAMALAR|TASIYICI|TELEFON|ADRES)/.test(fold(x));
+ const heading=x=>/^(?:SIRA(?:\s+NO)?|MAL\s*$|MALZEME(?:\s+(?:KODU|TANIMI))?|ÜRÜN(?:\s+(?:ADI|KODU))?|STOK\s+KODU|KALEM|BIRIM|MIKTAR|TOPLAM|VERGI|IRSALIYE|BELGE\s+NO|TARIH|SAYFA|VKN|ETTN|TCKN|ARAC\s+PLAKA|ACIKLAMALAR|TASIYICI|TELEFON|ADRES)/.test(fold(x));
  const footer=x=>/^(?:TASIYICI\s+BILGILERI|ACIKLAMALAR|TESLIM\s+ALAN|GENEL\s+TOPLAM|ODENECEK|TOPLAM\s+(?:KDV|TUTAR)|BANKA|KREDI\s+KARTI)/.test(fold(x));
  function invoiceFrom(lines){
   const label=/(?:E\s*-?\s*)?(?:SEVK\s+)?IRSALIYE\s*(?:NO|NUMARASI|NUM|#)?|BELGE\s*(?:NUMARASI|NO|#)|DOKUMAN\s*NO/;
@@ -92,9 +92,9 @@
   if(rawAmount===null||rawAmount===0)return null;
   // Ürün adının sonundan K. İçi / K. Ad / Toplam numeric hücrelerini kaldır.
   core=core.replace(/(?:\s+[\d.,]+){1,4}\s*$/,'').replace(/^\s*\d{1,3}\s+(?=\d{5,14}\b)/,'');
-  const match=core.match(/^(?:\d{1,3}\s*[|;.\-]\s*)?(\d{5,14}|[A-Z]{1,4}[-/]\d{4,14})\s+(.+)$/i);
+  const match=core.match(/^(?:\d{1,3}\s*[|;.\-]?\s+)?(\d{5,14}|[A-Z]{1,4}[-/]\d{4,14})\s+(.+)$/i);
   if(match){code=match[1];core=match[2];}
-  core=clean(core.replace(/^\d{1,3}[.)]\s*/,'').replace(/^[|;\s]+|[|;\s]+$/g,''));
+  core=clean(core.replace(/^\d{1,3}(?:[.)-])?\s+(?=[A-Za-zÇĞİÖŞÜçğıöşü])/, '').replace(/^[|;\s]+|[|;\s]+$/g,''));
   const title=fold(core);
   if(core.length<4||core.length>200||!/[a-zA-ZçğıöşüÇĞİÖŞÜ]{2}/.test(core)||heading(core)||/^(?:K\.?\s*(?:ICI|AD)|BIRIM|TOPLAM|MIKTAR|SIRA\s*NO|BELGE)/.test(title))return null;
   const pm=s.match(/\b(\d{1,5})\s*(?:PALET|PALLET|PLT)\b/i);if(pm&&unit!=='palet')pallets=Number(pm[1]);
@@ -110,25 +110,33 @@
   for(let i=0;i<lines.length&&rows.length<150;i++){
    const line=lines[i],u=fold(line);
    if(footer(line)){table=false;buffer='';continue}
-   if((/MALZEME\s+(?:KODU|TANIMI)|URUN\s+ADI|MAL\s*\/\s*HIZMET|STOK\s+KODU/.test(u))){
-    const header=fold(lines.slice(i,i+4).join(' '));
-    if(/(?:BIRIM|TOPLAM|MIKTAR|KOLI|K\.?\s*AD\.?)/.test(header)){
-     table=true;buffer='';while(i+1<lines.length&&i<lines.length-1&&heading(lines[i+1])&&(/K\.?\s*ICI|K\.?\s*AD|TOPLAM|BIRIM|MALZEME|SIRA/.test(fold(lines[i+1]))))i++;
+   // Ürün tablosu başlıkları firmadan firmaya değişir. Özellikle
+   // "Sıra No | Mal | Miktar | Miktar Birimi" e-İrsaliye şablonunu tanı.
+   const isProductHeader=/^(?:MAL|MAL\s*\/\s*HIZMET|MALZEME(?:\s+(?:KODU|TANIMI))?|URUN(?:\s+(?:ADI|KODU|TANIMI))?|STOK\s+KODU|URUN\s*\/\s*HIZMET)$/.test(u)
+     || /(?:MALZEME\s+(?:KODU|TANIMI)|URUN\s+ADI|MAL\s*\/\s*HIZMET|STOK\s+KODU)/.test(u)
+     || /\bMAL\b.*\bMIKTAR\b/.test(u);
+   if(isProductHeader){
+    const header=fold(lines.slice(Math.max(0,i-2),i+7).join(' '));
+    if(/(?:BIRIM|MIKTAR|KOLI|K\.?\s*AD\.?|TOPLAM)/.test(header)){
+     table=true;buffer='';
+     // Birden çok satıra bölünmüş başlıkları atla ama veri satırlarını atlama.
+     while(i+1<lines.length&&heading(lines[i+1])&&(/K\.?\s*ICI|K\.?\s*AD|TOPLAM|BIRIM|MIKTAR|MALZEME|SIRA|MUSTERI|STOK/.test(fold(lines[i+1]))))i++;
      continue;
     }
    }
    if(/^(?:GENEL\s+TOPLAM|ARA\s+TOPLAM|KS\s*[:=])/.test(u)&&rows.length){table=false;buffer='';continue}
    if(heading(line))continue;
    if(table){
-    if(/\b(?:KOLI|ADET|PALET|PALLET|PLT|PAKET)\b/.test(u)&&emit(line)){buffer='';continue}
-    // Bazı OCR sonuçlarında tablo satırı 2–5 satıra bölünür.
-    // Ürün koduyla başlayan parçaları birleştir, taşan diğer metinleri yoksay.
-    if(/^(?:\d{1,2}\s+)?\d{5,14}\b/.test(line)||buffer){
-     buffer=clean((buffer+' '+line));
-     if(/\b(?:KOLI|ADET|PALET|PALLET|PLT|PAKET)\b/.test(fold(buffer))&&emit(buffer)){buffer='';continue}
-     if(buffer.length>300||buffer.split(' ').length>34)buffer='';
+    if(/(?:KOLI|ADET|PALET|PALLET|PLT|PAKET)\b/.test(u)&&emit(line)){buffer='';continue}
+    // OCR tabloyu bir satır yerine "ürün adı / miktar / birim"
+    // olarak bölebilir; baştaki sıra numarası ve ürün adını birleştir.
+    if(/^(?:\d{1,3}\s+)?(?:\d{5,14}\s+)?[A-ZÇĞİÖŞÜa-zçğıöşü][\s\S]{6,}$/.test(line)||/^\d{1,3}\s+\d{5,14}$/.test(line)||buffer){
+     if(/^(?:MUSTERI|SIPARIS|MIKTAR|BIRIM|STOK|KOD|NO|TARIH)\b/.test(u)&&!buffer)continue;
+     buffer=clean(buffer+' '+line);
+     if(/(?:KOLI|ADET|PALET|PALLET|PLT|PAKET)\b/.test(fold(buffer))&&emit(buffer)){buffer='';continue}
+     if(buffer.length>320||buffer.split(' ').length>42)buffer='';
     }
-   }else if(/\b(?:KOLI|KOL\.?)\b/.test(u))emit(line);
+   }else if(/(?:KOLI|KOL\.?)\b/.test(u))emit(line);
   }
   // OCR miktar sütununu kaçırsa bile ürün adı bulunmuşsa onu kullanıcıya
   // aday olarak sun; koli/palet bilgisi kesinlikle uydurulmasın.
@@ -146,10 +154,14 @@
     if(rows.length)break;
    }
   }
+  // Palet ayrı bir mal satırı olarak "15 Adet" yazılabilir. Bu, sevk
+  // palet sayısına adaydır; otomatik toplam palet kabul edilmez.
+  const palletItems=rows.filter(r=>r.unit==='adet'&&/\b(?:EURO\s+)?(?:PALET|PALLET|PALEx|TURPAL)\b/.test(fold(r.name))&&Number.isSafeInteger(r.rawAmount)&&r.rawAmount>0);
+  const palletSuggestion=palletItems.length===1?{value:palletItems[0].rawAmount,source:palletItems[0].name}:null;
   if(rows.length===1&&pal.value!==null&&rows[0].pallets===0){rows[0].pallets=pal.value;rows[0].review=true}
   const confidence={supplier:supplier.score>=12?'yüksek':supplier.score>=6?'orta':'düşük',invoice:invoice.score>=12?'yüksek':invoice.score>=7?'orta':'düşük',plate:plate.score>=10&&!plate.ambiguous?'yüksek':plate.score>=4?'orta':'düşük',pallets:pal.score>=10&&!pal.ambiguous?'yüksek':pal.score>=5?'orta':'düşük'};
-  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Bu belgede toplam palet sayısı belirtilmemiş olabilir; 0 kabul etmeyin.':null,rows.some(x=>x.unit==='adet')?'Adet cinsinden okunan ürünleri koli olarak kaydetmeden önce karşılığını kontrol edin.':null,rows.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null].filter(Boolean);
-  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,plateHint:plate.hint,totalPallets:pal.value,confidence,rows,notes,raw:String(raw||'')};
+  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?(palletSuggestion?'Palet ürünü '+palletSuggestion.value+' adet görünüyor; toplam palet sayısı olarak kullanmadan önce onaylayın.':'Bu belgede toplam palet sayısı belirtilmemiş olabilir; 0 kabul etmeyin.'):null,rows.some(x=>x.unit==='adet')?'Adet cinsinden okunan ürünleri koli olarak kaydetmeden önce karşılığını kontrol edin.':null,rows.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null].filter(Boolean);
+  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,plateHint:plate.hint,totalPallets:pal.value,palletSuggestion,confidence,rows,notes,raw:String(raw||'')};
  }
  const api={parse,productFromLine,linesOf};root.AKTIVA_WAYBILL_PARSE=api;
  if(typeof module==='object'&&module.exports)module.exports=api;

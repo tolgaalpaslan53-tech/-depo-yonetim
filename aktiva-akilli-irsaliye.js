@@ -1,4 +1,4 @@
-/* AKTİVA - Yeni Sevkiyat Kaydı / Akıllı İrsaliye Okuma V5
+/* AKTİVA - Yeni Sevkiyat Kaydı / Akıllı İrsaliye Okuma V6
  * Fotoğraflar kullanıcı cihazında Tesseract.js ile çözümlenir. Otomatik veritabanı kaydı YOK.
  */
 (()=>{'use strict';
@@ -88,7 +88,7 @@
   const text=(result.rows.length?result.rows.length+' olası ürün bulundu. ':'Otomatik ürün satırı bulunamadı. Metni kontrol edip satır ekleyebilirsiniz. ')+result.notes.join(' ');
   status(text,result.rows.some(x=>x.review)||!result.rows.length?'warn':'ok');
  }
- function parseText(text){const parser=window.AKTIVA_WAYBILL_PARSE;if(!parser||typeof parser.parse!=='function'){status('İrsaliye ayrıştırıcısı bulunamadı. Sayfayı yenileyin.','error');return}if(!String(text||'').trim()){status('Önce bir metin yazın veya fotoğraf okuyun.','warn');return}showParse(parser.parse(text));byId('akw-review').scrollIntoView({behavior:'smooth',block:'start'})}
+ function parseText(text, options={}){const parser=window.AKTIVA_WAYBILL_PARSE;if(!parser||typeof parser.parse!=='function'){status('İrsaliye ayrıştırıcısı bulunamadı. Sayfayı yenileyin.','error');return}if(!String(text||'').trim()){status('Önce bir metin yazın veya fotoğraf okuyun.','warn');return}showParse(parser.parse(text,options));byId('akw-review').scrollIntoView({behavior:'smooth',block:'start'})}
  async function ensureTesseract(){if(window.Tesseract)return window.Tesseract;await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';script.onload=resolve;script.onerror=()=>reject(Error('OCR kütüphanesi indirilemedi. İnternet bağlantısını kontrol edin.'));document.head.append(script)});return window.Tesseract}
  // Sayfanın geniş boş kalan kısmı OCR'ı zayıflatır. Yazı satırlarının yoğun
  // olduğu alanı otomatik tespit edip büyüterek okutuyoruz. Başka yerleşimlerde
@@ -179,29 +179,46 @@
   const plateCanvas=enhance(fullCanvas,plateTop,fullCanvas.height,Math.min(3000,Math.round(fullCanvas.width*1.75)));
   const plateImage=await canvasBlob(plateCanvas);
   // Yedek tam görüntü yalnızca yeterli bilgi bulunamazsa okutulur.
-  return {primary,table,plateImage,full:bounds?await canvasBlob(enhance(fullCanvas)):null,focused:!!bounds,width:focused.width,height:focused.height};
+  return {primary,table,tableWidth:tableCanvas?.width||0,tableHeight:tableCanvas?.height||0,plateImage,full:bounds?await canvasBlob(enhance(fullCanvas)):null,focused:!!bounds,width:focused.width,height:focused.height};
  }
  async function readImages(){if(busy)return;if(!files.length){status('Önce irsaliye fotoğrafı ekleyin.','warn');return}
   busy=true;byId('akw-read').disabled=true;byId('akw-close').disabled=true;status('Türkçe ve İngilizce belge okuma hazırlanıyor. İlk kullanımda internet gerekir.');
   try{
-   const tess=await ensureTesseract(),all=[];
+   const tess=await ensureTesseract(),all=[],tables=[],depotPalletCandidates=[];
    worker=await tess.createWorker('tur+eng',1,{logger:m=>{if(m.status==='recognizing text')status('Belge okunuyor: %'+Math.round((m.progress||0)*100))}});
    await worker.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:tess.PSM?.AUTO||'3',user_defined_dpi:'300'});
    for(let i=0;i<files.length;i++){
     status('Fotoğraf '+(i+1)+'/'+files.length+' için metin alanı aranıyor...');
     const picture=await loadPhoto(files[i],rotation);
     status('Fotoğraf '+(i+1)+'/'+files.length+' büyütülmüş metin alanı okunuyor...');
-    let words=(await worker.recognize(picture.primary)).data.text||'';
+    const baseData=(await worker.recognize(picture.primary,{}, {text:true,tsv:true})).data;
+    let words=baseData.text||'';
     // Tablo başlıkları veya miktarlar eksik olsa bile tablo bölgesi ayrıca
     // okunur: ilk sonuçta yalnızca bir ürün gelmesi yeterli sayılmaz.
     if(picture.table){
      status('Fotoğraf '+(i+1)+' için ürün tablosu yakından okunuyor...');
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SINGLE_BLOCK||'6'});
-     const productText=(await worker.recognize(picture.table)).data.text||'';
+     const productData=(await worker.recognize(picture.table,{}, {text:true,tsv:true})).data;
+     const productText=productData.text||'';if(productData.tsv)tables.push(productData.tsv);
+     if(productData.tsv){
+      const parser=window.AKTIVA_WAYBILL_PARSE;
+      const tableResult=parser?.parse(productText,{tables:[productData.tsv]});
+      const depotFocus=tableResult?.depotPallets==null?parser?.findDepotCell(productData.tsv,picture.tableWidth,picture.tableHeight):null;
+      if(depotFocus){
+       status('Euro palet satırının miktar hücresi yakından okunuyor...');
+       try{
+        await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SINGLE_LINE||'7'});
+        const near=(await worker.recognize(picture.table,{rectangle:depotFocus})).data.text||'';
+        const amount=parser.readFocusedDepotQuantity(near);
+        if(amount!==null)depotPalletCandidates.push(amount);
+       }catch(err){console.warn('AKTİVA: Euro palet ayrıntı okuması atlandı',err)}
+      }
+     }
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
      if(productText.trim())words+='\n'+productText;
     }
-    let first=window.AKTIVA_WAYBILL_PARSE?.parse(words);
+    if(!picture.table&&baseData.tsv)tables.push(baseData.tsv);
+    let first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
     if(picture.plateImage&&(!first?.plate||first.confidence?.plate!=='yüksek'||!first.trailerPlate)){
      status('Fotoğraf '+(i+1)+' çekici/dorse plakası için alt bölge yakın okunuyor...');
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SINGLE_BLOCK||'6'});
@@ -209,7 +226,7 @@
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
      if(plateText.trim())words+='\n'+plateText;
     }
-    first=window.AKTIVA_WAYBILL_PARSE?.parse(words);
+    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
     // Düzene bağlı kalmadan 2x2 örtüşen bölgeleri tek tek tarar. Özellikle
     // sağ sütundaki belge no, tablo miktarı ve alt kutudaki plaka için.
     if(!first?.supplier||!first?.invoice||!first?.plate||!first?.rows?.length||!picture.table){
@@ -225,13 +242,13 @@
       status('Fotoğraf '+(i+1)+' için detay taraması '+(k+1)+'/4');
       const extra=(await worker.recognize(picture.primary,{rectangle:tiles[k]})).data.text||'';
       if(extra.trim())words+='\n'+extra;
-      const chk=window.AKTIVA_WAYBILL_PARSE?.parse(words);
+      const chk=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
       if(chk?.supplier&&chk?.invoice&&chk?.plate&&chk?.rows?.length&&(picture.table||k>=2))break;
      }
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
     }
     // Kontrastlı odakta hâlâ alan eksikse tam belgeden seyrek yazıları oku.
-    first=window.AKTIVA_WAYBILL_PARSE?.parse(words);
+    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
     if(picture.full&&(!first?.supplier||!first?.plate||!first?.rows?.length||!first?.invoice)){
      status('Okunamayan alanlar için belgenin tamamı kontrol ediliyor...');
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SPARSE_TEXT||'11'});
@@ -239,17 +256,18 @@
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
      words+='\n'+extra;
     }
-    first=window.AKTIVA_WAYBILL_PARSE?.parse(words);
+    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
     if(picture.table&&!first?.rows?.length){
      status('Fotoğraf '+(i+1)+' için ürün tablosu alternatif okuma deneniyor...');
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SPARSE_TEXT||'11'});
-     const tableExtra=(await worker.recognize(picture.table)).data.text||'';
+     const tableResult=(await worker.recognize(picture.table,{}, {text:true,tsv:true})).data;
+     const tableExtra=tableResult.text||'';if(tableResult.tsv)tables.push(tableResult.tsv);
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
      if(tableExtra.trim())words+='\n'+tableExtra;
     }
     all.push(words);
    }
-   parseText(all.join('\n'));
+   parseText(all.join('\n'),{tables,depotPalletCandidates});
   }catch(e){status('Belge okunamadı: '+e.message+'. Fotoğrafı daha yakından çekebilir veya metin alanından düzeltebilirsiniz.','error')}
   finally{if(worker){try{await worker.terminate()}catch(_){ }worker=null}busy=false;byId('akw-read')&&(byId('akw-read').disabled=false);byId('akw-close')&&(byId('akw-close').disabled=false)}
  }

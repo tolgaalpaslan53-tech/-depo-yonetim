@@ -551,8 +551,8 @@
  }
  function applySource(){
   const root=$('#akd-dashboard');if(!root)return;
-  root.classList.toggle('akpr-show-only-pre',source==='pre');
-  root.classList.toggle('akpr-hide-pre',source==='mal');
+  // Ön Kayıtlar artık ayrı bir Mal Kabul menü sayfasında; eski kaynak sekmeleri kullanılmıyor.
+  root.classList.remove('akpr-show-only-pre','akpr-hide-pre');
   root.querySelectorAll('[data-akpr-source]').forEach(btn=>{const selected=btn.dataset.akprSource===source;btn.classList.toggle('akpr-selected',selected);btn.setAttribute('aria-pressed',String(selected))});
  }
  function countOverlay(){let el=$('#akpr-count-overlay');if(!el){el=document.createElement('section');el.id='akpr-count-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Sevkiyat ürün sayımı');el.hidden=true;document.body.append(el);el.addEventListener('click',countClick);el.addEventListener('input',countInput);}return el}
@@ -567,13 +567,14 @@
  async function countClick(e){const b=e.target.closest('[data-count-action]');if(!b||!counting||countBusy)return;const action=b.dataset.countAction;if(action==='exit'){try{countBusy=true;await saveCount();closeCount()}catch(err){$('#akpr-count-error').textContent=err.message}finally{countBusy=false}return}if(action==='edit'){renderCount();return}if(action==='previous'){countIndex=Math.max(0,countIndex-1);renderCount();return}if(action==='next'){if(!countValid()){$('#akpr-count-error').textContent='Sayılan ve hasarlı miktarı kontrol edin.';return}try{countBusy=true;await saveCount();if(countIndex===counting.products.length-1)countSummary();else{countIndex++;renderCount()}}catch(err){$('#akpr-count-error').textContent=err.message}finally{countBusy=false}return}if(action==='finish'){try{countBusy=true;await saveCount(true);closeCount()}catch(err){$('#akpr-count-error').textContent=err.message}finally{countBusy=false}}}
  function receiving(){
   const root=$('#akd-dashboard');if(!root||document.body.dataset.role!=='count')return;
-  const list=root.querySelector('.akd-body .akd-records-list');
+  const list=root.dataset.akdPage==='pre-records' ? root.querySelector('.akd-body .akd-pre-records-mount') : null;
   if(!list){root.classList.remove('akpr-show-only-pre','akpr-hide-pre');lastHost=null;return}
   if(lastHost===list && root.contains($('#akpr-records-panel')))return;
   lastHost=list;
   root.querySelector('#akpr-records-panel')?.remove();
   const box=document.createElement('section');box.id='akpr-records-panel';
-  box.innerHTML='<div class="akpr-source-tabs" role="group" aria-label="Kayıt kaynağı"><button type="button" data-akpr-source="all">Tümü</button><button type="button" data-akpr-source="mal">Mal Kabul</button><button type="button" data-akpr-source="pre">Ön Kayıt</button></div><div class="akpr-pre-records"><div class="akpr-pre-heading"><strong>Bekleyen Sevkiyatlar</strong><span id="akpr-record-count"></span></div><div id="akpr-pending-summary" class="akpr-pending-summary" aria-label="Bekleyen sevkiyat özeti"></div><input id="akpr-record-search" type="search" placeholder="Plaka, firma, şoför veya irsaliye ara" aria-label="Ön kayıtlarda ara"><div id="akpr-records-content" class="akpr-muted">Kayıtlar yükleniyor…</div></div>';
+  source='pre';
+  box.innerHTML='<div class="akpr-pre-records"><div class="akpr-pre-heading"><strong>Bekleyen Sevkiyatlar</strong><span id="akpr-record-count"></span></div><div id="akpr-pending-summary" class="akpr-pending-summary" aria-label="Bekleyen sevkiyat özeti"></div><input id="akpr-record-search" type="search" placeholder="Plaka, firma, şoför veya irsaliye ara" aria-label="Ön kayıtlarda ara"><div id="akpr-records-content" class="akpr-muted">Kayıtlar yükleniyor…</div></div>';
   list.before(box);
   box.querySelectorAll('[data-akpr-source]').forEach(btn=>btn.addEventListener('click',()=>{source=btn.dataset.akprSource;applySource()}));
   box.querySelector('#akpr-record-search').addEventListener('input',()=>drawReceiving(cache));

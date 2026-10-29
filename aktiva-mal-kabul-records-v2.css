@@ -1,0 +1,158 @@
+/* AKTİVA · Mal Kabul kayıtlar / Ön Kayıtlar yerleşimi.
+   Yalnızca Mal Kabul rolüne ve bu iki panele etki eder. */
+body[data-role="count"].akd-home #akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) .akd-body{
+  width:100%;max-width:1080px!important;box-sizing:border-box;color:#192d48!important;
+}
+#akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) .akd-records-head{
+  display:flex!important;justify-content:space-between!important;align-items:center!important;
+  gap:14px!important;flex-wrap:wrap!important;margin:4px 0 20px!important;
+}
+#akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) .akd-records-heading{flex:1 1 210px;min-width:0}
+#akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) .akd-eyebrow{
+  display:block;margin-bottom:9px;font-size:11px;font-weight:800;letter-spacing:2px;color:#c81036!important;
+}
+#akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) .akd-records-head h1{
+  margin:0!important;font-size:clamp(22px,4vw,29px)!important;line-height:1.18!important;
+  letter-spacing:-.4px;color:#182d49!important;
+}
+#akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) .akd-records-desc{
+  margin:8px 0 0!important;font-size:13px!important;line-height:1.5;color:#6a7d94!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] button.akd-new-btn{
+  background:#ec1640!important;color:#fff!important;border:1px solid #ec1640!important;
+  min-height:46px!important;border-radius:12px!important;padding:10px 15px!important;
+  font-size:13px!important;font-weight:750!important;box-shadow:0 5px 15px #ec164026!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-tools{
+  background:#fff!important;color:#192d48!important;border:1px solid #d9e3ee!important;
+  border-radius:18px!important;padding:clamp(13px,3vw,20px)!important;
+  box-shadow:0 4px 16px #2038590b!important;margin:0 0 22px!important;
+  display:grid!important;gap:14px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-search-wrap{
+  background:#f5f8fc!important;border:1px solid #cbd9e9!important;color:#546e89!important;
+  border-radius:12px!important;padding:0 13px!important;min-height:48px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-search-wrap span{font-size:22px!important;color:#66809a!important}
+#akd-dashboard[data-akd-page="records"] #akd-record-search{
+  color:#192d48!important;min-height:48px!important;font-size:14px!important;
+  background:transparent!important;outline:none!important;box-shadow:none!important;
+}
+#akd-dashboard[data-akd-page="records"] #akd-record-search::placeholder{color:#879bb0!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters label{
+  font-weight:650!important;font-size:12px!important;line-height:1.4!important;color:#425974!important;gap:7px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters select,
+#akd-dashboard[data-akd-page="records"] .akd-record-filters input{
+  box-sizing:border-box!important;display:block!important;max-width:100%!important;width:100%!important;
+  min-width:0!important;min-height:46px!important;border-radius:11px!important;
+  background:#f5f8fc!important;color:#1b304e!important;border:1px solid #cbd9e9!important;
+  padding:10px 12px!important;font-size:13px!important;font-weight:550!important;
+  color-scheme:light!important;box-shadow:none!important;-webkit-text-fill-color:#1b304e!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-tool-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#akd-dashboard[data-akd-page="records"] #akd-visible-count{color:#6a7d94!important;font-size:12px!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] button.akd-date-clear{
+  background:#f5f8fc!important;color:#ab2343!important;border:1px solid #eccad2!important;
+  padding:7px 10px!important;font-size:12px!important;border-radius:9px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-list-section-head{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:0 0 12px;padding:0 2px}
+#akd-dashboard[data-akd-page="records"] .akd-list-section-head h2{font-size:18px!important;color:#192d48!important;margin:0!important}
+#akd-dashboard[data-akd-page="records"] .akd-list-section-head span{font-size:12px!important;color:#778da3!important}
+#akd-dashboard[data-akd-page="records"] .akd-records-list{
+  display:grid!important;gap:10px!important;background:transparent!important;
+  border:0!important;border-radius:0!important;padding:0!important;min-width:0!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] button.akd-record-clickable{
+  box-sizing:border-box!important;display:flex!important;align-items:center!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  padding:15px!important;gap:10px!important;text-align:left!important;
+  border:1px solid #d8e3ef!important;border-radius:15px!important;
+  background:#fff!important;color:#192d48!important;box-shadow:0 3px 13px #2134520a!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-clickable[hidden]{display:none!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-main{min-width:0!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-main strong{color:#1b304d!important;font-size:15px!important;line-height:1.35!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-main small{font-size:12px!important;line-height:1.5!important;color:#73879e!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-clickable > span:last-child{color:#91a3b9!important;font-size:23px!important}
+#akd-dashboard[data-akd-page="records"] .akd-state{
+  background:#fff0d7!important;color:#915511!important;font-size:11px!important;
+  font-weight:700!important;border-radius:9px!important;white-space:nowrap!important;
+  padding:7px 9px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-state.done{background:#e0f4e8!important;color:#146e49!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-pager{color:#253b57!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] .akd-record-pager button{
+  background:#fff!important;color:#253b57!important;border:1px solid #d4e1ed!important;
+  box-shadow:none!important;border-radius:11px!important;
+}
+#akd-dashboard[data-akd-page="records"] #akd-record-empty,
+#akd-dashboard[data-akd-page="records"] .akd-empty{color:#687f98!important}
+/* Ön Kayıtlar: yönetim menüsünden ayrı sayfa olarak açılır. */
+#akd-dashboard[data-akd-page="pre-records"] .akd-pre-records-mount{width:100%;min-width:0;box-sizing:border-box}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] #akpr-records-panel{
+  background:transparent!important;border:0!important;color:#1b304c!important;
+  padding:0!important;margin:0!important;max-width:100%!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pre-records{
+  color:#1b304c!important;display:grid!important;gap:14px!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pre-heading{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  margin:0!important;padding:0 2px!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pre-heading strong{font-size:18px!important;color:#1b304c!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pre-heading span{font-size:12px!important;color:#647b94!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;margin:0!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary>div{
+  min-width:0!important;background:#fff!important;border:1px solid #d8e4ee!important;
+  border-top:4px solid #ea1640!important;border-radius:15px!important;padding:13px!important;
+  box-shadow:0 3px 14px #2438540a!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary>div:nth-child(2){border-top-color:#2788df!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary>div:nth-child(3){border-top-color:#16b88c!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary small{color:#70839c!important;font-size:12px!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary strong{color:#192d47!important;font-size:22px!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] #akpr-record-search{
+  display:block!important;width:100%!important;min-height:49px!important;box-sizing:border-box!important;
+  background:#fff!important;color:#1b304c!important;border:1px solid #d2deeb!important;
+  padding:12px 14px!important;border-radius:12px!important;box-shadow:none!important;font:inherit!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] #akpr-record-search::placeholder{color:#7d90a5!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-row{
+  width:100%!important;box-sizing:border-box!important;display:block!important;
+  background:#fff!important;border:1px solid #d8e4ee!important;
+  border-radius:15px!important;padding:16px!important;margin:0 0 12px!important;
+  color:#1b304c!important;box-shadow:0 3px 13px #2237510a!important;overflow-wrap:anywhere!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-row >div:first-child{min-width:0!important;color:#1b304c!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-row >div:first-child >strong{font-size:17px!important;color:#1b304c!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-muted{color:#6b7f96!important;font-size:12px!important;line-height:1.55!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pill{display:inline-block!important;background:#fff0d6!important;color:#86530f!important;font-size:11px!important;margin:6px 0!important;border-radius:9px!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-vehicle-details{
+  border:1px solid #dbe4ee!important;background:#f5f8fc!important;color:#233b58!important;
+  border-radius:11px!important;margin-top:11px!important;overflow:hidden!important;
+}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-vehicle-details summary{color:#263e58!important;font-weight:700!important;cursor:pointer!important;padding:12px!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-vehicle-more{color:#263e58!important;padding:10px 12px!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-vehicle-more small{color:#657e99!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-actions{padding:0 12px 12px!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-actions .akpr-btn.primary{background:#e9153b!important;color:#fff!important;border-radius:10px!important}
+body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-actions .akpr-btn.light{background:#e7edf6!important;color:#203955!important;border-radius:10px!important}
+@media(max-width:620px){
+ #akd-dashboard[data-akd-page="records"] .akd-record-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #akd-dashboard[data-akd-page="records"] .akd-record-filters label:last-child{grid-column:1/-1!important}
+ body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary>div:last-child{grid-column:1/-1!important}
+ body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] button.akd-record-clickable{flex-wrap:wrap!important}
+ #akd-dashboard[data-akd-page="records"] .akd-record .akd-state{margin-left:auto!important}
+}
+/* [hidden] must outrank the inherited flex rule; otherwise search and pagination appear unfiltered. */
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] button.akd-record-clickable[hidden]{display:none!important}
+/* Radar özet kartı Mal Kabul ana sayfasına aittir, kayıt ekranlarını itmemeli. */
+body[data-role="count"].akd-home #akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) #akr-panel{display:none!important}

@@ -287,11 +287,15 @@
      progress.innerHTML='<div class="akpr-progress-labels">'+labels.map((label,i)=>'<span class="'+(i===stage?'is-current':'')+'">'+E(label)+'</span>').join('')+'</div><div class="akpr-progress-track">'+labels.map((_,i)=>'<span class="'+(stage>=i?'is-done':'')+'"></span>').join('')+'</div>';
      summary.append(progress);
    }
-   if(receiving){x.innerHTML=`<div><strong>${E(r.plate||recordNo(r))}</strong> · ${E(r.company||"Firma belirtilmedi")}<div class="akpr-muted">Kayıt No: ${E(recordNo(r))} · Kayıt: ${stamp(r.created_at)} · Geliş: ${stamp(recordedArrival(r))} · ${E(r.driver_name||'Şoför belirtilmedi')} · İrsaliye: ${E(r.waybill_number||'—')}</div><div class="akpr-muted">Perona gönderilme: ${stamp(r.docked_at)} · Çıkış: ${stamp(r.departed_at)}</div><div class="akpr-muted">${r.operation_note?"Operasyon notu: "+E(r.operation_note)+" · ":""}${E(r.notes||'')}${r.cancellation_reason?" · İptal nedeni: "+E(r.cancellation_reason):""}</div><div class="akpr-wait-time" data-akpr-start="${E(recordedArrival(r))}" data-akpr-end="${E(r.docked_at||(r.status==='cancelled'?r.created_at:''))}">${r.docked_at?'Perona gönderilene kadar bekleme: ':'Bekleme süresi: '}<strong>${elapsedText(recordedArrival(r),r.docked_at||(r.status==='cancelled'?r.created_at:null))}</strong></div></div><div><span class="akpr-pill">${statusText(r)}</span></div>`; }else{x.append(summary);}
+   if(receiving){
+    const stageClass=r.status==='cancelled'?'cancelled':r.departed_at?'exited':r.docked_at?'in-depot':'waiting';
+    x.classList.add('akpr-receiving-row');
+    x.innerHTML=`<div class="akpr-receiving-main"><div class="akpr-receiving-top"><div class="akpr-receiving-identity"><strong class="akpr-receiving-plate">${E(r.plate||recordNo(r))}</strong><span class="akpr-receiving-company">${E(r.company||'Firma belirtilmedi')}</span></div><span class="akpr-pill akpr-receiving-status akpr-receiving-${stageClass}">${E(statusText(r))}</span></div><div class="akpr-receiving-facts"><div><small>Şoför</small><strong>${E(r.driver_name||'Belirtilmedi')}</strong></div><div><small>Geliş</small><strong>${E(stamp(recordedArrival(r)))}</strong></div><div><small>Perona gönderilme</small><strong>${E(stamp(r.docked_at))}</strong></div><div><small>Çıkış</small><strong>${E(stamp(r.departed_at))}</strong></div></div><div class="akpr-receiving-foot"><div class="akpr-wait-time" data-akpr-start="${E(recordedArrival(r))}" data-akpr-end="${E(r.docked_at||(r.status==='cancelled'?r.created_at:''))}">${r.docked_at?'Perona kadar bekleme: ':'Bekleme süresi: '}<strong>${elapsedText(recordedArrival(r),r.docked_at||(r.status==='cancelled'?r.created_at:null))}</strong></div></div></div>`;
+   }else{x.append(summary);}
    const details=document.createElement('details');details.className='akpr-vehicle-details';
    const title=document.createElement('summary');title.textContent='İşlem detayları ve seçenekler';details.append(title);
    const info=document.createElement('div');info.className='akpr-vehicle-more';
-   info.innerHTML=`<div><small>Kayıt türü</small><span>${isQr(r)?'Şoför QR Kaydı':'Danışma Kaydı'}</span></div><div><small>Kayıt numarası</small><span>${E(recordNo(r))}</span></div><div><small>Gerçek geliş</small><span>${stamp(recordedArrival(r))}</span></div><div><small>Perona gönderilme</small><span>${stamp(r.docked_at)}</span></div><div><small>Çıkış</small><span>${stamp(r.departed_at)}</span></div>${r.driver_phone?`<div><small>Telefon</small><span>${E(r.driver_phone)}</span></div>`:''}${r.operation_note?`<div><small>Operasyon notu</small><span>${E(r.operation_note)}</span></div>`:''}${r.notes?`<div><small>Kayıt notu</small><span>${E(r.notes)}</span></div>`:''}${r.cancellation_reason?`<div><small>İptal nedeni</small><span>${E(r.cancellation_reason)}</span></div>`:''}`;
+   info.innerHTML=`<div><small>Kayıt türü</small><span>${isQr(r)?'Şoför QR Kaydı':'Danışma Kaydı'}</span></div><div><small>Kayıt numarası</small><span>${E(recordNo(r))}</span></div><div><small>İrsaliye</small><span>${E(r.waybill_number||'—')}</span></div><div><small>Gerçek geliş</small><span>${stamp(recordedArrival(r))}</span></div><div><small>Perona gönderilme</small><span>${stamp(r.docked_at)}</span></div><div><small>Çıkış</small><span>${stamp(r.departed_at)}</span></div>${r.driver_phone?`<div><small>Telefon</small><span>${E(r.driver_phone)}</span></div>`:''}${r.operation_note?`<div><small>Operasyon notu</small><span>${E(r.operation_note)}</span></div>`:''}${r.notes?`<div><small>Kayıt notu</small><span>${E(r.notes)}</span></div>`:''}${r.cancellation_reason?`<div><small>İptal nedeni</small><span>${E(r.cancellation_reason)}</span></div>`:''}`;
    details.append(info);
    const b=document.createElement('div');b.className='akpr-actions';
    if(r.photo_path){const v=document.createElement('button');v.type='button';v.className='akpr-btn light';v.textContent='📷 İrsaliyeyi Gör';v.onclick=async()=>{v.disabled=true;try{const url=await imageLink(r.photo_path);window.open(url,'_blank','noopener,noreferrer')}catch(e){alert(e.message)}finally{v.disabled=false}};b.append(v)}
@@ -402,7 +406,10 @@
        }catch(e){alert('Geçmiş okunamadı: '+e.message)}
      };b.append(history);
    }
-   if(receiving){x.append(b)}else{
+   if(receiving){
+     if(b.childElementCount)x.append(b);
+     x.append(details);
+   }else{
      // Yalnızca o an uygulanabilir ana işlem kartın üzerinde görünür;
      // diğer mevcut işlemler açılır detay bölümünde korunur.
      const main=[...b.children].find(el=>el.tagName==='BUTTON'&&(
@@ -462,7 +469,25 @@
   const filtered=records.filter(r=>(r.plate+' '+r.company+' '+(r.waybill_number||'')+' '+(r.driver_name||'')).toLocaleLowerCase('tr-TR').includes(q));
   // Bekleyen araçlar en üstte; dünden kalanlar da mutlaka görünür.
   filtered.sort((a,b)=>(['waiting','at_dock','counting'].includes(a.status)?0:1)-(['waiting','at_dock','counting'].includes(b.status)?0:1)||new Date(a.created_at)-new Date(b.created_at));
-  host.textContent='';rows(filtered,host,true);
+  const openDetails=new Set([...host.querySelectorAll('.akpr-receiving-row details[open]')].map(d=>d.closest('.akpr-row')?.dataset.recordId).filter(Boolean));
+  host.textContent='';
+  // Aktif kayıtlar ve kapanmış kayıtlar ayrı görünsün; tüm kayıtlar erişilebilir kalsın.
+  const activeRows=filtered.filter(r=>!r.departed_at&&r.status!=='cancelled');
+  const closedRows=filtered.filter(r=>r.departed_at||r.status==='cancelled');
+  const section=(title,records)=>{
+   if(!records.length)return;
+   const group=document.createElement('section');group.className='akpr-receiving-group';
+   const heading=document.createElement('div');heading.className='akpr-receiving-group-head';
+   const label=document.createElement('h3');label.textContent=title;
+   const total=document.createElement('span');total.textContent=records.length+' kayıt';
+   heading.append(label,total);group.append(heading);
+   const list=document.createElement('div');list.className='akpr-receiving-list';group.append(list);host.append(group);
+   rows(records,list,true);
+  };
+  section('İşlemdeki ve Bekleyen Araçlar',activeRows);
+  section('Çıkış Yapan ve İptal Edilenler',closedRows);
+  host.querySelectorAll('.akpr-receiving-row').forEach(row=>{if(openDetails.has(row.dataset.recordId)){const panel=row.querySelector('details.akpr-vehicle-details');if(panel)panel.open=true}});
+  if(!filtered.length){const empty=document.createElement('p');empty.className='akpr-muted akpr-receiving-empty';empty.textContent='Aramanıza uygun ön kayıt bulunamadı.';host.append(empty)}
   const badge=$('#akpr-record-count');if(badge)badge.textContent=waiting.length+' bekleyen / '+records.length+' toplam ön kayıt';
  }
 

@@ -156,3 +156,181 @@ body[data-role="count"] #akd-dashboard[data-akd-page="pre-records"] .akpr-action
 body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] button.akd-record-clickable[hidden]{display:none!important}
 /* Radar özet kartı Mal Kabul ana sayfasına aittir, kayıt ekranlarını itmemeli. */
 body[data-role="count"].akd-home #akd-dashboard:is([data-akd-page="records"],[data-akd-page="pre-records"]) #akr-panel{display:none!important}
+
+/* 29.10.2026 · Kayıt filtreleri: mobilde date input taşmasını ve dev boşlukları önle. */
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] .akd-record-tools{
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  padding:14px!important;gap:12px!important;margin-bottom:17px!important;
+  overflow:hidden!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-search-wrap{
+  width:100%!important;min-width:0!important;min-height:46px!important;
+}
+#akd-dashboard[data-akd-page="records"] #akd-record-search{min-height:44px!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  gap:11px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters label{
+  display:flex!important;flex-direction:column!important;min-width:0!important;max-width:100%!important;
+  overflow:hidden!important;gap:5px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters label:last-child{
+  grid-column:1 / -1!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters input[type="date"]{
+  appearance:auto!important;-webkit-appearance:auto!important;
+  inline-size:100%!important;min-inline-size:0!important;max-inline-size:100%!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  overflow:hidden!important;display:block!important;
+  font-size:14px!important;line-height:1.2!important;min-height:44px!important;
+  padding:9px 10px!important;box-sizing:border-box!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-filters input[type="date"]::-webkit-date-and-time-value{
+  min-width:0!important;max-width:100%!important;text-align:left!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-record-tool-footer{
+  width:100%;min-width:0;gap:8px!important;
+}
+#akd-dashboard[data-akd-page="records"] .akd-list-section-head h2{font-size:17px!important}
+#akd-dashboard[data-akd-page="records"] .akd-list-section-head span{font-size:11px!important}
+#akd-dashboard[data-akd-page="records"] .akd-records-head{margin-bottom:16px!important}
+#akd-dashboard[data-akd-page="records"] .akd-record-clickable .akd-record-main{flex:1;min-width:0;overflow-wrap:anywhere}
+#akd-dashboard[data-akd-page="records"] .akd-record-clickable .akd-record-main small{display:block!important;margin-top:4px!important}
+
+/* Ön kayıtlar: veriyi ve işlemleri değiştirmeden ayrıştırılmış operasyon kartları. */
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-pre-records{
+  gap:15px!important;min-width:0!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-pending-summary>div{
+  padding:13px 14px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-group{
+  min-width:0!important;margin-top:5px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-group-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:0 0 10px!important;padding:0 3px;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-group-head h3{
+  margin:0!important;color:#192f4d!important;font-size:15px!important;line-height:1.3!important;font-weight:800!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-group-head span{
+  flex:none;color:#6a7e96!important;font-size:12px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-list{
+  display:grid;gap:12px;min-width:0;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-row.akpr-receiving-row{
+  display:block!important;width:100%!important;min-width:0!important;
+  padding:15px!important;margin:0!important;border-radius:16px!important;
+  border:1px solid #d8e3ee!important;background:#fff!important;
+  box-shadow:0 3px 12px #2137540a!important;overflow:hidden!important;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-main{width:100%;min-width:0}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-top{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding-bottom:12px;border-bottom:1px solid #e8eef5;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-identity{
+  min-width:0;flex:1 1 170px;display:flex;flex-direction:column;gap:3px;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-plate{
+  display:block!important;font-size:18px!important;font-weight:800!important;line-height:1.3!important;
+  letter-spacing:.1px;color:#1b304e!important;overflow-wrap:anywhere;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-company{
+  color:#60758e!important;font-size:13px!important;line-height:1.35!important;overflow-wrap:anywhere;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-status{
+  flex:0 0 auto!important;max-width:100%;white-space:normal!important;text-align:center!important;
+  padding:7px 10px!important;line-height:1.3!important;margin:0!important;
+  color:#8e550f!important;background:#fff0d4!important;border:0!important;border-radius:9px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-status.akpr-receiving-in-depot{
+  color:#155d80!important;background:#e2f3fb!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-status.akpr-receiving-exited{
+  color:#19734b!important;background:#e2f5e9!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-status.akpr-receiving-cancelled{
+  color:#9a3544!important;background:#ffeaed!important;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-facts{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px 15px;padding:13px 0 11px;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-facts>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-facts small{
+  font-size:11px!important;font-weight:600!important;color:#778ba1!important;line-height:1.3!important;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-facts strong{
+  font-size:12px!important;font-weight:650!important;line-height:1.45!important;
+  color:#263d59!important;overflow-wrap:anywhere;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-foot{
+  border-top:1px solid #eef2f7;padding-top:10px;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-foot .akpr-wait-time{
+  margin:0!important;max-width:100%;border-radius:9px!important;
+  color:#dce8f5!important;background:#253e54!important;
+  border:1px solid #47657e!important;padding:8px 11px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-foot .akpr-wait-time strong{
+  color:#ffda8b!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-vehicle-details{
+  margin-top:12px!important;border-color:#dce5f0!important;background:#f7f9fc!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-vehicle-details summary{
+  font-size:12px!important;min-height:42px!important;
+}
+#akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-empty{padding:22px!important;text-align:center!important}
+@media(min-width:780px){
+  #akd-dashboard[data-akd-page="records"] .akd-record-filters{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  #akd-dashboard[data-akd-page="records"] .akd-record-filters label:last-child{grid-column:auto!important}
+  #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-facts{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:620px){
+  body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] .akd-body,
+  body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akd-body{
+    padding-left:12px!important;padding-right:12px!important;padding-bottom:32px!important;
+  }
+  #akd-dashboard[data-akd-page="records"] .akd-records-head{gap:10px!important}
+  #akd-dashboard[data-akd-page="records"] .akd-records-heading{flex:1 1 100%!important}
+  body[data-role="count"].akd-home #akd-dashboard[data-akd-page="records"] button.akd-new-btn{
+    width:100%!important;min-height:43px!important;
+  }
+  #akd-dashboard[data-akd-page="records"] .akd-record-filters select,
+  #akd-dashboard[data-akd-page="records"] .akd-record-filters input{font-size:16px!important}
+  #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-group-head h3{font-size:14px!important}
+  #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-top{gap:7px!important}
+  #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-status{font-size:11px!important}
+}
+@media(max-width:340px){
+  #akd-dashboard[data-akd-page="records"] .akd-record-filters{grid-template-columns:minmax(0,1fr)!important}
+  #akd-dashboard[data-akd-page="records"] .akd-record-filters label:last-child{grid-column:auto!important}
+}
+/* Ön kayıt detayları isteğe bağlı açılır; işlemler görünür ve erişilebilir kalır. */
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-row > .akpr-actions{
+  margin:9px 0 0!important;padding:0!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-row > .akpr-vehicle-details{
+  margin-top:12px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-row .akpr-vehicle-more{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;max-width:100%;padding:12px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-row .akpr-vehicle-more>div{
+  display:flex!important;flex-direction:column!important;gap:3px!important;min-width:0!important;
+  overflow-wrap:anywhere!important;font-size:12px!important;
+}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="pre-records"] .akpr-receiving-row .akpr-vehicle-more small{
+  display:block!important;font-size:11px!important;color:#70839b!important;
+}

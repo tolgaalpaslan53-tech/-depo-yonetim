@@ -443,3 +443,34 @@ body[data-role="count"].akd-home #akd-dashboard[data-akd-page="reports"] .akmr-p
 body[data-role="count"].akd-home #akd-dashboard[data-akd-page="reports"] button.akmr-export{display:flex!important;justify-content:center!important;gap:12px!important;width:100%!important;min-width:0!important;background:#e82942!important;color:white!important;border:1px solid #d81f38!important;border-radius:12px!important;box-shadow:none!important;white-space:normal!important;min-height:53px!important;font-size:15px!important}
 #akd-dashboard[data-akd-page="reports"] .akmr-note{color:#62738b!important;font-size:12px!important;line-height:1.65!important;margin-bottom:0!important}
 @media(max-width:650px){#akd-dashboard[data-akd-page="reports"] .akmr-date-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}}
+
+
+/* 29.10.2026 - Yeni Sevkiyat sayfasindaki bos gri alan:
+   Sadece yeni kayit ekraninin alt zeminini sabit beyaz navigasyonla butunlestir.
+   Form kutusu ve mal kabul islemleri degismez. */
+body[data-role="count"].akd-home:has(#akd-dashboard[data-akd-page="create"]),
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="create"],
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="create"] > .akd-layout,
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="create"] .akd-content,
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="create"] .akd-body {
+  background:#fff!important;
+}
+/* Koyu formun ustunde keskin gorunum; bosta genis gri bant olusmasin. */
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="create"] .akd-body {
+  padding-bottom:clamp(16px,3vw,28px)!important;
+}
+
+/* Mal Kabul Ayarları — Danışma ile aynı kategori tabanlı gezinme */
+#akd-dashboard .akd-settings-options{display:grid;gap:12px;margin:16px 0 20px}
+#akd-dashboard .akd-settings-section{min-width:0;border:1px solid #dbe4ef;border-radius:17px;background:#fff;box-shadow:0 4px 15px #17283e0b;overflow:hidden}
+#akd-dashboard .akd-settings-section summary{list-style:none;display:flex;align-items:center;gap:13px;padding:19px 17px;min-height:78px;cursor:pointer;color:#1c304b}
+#akd-dashboard .akd-settings-section summary::-webkit-details-marker{display:none}
+#akd-dashboard .akd-settings-option-icon{width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;background:#edf3fa;border-radius:12px;color:#d92543;font-size:25px;font-weight:700}
+#akd-dashboard .akd-settings-option-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
+#akd-dashboard .akd-settings-option-copy strong{color:#172942;font-size:16px;line-height:1.25}
+#akd-dashboard .akd-settings-option-copy small{color:#667991;font-size:12px;line-height:1.45}
+#akd-dashboard .akd-settings-arrow{color:#8a9cb4;font-size:28px;transition:transform .2s ease}
+#akd-dashboard .akd-settings-section[open] .akd-settings-arrow{transform:rotate(90deg)}
+#akd-dashboard .akd-settings-panel{padding:0 17px 6px;border-top:1px solid #e9eef5}
+#akd-dashboard .akd-settings-panel .akd-pref:first-child{border-top:0}
+@media(max-width:380px){#akd-dashboard .akd-settings-section summary{padding:15px 12px;gap:10px}#akd-dashboard .akd-settings-option-icon{width:40px;height:40px;flex-basis:40px}#akd-dashboard .akd-settings-option-copy strong{font-size:14px}}

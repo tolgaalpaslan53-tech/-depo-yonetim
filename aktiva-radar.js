@@ -24,7 +24,7 @@ function analyse(rows){const now=Date.now(),span=30*60000;
  return {live:live.length,arrivals,dispatched,near,alerts,trend:chartData(rows),partial:rows.length>=1000};
 }
 function markup(){return `<section class="akr" id="akr-panel" aria-label="AKTİVA Radar"><div class="akr-top"><div><div class="akr-eyebrow">◉ OPERASYON TAKİBİ</div><h2>AKTİVA Radar</h2><p>Erken uyarı ve araç yoğunluğu</p></div><button type="button" class="akr-open" data-akr="toggle">${view==='detail'?'Özete Dön':'Detayları Gör ›'}</button></div><div class="akr-content" aria-live="polite">Veriler yükleniyor…</div></section>`}
-function mount(){if(!permitted())return;const parent=role()==='count'?document.querySelector('#akd-dashboard .akd-body'):document.querySelector('#ak-pre-receiving');if(!parent)return;
+function mount(){if(!permitted())return;if(role()==='count'&&document.querySelector('#akd-dashboard')?.dataset.akdPage!=='home')return;const parent=role()==='count'?document.querySelector('#akd-dashboard .akd-body'):document.querySelector('#ak-pre-receiving');if(!parent)return;
  let el=parent.querySelector('#akr-panel');if(!el){el=document.createElement('div');el.innerHTML=markup();el=el.firstElementChild;
   if(role()==='count'){const greeting=parent.querySelector('.akd-greeting');greeting?.after(el);if(!greeting)parent.prepend(el)}
   else{const stats=parent.querySelector('#akpr-live-status');stats?.after(el);if(!stats)parent.querySelector('#akpr-home-nav')?.after(el)}

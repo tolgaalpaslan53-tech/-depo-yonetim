@@ -29,6 +29,26 @@ const style=document.createElement('style');style.textContent=`#aktivaCatalogOve
 }
 #aktivaCatalogOverlay .ac-wrap > button:hover { filter:brightness(1.12); }
 #aktivaCatalogOverlay .ac-wrap > button:active { transform:translateY(1px); }
+
+/* Ana uygulama icindeki katalog: sayfa kabugunu ve alt menuyu asla kapatma. */
+#aktivaCatalogOverlay.ac-inline{position:relative!important;inset:auto!important;z-index:auto!important;overflow:visible!important;padding:0!important;background:transparent!important;color:#1b2b43!important;min-height:0!important}
+#aktivaCatalogOverlay.ac-inline .ac-wrap{max-width:900px!important;width:100%!important;margin:0 auto!important;padding-bottom:14px}
+#aktivaCatalogOverlay.ac-inline .ac-wrap>h2{color:#172b44!important;font-size:clamp(21px,4.5vw,29px)!important;margin:4px 0 18px!important}
+#aktivaCatalogOverlay.ac-inline .ac-wrap>h2::before{content:"ÜRÜN VE BARKOD YÖNETİMİ";display:block;color:#d31c3a;letter-spacing:.16em;font-size:11px;font-weight:800;margin-bottom:9px}
+#aktivaCatalogOverlay.ac-inline #ac-hint{color:#64748b!important;margin:22px 0 12px!important}
+#aktivaCatalogOverlay.ac-inline .ac-wrap>label{color:#253b58!important}
+#aktivaCatalogOverlay.ac-inline #ac-search,#aktivaCatalogOverlay.ac-inline input:not([type=checkbox]){width:100%!important;min-width:0!important;max-width:100%!important;background:#f5f7fb!important;color:#1a2d46!important;border:1px solid #cad5e5!important;box-sizing:border-box!important}
+#aktivaCatalogOverlay.ac-inline #ac-search::placeholder{color:#8291a7!important}
+#aktivaCatalogOverlay.ac-inline .ac-wrap>button:not(#ac-close){min-height:58px!important;font-size:14px!important}
+#aktivaCatalogOverlay.ac-inline .ac-wrap>button#ac-close{margin:0 0 22px!important;background:#fff!important;color:#233a57!important;border:1px solid #d5dfec!important}
+#aktivaCatalogOverlay.ac-inline .ac-item{background:#fff!important;border:1px solid #dce4ef!important;color:#1b2e46!important;box-shadow:none!important;padding:15px!important}
+#aktivaCatalogOverlay.ac-inline .ac-item small{color:#677992!important}
+#aktivaCatalogOverlay.ac-inline #ac-selected{color:#173a2f!important;background:#eaf8f1!important;border:1px solid #a9dac6!important}
+#aktivaCatalogOverlay.ac-inline #ac-selected small{color:#365b4d!important}
+#aktivaCatalogOverlay.ac-inline #ac-detail{background:#fff;border-radius:15px;padding:12px 15px;border:1px solid #dce4ef;color:#172b44}
+#aktivaCatalogOverlay.ac-inline #ac-detail:empty{display:none}
+#aktivaCatalogOverlay.ac-inline #ac-detail label{display:block;color:#233a57;font-weight:700}
+@media(max-width:750px){#aktivaCatalogOverlay.ac-inline .ac-wrap{padding-bottom:20px!important}}
 `;document.head.append(style);
 async function init(){if(products.length)return;try{const r=await fetch('aktiva-urunler.json',{cache:'no-store'});if(!r.ok)throw Error('Dosya bulunamadı');const data=await r.json();if(Array.isArray(data))products=data}catch(e){console.warn(e)}await refreshShared()}
 async function refreshShared(){
@@ -49,7 +69,7 @@ function syncLocalBarcode(code,newBarcode){
  localStorage.setItem('aktiva_barkod_eslestirme_demo',JSON.stringify(map));
 }
 
-function view(){let el=document.getElementById('aktivaCatalogOverlay');if(!el){el=document.createElement('div');el.id='aktivaCatalogOverlay';document.body.append(el)}chosen=null;el.innerHTML='<div class="ac-wrap"><button type="button" id="ac-close">← Geri</button><h2>AKTİVA • Barkod Tanımlama</h2><p id="ac-hint">Ürün adı veya kodunu yazın.</p><label>Ürün ara<input id="ac-search" autocomplete="off" placeholder="Ürün adı veya kodu"></label><div id="ac-list"></div><div id="ac-selected" hidden></div><div id="ac-detail"></div></div>';if(typeof profile!=='undefined'&&['count','admin'].includes(profile?.role)){const b=document.createElement('button');b.type='button';b.textContent='📊 Excel Ürün Listesi Yönetimi';b.onclick=()=>window.AKTIVA_excelOpen?.();el.querySelector('.ac-wrap').insertBefore(b,el.querySelector('#ac-hint'))}const exportBtn=document.createElement('button');exportBtn.type='button';exportBtn.id='ac-export';exportBtn.textContent='⬇ Tanımlanan Barkodları Excel’e Aktar';exportBtn.onclick=exportBarcodes;el.querySelector('.ac-wrap').insertBefore(exportBtn,el.querySelector('#ac-hint'));el.querySelector('#ac-close').onclick=()=>el.remove();el.querySelector('#ac-search').oninput=showResults}
+function view(inlineMount){let el=document.getElementById('aktivaCatalogOverlay');const host=inlineMount||document.body;if(!el){el=document.createElement('div');el.id='aktivaCatalogOverlay';host.append(el)}else if(el.parentElement!==host){host.append(el)}el.classList.toggle('ac-inline',!!inlineMount);if(inlineMount)inlineMount.querySelector('.akd-catalog-loading')?.remove();chosen=null;el.innerHTML='<div class="ac-wrap"><button type="button" id="ac-close">← Geri</button><h2>AKTİVA • Barkod Tanımlama</h2><p id="ac-hint">Ürün adı veya kodunu yazın.</p><label>Ürün ara<input id="ac-search" autocomplete="off" placeholder="Ürün adı veya kodu"></label><div id="ac-list"></div><div id="ac-selected" hidden></div><div id="ac-detail"></div></div>';if(typeof profile!=='undefined'&&['count','admin'].includes(profile?.role)){const b=document.createElement('button');b.type='button';b.textContent='📊 Excel Ürün Listesi Yönetimi';b.onclick=()=>window.AKTIVA_excelOpen?.();el.querySelector('.ac-wrap').insertBefore(b,el.querySelector('#ac-hint'))}const exportBtn=document.createElement('button');exportBtn.type='button';exportBtn.id='ac-export';exportBtn.textContent='⬇ Tanımlanan Barkodları Excel’e Aktar';exportBtn.onclick=exportBarcodes;el.querySelector('.ac-wrap').insertBefore(exportBtn,el.querySelector('#ac-hint'));el.querySelector('#ac-close').onclick=()=>{if(inlineMount&&typeof window.AKTIVA_catalogInlineClose==='function'){window.AKTIVA_catalogInlineClose()}else el.remove()};el.querySelector('#ac-search').oninput=showResults}
 function showResults(){const el=document.getElementById('aktivaCatalogOverlay');if(!el)return;const term=el.querySelector('#ac-search').value.trim().toLocaleLowerCase('tr');const list=el.querySelector('#ac-list');if(!term){list.innerHTML='';return}const linked=map[term];const found=products.filter(p=>String(p.code||'').toLocaleLowerCase('tr').includes(term)||String(p.name||'').toLocaleLowerCase('tr').includes(term)||String(p.position||'').toLocaleLowerCase('tr').includes(term)||p.code===linked).slice(0,8);list.innerHTML=found.map(p=>`<button type="button" class="ac-item" data-code="${esc(p.code)}"><b>${esc(p.name)}</b><br><small>Kod: ${esc(p.code)} · Pozisyon: ${esc(p.position)}</small></button>`).join('')||'<p>Ürün bulunamadı.</p>';list.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>select(b.dataset.code))}
 function select(code){
  chosen=products.find(p=>String(p.code)===String(code));if(!chosen)return;
@@ -78,7 +98,9 @@ function select(code){
  };
 }
 
-async function open(){pendingBarcode='';await init();await refreshShared();view()}
+async function open(inlineMount){pendingBarcode='';await init();await refreshShared();view(inlineMount)}
+// Sadece Mal Kabul yan menusunden gelindiginde merkezi calisma alanina render et.
+window.AKTIVA_openCatalogInline=async mount=>{if(!(mount instanceof HTMLElement))return;await open(mount)};
 async function openBarcodeMatch(barcode){pendingBarcode=String(barcode||'').trim();if(!pendingBarcode)return;await init();await refreshShared();view();const root=document.getElementById('aktivaCatalogOverlay');const linked=products.find(p=>p.code===map[pendingBarcode]);if(linked){select(linked.code);return}root.querySelector('#ac-hint').textContent='Okutulan barkod: '+pendingBarcode+' — Eşleştirmek için ürün arayın ve seçin.';root.querySelector('#ac-search').focus()}
 
 async function updateBarcode(product,barcode){

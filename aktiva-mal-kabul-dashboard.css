@@ -427,3 +427,19 @@ body[data-role="count"].akd-home #akd-dashboard .akd-sidebar{left:auto!important
 body[data-role="count"].akd-home #akd-dashboard.akd-menu-open .akd-sidebar{transform:translateX(0)!important;visibility:visible!important}
 body[data-role="count"].akd-home #akd-dashboard .akd-scrim{touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){body[data-role="count"].akd-home #akd-dashboard .akd-sidebar{transition:none!important}}
+
+/* 29.10.2026 takip: Barkod ve raporlar da Mal Kabul SPA kabugunda. */
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="catalog"] .akd-body,
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="reports"] .akd-body{width:100%!important;max-width:980px!important;min-width:0!important;overflow-x:clip!important;padding:clamp(14px,3vw,26px)!important}
+#akd-dashboard #akd-catalog-mount{min-width:0;width:100%;max-width:100%;padding:2px 0 20px}
+#akd-dashboard #akd-catalog-mount .akd-catalog-loading,
+#akd-dashboard #akd-catalog-mount .akd-catalog-error{padding:20px;color:#475569}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="reports"] .akd-records-head h1{color:#172c45!important;font-size:clamp(23px,4.8vw,30px)!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="reports"] .akd-records-desc{color:#566b86!important;font-size:14px!important;line-height:1.55;margin:12px 0 22px!important;opacity:1!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="reports"] .akmr-panel{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;box-sizing:border-box!important;background:#fff!important;color:#1d304b!important;border:1px solid #dce4ee!important;box-shadow:0 8px 25px #1d305014!important;border-radius:18px!important;padding:clamp(16px,3vw,28px)!important}
+#akd-dashboard[data-akd-page="reports"] .akmr-date-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;min-width:0!important;max-width:100%!important;gap:18px!important;align-items:start}
+#akd-dashboard[data-akd-page="reports"] label.akmr-date-label{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;font-weight:700!important;font-size:14px!important;color:#263d59!important;box-sizing:border-box!important;overflow:hidden!important}
+#akd-dashboard[data-akd-page="reports"] input.akmr-date-input{display:block!important;position:relative!important;inset:auto!important;min-width:0!important;width:100%!important;max-width:100%!important;margin:9px 0 0!important;box-sizing:border-box!important;min-height:54px!important;padding:10px 12px!important;border:1px solid #cbd7e6!important;border-radius:12px!important;background:#f5f7fb!important;color:#223a58!important;-webkit-text-fill-color:#223a58!important;font-size:16px!important;line-height:1.25!important;color-scheme:light!important;overflow:hidden!important;opacity:1!important}
+body[data-role="count"].akd-home #akd-dashboard[data-akd-page="reports"] button.akmr-export{display:flex!important;justify-content:center!important;gap:12px!important;width:100%!important;min-width:0!important;background:#e82942!important;color:white!important;border:1px solid #d81f38!important;border-radius:12px!important;box-shadow:none!important;white-space:normal!important;min-height:53px!important;font-size:15px!important}
+#akd-dashboard[data-akd-page="reports"] .akmr-note{color:#62738b!important;font-size:12px!important;line-height:1.65!important;margin-bottom:0!important}
+@media(max-width:650px){#akd-dashboard[data-akd-page="reports"] .akmr-date-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}}

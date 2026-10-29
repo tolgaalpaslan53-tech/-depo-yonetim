@@ -31,7 +31,7 @@ function init(){if($('#akd-dashboard'))return;const el=document.createElement('s
 el.addEventListener('input',e=>{if(e.target.id==='akd-record-search'){recordQuery=e.target.value;recordPage=1;filterRecords(el)}});
 el.addEventListener('change',e=>{if(e.target.id==='akd-record-status'){recordStatus=e.target.value;recordPage=1;filterRecords(el)}if(e.target.id==='akd-record-date'){recordDate=e.target.value;recordPage=1;filterRecords(el)}if(e.target.id==='akd-record-sort'){recordSort=e.target.value;update()} if(e.target.id==='akmr-start')reportStart=e.target.value;if(e.target.id==='akmr-end')reportEnd=e.target.value;if(e.target.matches('[data-akd-pref]'))akdSavePref(e.target.dataset.akdPref,e.target.checked);});
 el.addEventListener('keydown',e=>{if(e.key==='Escape'&&el.classList.contains('akd-menu-open')){setMenuOpen(el,false);el.querySelector('.akd-menu')?.focus();}});
-el.addEventListener('click',e=>{const btn=e.target.closest('[data-akd]');if(!btn)return;const id=btn.dataset.akd;if(btn.closest('.akd-sidebar')&&id!=='close')setMenuOpen(el,false);if(id==='clear-date'){recordDate='';recordPage=1;update();return}if(id==='page-prev'||id==='page-next'){recordPage+=id==='page-next'?1:-1;filterRecords(el);return}if(id==='pre-records'){akdPage='pre-records';setMenuOpen(el,false);update();return}if(id==='settings'){akdPage='settings';setMenuOpen(el,false);update();return}if(id==='reset-prefs'){try{localStorage.removeItem(akdPrefsKey())}catch{};akdApplyPrefs(el);update();return}if(id==='reports'){akdPage='reports';update();return}if(id==='export-mal-kabul'){window.AKTIVA_MAL_KABUL_RAPORU?.();return}if(id==='pallet'){window.dispatchEvent(new Event('aktiva:open-pallet-tracking'));return}if(id==='palet-iade'){if(typeof window.AKTIVA_OPEN_PALET_IADE==='function')window.AKTIVA_OPEN_PALET_IADE();else alert('Palet İade modülü henüz yüklenmedi.');return}if(id==='menu'){setMenuOpen(el,!el.classList.contains('akd-menu-open'));return}if(id==='close'){setMenuOpen(el,false);return}setMenuOpen(el,false);if(id==='open-record'){
+el.addEventListener('click',e=>{const btn=e.target.closest('[data-akd]');if(!btn)return;const id=btn.dataset.akd;if(btn.closest('.akd-sidebar')&&id!=='close')setMenuOpen(el,false);if(id==='clear-date'){recordDate='';recordPage=1;update();return}if(id==='page-prev'||id==='page-next'){recordPage+=id==='page-next'?1:-1;filterRecords(el);return}if(id==='pre-records'){akdPage='pre-records';setMenuOpen(el,false);update();return}if(id==='settings'){akdPage='settings';setMenuOpen(el,false);update();return}if(id==='catalog'){akdPage='catalog';setMenuOpen(el,false);update();return}if(id==='reset-prefs'){try{localStorage.removeItem(akdPrefsKey())}catch{};akdApplyPrefs(el);update();return}if(id==='reports'){akdPage='reports';update();return}if(id==='export-mal-kabul'){window.AKTIVA_MAL_KABUL_RAPORU?.();return}if(id==='pallet'){window.dispatchEvent(new Event('aktiva:open-pallet-tracking'));return}if(id==='palet-iade'){if(typeof window.AKTIVA_OPEN_PALET_IADE==='function')window.AKTIVA_OPEN_PALET_IADE();else alert('Palet İade modülü henüz yüklenmedi.');return}if(id==='menu'){setMenuOpen(el,!el.classList.contains('akd-menu-open'));return}if(id==='close'){setMenuOpen(el,false);return}setMenuOpen(el,false);if(id==='open-record'){
   const recordId=btn.dataset.id;
   if(!recordId)return;
   akdPage='detail';
@@ -50,6 +50,8 @@ window.addEventListener('aktiva:shipment-saved',()=>{
 });
 function update(){if(document.body.dataset.role==='count'&&document.getElementById('akd-dashboard'))document.body.classList.add('akd-home');if(busy)return;init();const on=active();document.body.classList.toggle('akd-home',!!on);if(!on)return;const root=$('#akd-dashboard');if(!root)return;
 if(akdPage==='reports' && root.querySelector('#akmr-start') && root.querySelector('#akmr-end'))return;
+// Kullanici barkod ararken filtre veya secim kaybolmasin.
+if(akdPage==='catalog' && root.querySelector('#akd-catalog-mount'))return;
 // Ön Kayıtlar kendi 15 sn veri yenilemesini kullanır; 12 sn'de tüm sayfayı silip geri oluşturma.
 if(akdPage==='pre-records'&&root.querySelector('#akpr-records-panel'))return;
 busy=true;try{
@@ -74,6 +76,18 @@ if(akdPage==='settings'){
  return;
 }
 
+if(akdPage==='catalog'){
+ const body=root.querySelector('.akd-body');
+ body.innerHTML='<div id="akd-catalog-mount"><div class="akd-catalog-loading" role="status">Ürün kataloğu açılıyor…</div></div>';
+ const mount=body.querySelector('#akd-catalog-mount');
+ window.AKTIVA_catalogInlineClose=()=>{if(akdPage==='catalog'){akdPage='home';update()}};
+ if(typeof window.AKTIVA_openCatalogInline==='function'){
+   Promise.resolve(window.AKTIVA_openCatalogInline(mount)).catch(e=>{
+      if(mount.isConnected)mount.innerHTML='<p class="akd-catalog-error" role="alert">Ürün kataloğu açılamadı: '+escape(e.message)+'</p>';
+   });
+ } else mount.innerHTML='<p class="akd-catalog-error">Ürün kataloğu yüklenemedi. Sayfayı yenileyin.</p>';
+ root.querySelectorAll('.akd-nav').forEach(n=>n.classList.toggle('selected',n.dataset.akd==='catalog'));
+}
 if(akdPage==='reports'){
  const body=root.querySelector('.akd-body');
  const previousStart=reportStart;
@@ -87,7 +101,7 @@ if(akdPage==='reports'){
 #akd-dashboard .akmr-export:hover{background:#304962!important}
 #akd-dashboard .akmr-export:active{transform:scale(.99)}
 #akd-dashboard .akmr-note{overflow-wrap:anywhere;line-height:1.55;text-align:center}
-</style><div class="akd-records-head"><h1>📊 Mal Kabul Raporları</h1><button type="button" data-akd="home">← Ana Sayfa</button></div><p class="akd-records-desc">Yeni sevkiyat kayıtlarından tarih aralığına göre ayrıntılı Excel raporu oluşturun.</p><section class="akd-panel akmr-panel"><div class="akmr-date-grid"><label class="akmr-date-label">Başlangıç tarihi<input class="akmr-date-input" id="akmr-start" type="date" value="${previousStart}"></label><label class="akmr-date-label">Bitiş tarihi<input class="akmr-date-input" id="akmr-end" type="date" value="${previousEnd}"></label></div><button type="button" class="akmr-export" data-akd="export-mal-kabul"><span aria-hidden="true">📗</span><span>Excel Raporu Oluştur</span></button><p class="akmr-note" id="akmr-status" role="status" style="margin-top:14px;color:#aebed2;font-size:13px">Genel Özet · Günlük Döküm · Ürün Raporu · Sevkiyat Detayları</p></section>`;
+</style><div class="akd-records-head akmr-header"><div class="akd-records-heading"><span class="akd-eyebrow">OPERASYON RAPORLARI</span><h1>Mal Kabul Raporları</h1></div></div><p class="akd-records-desc">Seçtiğiniz tarih aralığındaki mal kabul kayıtlarını Excel olarak indirin.</p><section class="akd-panel akmr-panel"><div class="akmr-date-grid"><label class="akmr-date-label">Başlangıç tarihi<input class="akmr-date-input" id="akmr-start" type="date" value="${previousStart}"></label><label class="akmr-date-label">Bitiş tarihi<input class="akmr-date-input" id="akmr-end" type="date" value="${previousEnd}"></label></div><button type="button" class="akmr-export" data-akd="export-mal-kabul"><span aria-hidden="true">📗</span><span>Excel Raporu Oluştur</span></button><p class="akmr-note" id="akmr-status" role="status" style="margin-top:14px;color:#aebed2;font-size:13px">Genel Özet · Günlük Döküm · Ürün Raporu · Sevkiyat Detayları</p></section>`;
  root.querySelectorAll('.akd-nav').forEach(n=>n.classList.toggle('selected',n.dataset.akd==='reports'));
 }
 if(akdPage==='records'){

@@ -1,0 +1,49 @@
+/* AKTIVA - izolasyon: Yeni Sevkiyat OCR arayüzü */
+#aktivaCountUI .ak-waybill-entry{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:15px;background:linear-gradient(110deg,#24354e,#17243b)!important;color:#fff!important;border:1px solid #6c809a!important;border-radius:14px;cursor:pointer;margin:8px 0 12px}
+#aktivaCountUI .ak-waybill-entry>span:nth-child(2){flex:1;min-width:0}#aktivaCountUI .ak-waybill-entry strong,#aktivaCountUI .ak-waybill-entry small{display:block}#aktivaCountUI .ak-waybill-entry strong{font-size:14px}#aktivaCountUI .ak-waybill-entry small{font-size:11px;color:#d2ddeb;margin-top:3px}#aktivaCountUI .akw-entry-icon{display:grid;place-items:center;background:#ffffff22;border-radius:10px;width:38px;height:38px;font-size:24px;flex-shrink:0}
+body.akw-open{overflow:hidden!important}
+#akw-overlay,#akw-overlay *{box-sizing:border-box}
+#akw-overlay{z-index:2147483000;position:fixed;inset:0;background:#050b18bd;display:flex;align-items:center;justify-content:center;padding:10px;color:#15233a;font-family:inherit}
+#akw-overlay .akw-dialog{background:#f5f7fa;width:min(700px,100%);max-height:calc(100dvh - 20px);overflow:auto;border-radius:18px;box-shadow:0 25px 70px #0006;overscroll-behavior:contain}
+#akw-overlay .akw-head{display:flex!important;align-items:center!important;justify-content:space-between!important;background:#152741!important;color:#fff!important;padding:16px!important;margin:0!important;border:0!important;border-radius:18px 18px 0 0!important}
+#akw-overlay .akw-head h2{color:#fff!important;font-size:20px!important;margin:3px 0 0!important}#akw-overlay .akw-head small{color:#b8cde6!important;font-size:10px!important;letter-spacing:.04em}
+#akw-overlay button{font:inherit;cursor:pointer;border-radius:10px!important;border:1px solid #d0d9e5;color:#17243b;background:#fff;padding:10px 14px;font-size:13px;font-weight:650;min-height:40px}
+#akw-overlay button:disabled{opacity:.55;cursor:wait}
+#akw-overlay #akw-close{font-size:25px;color:#fff;background:#ffffff20;border:0;width:42px;height:42px;padding:0}
+#akw-overlay .akw-body{padding:16px;display:grid;gap:13px}
+#akw-overlay .akw-muted{font-size:13px;color:#526277;line-height:1.6;margin:0}
+#akw-overlay .akw-small{font-size:11px;color:#536274;line-height:1.5;margin:4px 0}
+#akw-overlay .akw-actions{display:flex;align-items:end;flex-wrap:wrap;gap:9px}
+#akw-overlay .akw-actions>label{flex:1;min-width:155px}
+#akw-overlay .akw-upload{position:relative;display:grid;place-items:center;padding:13px 9px;border:1px dashed #899cb7;border-radius:11px;background:#eaf0f7;color:#152741;font-size:13px;font-weight:700;cursor:pointer}
+#akw-overlay .akw-upload.alt{background:#fff}
+#akw-overlay .akw-upload input{opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;font-size:0}
+#akw-overlay .akw-thumbs{display:flex;gap:9px;flex-wrap:wrap}
+#akw-overlay .akw-thumb{position:relative;border-radius:11px;border:1px solid #d7deea;overflow:hidden;width:84px;height:104px;background:#fff}
+#akw-overlay .akw-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+#akw-overlay .akw-thumb button{position:absolute;right:4px;top:4px;border:0;background:#152741;color:white;padding:0;min-height:25px;width:25px;height:25px;border-radius:50%!important}
+#akw-overlay .akw-thumb small{position:absolute;left:0;bottom:0;background:#000b;color:#fff;width:100%;text-align:center;font-size:10px}
+#akw-overlay #akw-read,#akw-overlay .akw-transfer{background:#d22943;color:#fff;border-color:#d22943;font-weight:750}
+#akw-overlay label{font-size:12px;font-weight:700;color:#273c55;display:grid;gap:5px}
+#akw-overlay input:not([type=file]):not([type=checkbox]),#akw-overlay select,#akw-overlay textarea{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:10px!important;background:#fff!important;color:#15233a!important;padding:10px 11px;font-size:16px;max-width:100%;min-height:42px}
+#akw-overlay .akw-section{background:#fff;border:1px solid #e0e6ef;border-radius:13px;padding:13px;margin:12px 0}
+#akw-overlay .akw-section h3{margin:0 0 8px;font-size:15px;color:#17243b}
+#akw-overlay .akw-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+#akw-overlay .akw-grid small{color:#64748b;font-size:10px;font-weight:500}
+#akw-overlay .akw-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#akw-overlay .akw-product{padding:12px;border:1px solid #dce3ed;background:#f6f9fc;border-radius:11px;display:grid;gap:9px;margin:9px 0}
+#akw-overlay .akw-product strong{color:#193149;font-size:13px}
+#akw-overlay .akw-triple{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+#akw-overlay .akw-product .akw-review{color:#a05b0d;font-size:11px;font-weight:550}
+#akw-overlay .akw-catalog{margin:0;font-size:11px;color:#64748b}
+#akw-overlay .akw-catalog button{font-size:11px;text-align:left;padding:7px 8px;margin-right:6px;background:#e4ecfa}
+#akw-overlay #akw-status{border-radius:9px;background:#e9eff5;color:#253b55;font-size:13px;min-height:0;margin:0;padding:10px}
+#akw-overlay #akw-status:empty{display:none}
+#akw-overlay #akw-status[data-type=warn]{color:#875b0e;background:#fff2d6}#akw-overlay #akw-status[data-type=error]{color:#a11c2f;background:#ffeaed}#akw-overlay #akw-status[data-type=ok]{color:#155c3a;background:#dff5e9}
+#akw-overlay .akw-raw{background:#fff;border:1px solid #d9e1eb;border-radius:10px;padding:10px;font-size:12px;color:#43546b}
+#akw-overlay .akw-raw summary{font-weight:700;cursor:pointer}
+#akw-overlay .akw-raw textarea{margin:8px 0}
+#akw-overlay .akw-approve{display:flex!important;align-items:flex-start;flex-direction:row;gap:9px;font-size:13px!important;line-height:1.5}
+#akw-overlay .akw-approve input{width:20px!important;height:20px!important;flex-shrink:0;margin:0}
+#akw-overlay .akw-transfer{width:100%;padding:14px}
+@media(max-width:500px){#akw-overlay .akw-dialog{max-height:calc(100dvh - 12px);border-radius:14px}#akw-overlay .akw-head{border-radius:14px 14px 0 0!important}#akw-overlay .akw-body{padding:11px}#akw-overlay .akw-grid{grid-template-columns:minmax(0,1fr)}#akw-overlay .akw-triple{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}#akw-overlay .akw-triple input{padding:9px 6px!important;font-size:15px}#akw-overlay .akw-triple label{font-size:11px}#akw-overlay .akw-actions>label{min-width:130px}#akw-overlay .akw-upload{font-size:11px}}

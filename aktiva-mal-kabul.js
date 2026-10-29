@@ -145,7 +145,7 @@ window.AKTIVA_applyWaybillResult=function(payload){
  if(!fi||!inv)throw Error('Sevkiyat formu bulunamadı.');
  draftFirm=payload.supplier!==undefined?String(payload.supplier||'').slice(0,150):fi.value;
  draftInvoice=payload.invoice!==undefined?String(payload.invoice||'').slice(0,100):inv.value;
- draftPlate=payload.plate!==undefined?String(payload.plate||'').trim().slice(0,80):(plate?.value||'');
+ draftPlate=payload.plate!==undefined?String(payload.plate||'').slice(0,80):(plate?.value||'');
  const incoming=Array.isArray(payload.products)?payload.products:[];
  if(incoming.length>150)throw Error('Tek seferde en fazla 150 ürün aktarılabilir.');
  for(const p of incoming){
@@ -158,6 +158,8 @@ window.AKTIVA_applyWaybillResult=function(payload){
   if(exists){skipped++;continue}
   lines.push({name:String(p.name).trim(),cartons:Number(p.cartons),pallets:Number(p.pallets),sku:String(p.sku||'').slice(0,80),barcode:'',units_per_carton:Number(p.units_per_carton)||null});added++;
  }
+ if(fi)fi.value=draftFirm;if(inv)inv.value=draftInvoice;if(plate)plate.value=draftPlate;
+ render();
  toast(added+' ürün sevkiyat listesine eklendi.'+(skipped?' '+skipped+' olası tekrar atlandı.':'')+' Kaydetmeden önce listeyi kontrol edin.');
  return {added,skipped};
 };

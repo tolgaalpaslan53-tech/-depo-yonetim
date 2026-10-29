@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V4.
+/* AKTIVA / İrsaliye ayrıştırıcı V5.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -52,22 +52,54 @@
   let top=candidates[0]||{value:'',score:0};
   return {...top,value:top.value.replace(/^\d{5,12}\s*[-:]\s*/,'').trim().slice(0,150)};
  }
+ // OCR Türkçe plakalarda harf/rakam karışıklıklarına yatkındır. Düzeltmeleri
+ // yalnızca plaka etiketinin yakınında ve plakanın doğru segmentinde uygula.
  function plateFrom(lines){
-  const label=/(?:ARAC|CEKICI|KAMYON|TIR|VASITA|TASIT|SEVK\s+ARACI)?\s*PLAKA(?:SI)?(?:\s+(?:NUMARASI|NO))?|ARAC\s+NO/;
-  const rx=/(^|[^A-Z0-9])((?:0[1-9]|[1-7]\d|8[01]))[\s./-]*([A-Z]{1,3})[\s./-]*(\d{2,5})(?![A-Z0-9])/g;
-  const matches=new Map();
-  const add=(s,score,index)=>{const v=fold(s).replace(/[QWX]/g,'?');rx.lastIndex=0;let m;
-   while((m=rx.exec(v))){const plate=m[2]+' '+m[3]+' '+m[4];const sc=score-(/(?:DORSE|ROMORK)/.test(v)?6:0);const prior=matches.get(plate);if(!prior||sc>prior.score)matches.set(plate,{value:plate,score:sc,index});}
-  };
-  lines.forEach((line,i)=>{const f=fold(line),hit=label.test(f);add(line,hit?16:4,i);if(hit){if(lines[i+1])add(lines[i+1],10,i+1);if(lines[i+2])add(lines[i+2],5,i+2);}});
-  const ordered=[...matches.values()].sort((a,b)=>b.score-a.score||a.index-b.index),top=ordered[0]||{value:'',score:0};
-  let hint='';if(!top.value)for(let i=0;i<lines.length;i++){
-   const u=fold(lines[i]);if(!label.test(u))continue;
-   const tail=u.replace(/^.*?PLAKA(?:SI)?(?:\s+(?:NUMARASI|NO))?\s*[:=-]?\s*/,'');
-   const candidate=tail.match(/\b[A-Z0-9]{5,10}\b/)||(fold(lines[i+1]||'').match(/\b[A-Z0-9]{5,10}\b/));
-   if(candidate){hint=candidate[0];break}
+  const normalized=lines.map(fold),seen=new Map(),hints=[];
+  const plateLabel=/(?:ARAC|CEKICI|KAMYON|TIR|VASITA|TASIT|SEVK\s+ARACI|DORSE|ROMORK)?\s*PLAKA(?:SI)?(?:\s+(?:NUMARASI|NO))?|ARAC\s+NO/;
+  const anyLabel=/(?:ARAC|CEKICI|DORSE|ROMORK)?\s*PLAKA(?:SI)?(?:\s+(?:NUMARASI|NO))?/g;
+  const province=t=>t.replace(/[OS]/g,x=>x==='O'?'0':'5').replace(/[IL]/g,'1').replace(/B/g,'8');
+  const digits=t=>t.replace(/[OQ]/g,'0').replace(/[ILS]/g,x=>x==='S'?'5':'1').replace(/B/g,'8');
+  const letters=t=>t.replace(/0/g,'O').replace(/1/g,'I').replace(/5/g,'S').replace(/8/g,'B');
+  const candidates=/(^|[^A-Z0-9])([0-9OSIBL]{2})[\s.\/-]*([A-Z0158]{1,3})[\s.\/-]*([0-9OQISBL]{2,5})(?![A-Z0-9])/g;
+  function add(segment,index,label,kind,base){
+   const u=fold(segment),isTrailer=kind==='trailer';let m;
+   candidates.lastIndex=0;
+   while((m=candidates.exec(u))){
+    const pr=province(m[2]),letPart=letters(m[3]),num=digits(m[4]);
+    if(!/^\d{2}$/.test(pr)||Number(pr)<1||Number(pr)>81||!/^[A-Z]{1,3}$/.test(letPart)||!/^\d{2,5}$/.test(num))continue;
+    const repaired=pr!==m[2]||letPart!==m[3]||num!==m[4];
+    // Etiketsiz OCR'dan yapılan onarımları güvenilir kabul etme.
+    if(repaired&&!label)continue;
+    const value=pr+' '+letPart+' '+num;
+    const score=base+(isTrailer?-5:0)-(repaired?4:0);
+    const key=value+'|'+(isTrailer?'dorse':'arac');
+    const prev=seen.get(key);if(!prev||score>prev.score)seen.set(key,{value,score,index,repaired,role:isTrailer?'dorse':'arac',original:m[0].trim()});
+   }
   }
-  return {...top,hint,ambiguous:ordered.some(x=>x.value!==top.value&&x.score>=top.score-2)};
+  normalized.forEach((line,i)=>{
+   const labels=[...line.matchAll(anyLabel)];
+   if(labels.length){
+    for(let n=0;n<labels.length;n++){
+     const hit=labels[n],beg=hit.index+hit[0].length,end=n+1<labels.length?labels[n+1].index:line.length;
+     const prefix=line.slice(Math.max(0,hit.index-20),hit.index+hit[0].length);
+     const isTrailer=/(?:DORSE|ROMORK)/.test(prefix);
+     const beforeCount=seen.size;add(line.slice(beg,end),i,true,isTrailer?'trailer':'truck',isTrailer?17:26);
+     if(seen.size===beforeCount){for(let j=1;j<=2;j++)if(normalized[i+j]&&!plateLabel.test(normalized[i+j]))add(normalized[i+j],i+j,true,isTrailer?'trailer':'truck',16-j*3)}
+    }
+   }else{
+    add(line,i,false,'truck',3);
+   }
+   if(plateLabel.test(line)&&!/[0-9]{2}\s*[A-Z]{1,3}\s*[0-9]{2,5}/.test(line))hints.push(line.slice(-38));
+  });
+  const list=[...seen.values()].sort((a,b)=>b.score-a.score||a.index-b.index);
+  const trucks=list.filter(x=>x.role==='arac'),trailers=list.filter(x=>x.role==='dorse');
+  const top=trucks[0]||{value:'',score:0},trailer=trailers[0]||{value:'',score:0};
+  return {...top,trailer:trailer.value,trailerScore:trailer.score,
+   hint:!top.value?hints.find(Boolean)||'':'',
+   ambiguous:trucks.some(x=>x.value!==top.value&&x.score>=top.score-5),
+   repaired:!!top.repaired,
+   candidates:list.slice(0,6).map(x=>({value:x.value,role:x.role,review:x.repaired}))};
  }
  function palletFrom(lines){
   const opts=[];const add=(str,score,i)=>{const n=qty(str);if(n!==null)opts.push({value:n,score,index:i})};
@@ -114,7 +146,7 @@
    // "Sıra No | Mal | Miktar | Miktar Birimi" e-İrsaliye şablonunu tanı.
    const isProductHeader=/^(?:MAL|MAL\s*\/\s*HIZMET|MALZEME(?:\s+(?:KODU|TANIMI))?|URUN(?:\s+(?:ADI|KODU|TANIMI))?|STOK\s+KODU|URUN\s*\/\s*HIZMET)$/.test(u)
      || /(?:MALZEME\s+(?:KODU|TANIMI)|URUN\s+ADI|MAL\s*\/\s*HIZMET|STOK\s+KODU)/.test(u)
-     || /\bMAL\b.*\bMIKTAR\b/.test(u);
+     || /\bMAL\b.*\bMIKTAR\b/.test(u) || (/^SIRA\s*NO/.test(u)&&/\bMAL\b/.test(fold(lines.slice(i,i+5).join(' '))));
    if(isProductHeader){
     const header=fold(lines.slice(Math.max(0,i-2),i+7).join(' '));
     if(/(?:BIRIM|MIKTAR|KOLI|K\.?\s*AD\.?|TOPLAM)/.test(header)){
@@ -154,14 +186,16 @@
     if(rows.length)break;
    }
   }
-  // Palet ayrı bir mal satırı olarak "15 Adet" yazılabilir. Bu, sevk
-  // palet sayısına adaydır; otomatik toplam palet kabul edilmez.
-  const palletItems=rows.filter(r=>r.unit==='adet'&&/\b(?:EURO\s+)?(?:PALET|PALLET|PALEx|TURPAL)\b/.test(fold(r.name))&&Number.isSafeInteger(r.rawAmount)&&r.rawAmount>0);
-  const palletSuggestion=palletItems.length===1?{value:palletItems[0].rawAmount,source:palletItems[0].name}:null;
-  if(rows.length===1&&pal.value!==null&&rows[0].pallets===0){rows[0].pallets=pal.value;rows[0].review=true}
-  const confidence={supplier:supplier.score>=12?'yüksek':supplier.score>=6?'orta':'düşük',invoice:invoice.score>=12?'yüksek':invoice.score>=7?'orta':'düşük',plate:plate.score>=10&&!plate.ambiguous?'yüksek':plate.score>=4?'orta':'düşük',pallets:pal.score>=10&&!pal.ambiguous?'yüksek':pal.score>=5?'orta':'düşük'};
-  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?(palletSuggestion?'Palet ürünü '+palletSuggestion.value+' adet görünüyor; toplam palet sayısı olarak kullanmadan önce onaylayın.':'Bu belgede toplam palet sayısı belirtilmemiş olabilir; 0 kabul etmeyin.'):null,rows.some(x=>x.unit==='adet')?'Adet cinsinden okunan ürünleri koli olarak kaydetmeden önce karşılığını kontrol edin.':null,rows.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null].filter(Boolean);
-  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,plateHint:plate.hint,totalPallets:pal.value,palletSuggestion,confidence,rows,notes,raw:String(raw||'')};
+  // Euro palet satırı ürün kolisi değildir. Kullanıcının işlemi açısından
+  // 'depoda kalan palet' olarak ayrı göster; sevkiyat palet toplamına ekleme.
+  const palletPattern=/(?:\bPALET\b|\bPALLET\b|\bTURPAL\b|\bPALEX\b)/;
+  const depotItems=rows.filter(r=>r.unit==='adet'&&palletPattern.test(fold(r.name))&&Number.isSafeInteger(r.rawAmount)&&r.rawAmount>0);
+  const depotPallets=depotItems.length===1?depotItems[0].rawAmount:null;
+  const goods=rows.filter(r=>!depotItems.includes(r));
+  if(goods.length===1&&pal.value!==null&&goods[0].pallets===0){goods[0].pallets=pal.value;goods[0].review=true}
+  const confidence={supplier:supplier.score>=12?'yüksek':supplier.score>=6?'orta':'düşük',invoice:invoice.score>=12?'yüksek':invoice.score>=7?'orta':'düşük',plate:plate.score>=20&&!plate.ambiguous&&!plate.repaired?'yüksek':plate.score>=8?'orta':'düşük',pallets:pal.score>=10&&!pal.ambiguous?'yüksek':pal.score>=5?'orta':'düşük'};
+  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Sevkiyatın toplam taşıma palet sayısı belirtilmemiş olabilir; boş bırakın.':null,goods.some(x=>x.unit==='adet')?'Adet cinsinden okunan ürünleri koli olarak kaydetmeden önce karşılığını kontrol edin.':null,goods.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null].filter(Boolean);
+  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,trailerPlate:plate.trailer,plateCandidates:plate.candidates,plateHint:plate.hint,totalPallets:pal.value,depotPallets,depotPalletRows:depotItems,confidence,rows:goods,notes,raw:String(raw||'')};
  }
  const api={parse,productFromLine,linesOf};root.AKTIVA_WAYBILL_PARSE=api;
  if(typeof module==='object'&&module.exports)module.exports=api;

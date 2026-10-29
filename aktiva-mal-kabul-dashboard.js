@@ -54,6 +54,8 @@ window.addEventListener('aktiva:shipment-saved',()=>{
   update();
 });
 function update(){if(document.body.dataset.role==='count'&&document.getElementById('akd-dashboard'))document.body.classList.add('akd-home');if(busy)return;init();const on=active();document.body.classList.toggle('akd-home',!!on);if(!on)return;const root=$('#akd-dashboard');if(!root)return;
+// Ayarlar açıkken periyodik veri yenilemesi açılmış bölümleri ve odak/anahtar durumunu sıfırlamasın.
+if(akdPage==='settings' && root.querySelector('.akd-settings-options')){akdApplyPrefs(root);return;}
 if(akdPage==='reports' && root.querySelector('#akmr-start') && root.querySelector('#akmr-end'))return;
 // Kullanici barkod ararken filtre veya secim kaybolmasin.
 if(akdPage==='catalog' && root.querySelector('#akd-catalog-mount'))return;

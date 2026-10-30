@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V8.
+/* AKTIVA / İrsaliye ayrıştırıcı V9.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -9,6 +9,20 @@
  const linesOf=x=>String(x||'').split(/\r?\n/).map(clean).filter(Boolean);
  const signature=x=>fold(x).replace(/[^A-Z0-9]/g,'');
  const qty=s=>{const x=clean(s).replace(/\s/g,'').replace(/\./g,'').replace(/,/g,'.');if(!/^\d+(?:\.0+)?$/.test(x))return null;const n=Number(x);return Number.isSafeInteger(n)&&n>=0&&n<=999999?n:null};
+ // Kullanıcının KASA PALET KODLARI.xlsx referans dosyasındaki tam eşleşmeler.
+ // Prefix üzerinden tür türetilmez: 9900145 bir KASA kodudur.
+ const PACKAGING_REFERENCE=Object.freeze({"9900351":{"name":"PALET EURO-TURPAL 80X120CM BİRPAL","type":"palet"},"9900352":{"name":"PALET DÜSSELDORF-TURPAL 60X80CM BİRPAL","type":"palet"},"9900353":{"name":"PALET EURO-TURPAL 80X120CM PCS","type":"palet"},"9900354":{"name":"PALET DÜSSELDORF-TURPAL 60X80CM PCS","type":"palet"},"9900355":{"name":"PALET EURO-TURPAL 80X120CM PRESTİJ","type":"palet"},"9900356":{"name":"PALET DÜSSELDORF-TURPAL 60X80CM PRESTİJ","type":"palet"},"9900360":{"name":"PALET EURO-TURPAL 80X120CM P.GLOBAL","type":"palet"},"9900362":{"name":"PALET DÜSSELDORF-TURPAL 60X80CM P.GLOBAL","type":"palet"},"9900022":{"name":"PALET EURO-TURPAL 80X120CM PALEX","type":"palet"},"9900023":{"name":"PALET DÜSSELDORF-TURPAL 60X80CM PALEX","type":"palet"},"9900369":{"name":"PALET EURO-TURPAL 80X120 CM RENTAPAL","type":"palet"},"9900370":{"name":"PALET DÜSSELDORF-TURPAL 60X80 CM RENTAPAL","type":"palet"},"9900363":{"name":"PALET EURO-TURPAL 80X120CM TEDARİKÇİ","type":"palet"},"9900364":{"name":"PALET DÜSSLDORF-TURPAL 60X80CM TEDARİKÇİ","type":"palet"},"9800011":{"name":"YOĞURT KASASI","type":"kasa"},"9800012":{"name":"SEBZE KASASI","type":"kasa"},"9800145":{"name":"IFCO YOĞURT KASASI","type":"kasa"},"9800036":{"name":"TRENTO BÜYÜK KATLANABİLİR KASA 64","type":"kasa"},"9900145":{"name":"KASA KATLANIR YOĞURT 4419 IFCO","type":"kasa"},"9900175":{"name":"KARPUZ BOX BÜYÜK","type":"kasa"},"9800042":{"name":"KARPUZ BOX KÜÇÜK","type":"kasa"},"9800034":{"name":"TRENTO KÜÇÜK KATLANABİLİR KASA 64","type":"kasa"}});
+ const packagingReference=code=>PACKAGING_REFERENCE[String(code||'').replace(/\D/g,'')]||null;
+ const knownCodeIn=text=>{const m=String(text||'').match(/(?:^|\D)(?:98|99)\d{5}(?!\d)/g)||[];for(const raw of m){const code=raw.replace(/\D/g,'');if(packagingReference(code))return code}return ''};
+ function packagingKind(row){
+  const code=packagingReference(row.sku)?String(row.sku):knownCodeIn(row.name);
+  if(code)return {code,type:PACKAGING_REFERENCE[code].type,name:PACKAGING_REFERENCE[code].name,known:true};
+  const name=fold(row.name||'');
+  // Gerçek ürünlerin içindeki genel 'kasa' kelimesini tek başına ambalaj sanma.
+  if(/^(?:\d{1,3}\s+)?(?:PALET|PALLET|PLT)\b/.test(name)||/\b(?:TURPAL|PALEX)\b/.test(name))return {code:row.sku||'',type:'palet',name:clean(row.name),known:false};
+  if(/^(?:(?:IFCO|TRENTO|SEBZE|YOGURT|KARPUZ)\s+)?(?:KASA|BOX)\b/.test(name)||/\b(?:KASASI|KATLANABILIR\s+KASA|KATLANIR\s+KASA|KARPUZ\s+BOX)\b/.test(name))return {code:row.sku||'',type:'kasa',name:clean(row.name),known:false};
+  return null;
+ }
  const heading=x=>/^(?:SIRA(?:\s+NO)?|MAL\s*$|MALZEME(?:\s+(?:KODU|TANIMI))?|ÜRÜN(?:\s+(?:ADI|KODU))?|STOK\s+KODU|KALEM|BIRIM|MIKTAR|TOPLAM|VERGI|IRSALIYE|BELGE\s+NO|TARIH|SAYFA|VKN|ETTN|TCKN|ARAC\s+PLAKA|ACIKLAMALAR|TASIYICI|TELEFON|ADRES)/.test(fold(x));
  const footer=x=>/^(?:TASIYICI\s+BILGILERI|ACIKLAMALAR|TESLIM\s+ALAN|GENEL\s+TOPLAM|ODENECEK|TOPLAM\s+(?:KDV|TUTAR)|BANKA|KREDI\s+KARTI)/.test(fold(x));
  // E-irsaliye no: üç harfli seri + 4 haneli yıl + 9 haneli sıra.
@@ -225,6 +239,32 @@
   const top=Math.max(0,Math.floor(mid-Math.max(45,height*.025))),bottom=Math.min(height,Math.ceil(mid+Math.max(48,height*.028)));
   return right-left>=120&&bottom-top>=30?{left,top,width:right-left,height:bottom-top}:null;
  }
+ // Birden fazla palet/kasa satırında her kodun miktar hücresini ayrı oku.
+ // Kod yoksa 'diğer palet/kasa' için yanlış satıra miktar atamamak adına tahmin yapma.
+ function findPackagingCells(tsv,width,height){
+  if(!tsv||!width||!height)return [];
+  const words=[];
+  for(const line of String(tsv).split(/\r?\n/).slice(1)){
+   const c=line.split('\t');if(c.length<12||Number(c[0])!==5)continue;
+   const value=clean(c.slice(11).join(' ')),x=Number(c[6]),y=Number(c[7]),w=Number(c[8]),h=Number(c[9]);
+   if(value&&Number.isFinite(x)&&Number.isFinite(y)&&w>0&&h>0)words.push({value,x,y,w,h,mid:y+h/2});
+  }
+  const byCode=new Map();
+  for(const w of words){
+   const code=knownCodeIn(w.value);if(!code||byCode.has(code))continue;
+   const same=words.filter(v=>Math.abs(v.mid-w.mid)<Math.max(26,w.h*1.9));
+   const label=same.map(v=>v.value).join(' ');
+   if(!/(?:PALET|PALLET|PLT|KASA|KASASI|BOX|TURPAL|IFCO)/i.test(fold(label)))continue;
+   const headers=words.filter(v=>v.y<w.y&&v.y>0&&/MIKTAR|ADET|BIRIM/i.test(fold(v.value))&&v.x>w.x+width*.06&&v.x<width*.82)
+    .sort((a,b)=>Math.abs(a.x-width*.55)-Math.abs(b.x-width*.55));
+   const numbers=same.filter(v=>v.x>w.x+width*.06&&v.x<width*.82&&/^(?:\d{1,6}|ADET|KOL[Iİ])$/i.test(v.value));
+   const x=headers[0]?.x??numbers[0]?.x??width*.54;
+   const left=Math.max(0,Math.floor(x-Math.max(90,width*.05))),right=Math.min(width,Math.ceil(x+Math.max(310,width*.16)));
+   const top=Math.max(0,Math.floor(w.mid-Math.max(48,height*.025))),bottom=Math.min(height,Math.ceil(w.mid+Math.max(51,height*.03)));
+   if(right-left>130&&bottom-top>30)byCode.set(code,{code,rectangle:{left,top,width:right-left,height:bottom-top}});
+  }
+  return [...byCode.values()].slice(0,15);
+ }
  // İrsaliye No etiketinin karşısındaki dar hücreyi yüksek çözünürlükle tekrar oku.
  function findInvoiceCell(tsv,width,height){
   if(!tsv||!width||!height)return null;
@@ -248,10 +288,16 @@
   options.sort((a,b)=>b.score-a.score);
   return options[0]||null;
  }
+ function readFocusedPackagingQuantity(text){
+  const m=fold(text).match(/(?:^|[^\d])(\d{1,5})\s*[|;):.\]}JİIıi\-]?\s*(ADET|AD\.?|KOLI|PALET|PALLET|PAKET)(?=$|[^A-Z0-9])/);
+  if(!m)return null;
+  const amount=qty(m[1]);if(amount===null||amount===0)return null;
+  const unit=/^KOLI$/.test(m[2])?'koli':/^(?:PALET|PALLET)$/.test(m[2])?'palet':m[2]==='PAKET'?'paket':'adet';
+  return {amount,unit};
+ }
  function readFocusedDepotQuantity(text){
-  const m=fold(text).match(/(?:^|[^\d])(\d{1,5})\s*[|;):.\]}JİIıi\-]?\s*(ADET|AD\.?|KOLI|PALET|PALLET)\b/);
-  if(!m||!['ADET','AD','PALET','PALLET'].includes(m[2]))return null;
-  const n=qty(m[1]);return n!==null&&n>0?n:null;
+  const parsed=readFocusedPackagingQuantity(text);
+  return parsed&&['adet','palet'].includes(parsed.unit)?parsed.amount:null;
  }
  // Birden fazla OCR geçişi aynı ürünü hatalı harflerle yeniden üretebilir.
  // Farklı kodu olan veya farklı miktarlı gerçek ürünleri SİLME.
@@ -366,20 +412,60 @@
   const merged=dedupeProductRows(verified.length?[
    ...verified,...rows.filter(r=>r.unit!=='unknown'&&(r.sku||r.rawAmount)&&!verified.some(v=>sameProduct(r,v)))
   ]:rows);
-  // Paletler yalnızca EURO değildir. Palet stok satırını ürün olarak gösterme;
-  // miktarı okunamasa da ham metinden palet türünü tanıyabilmeliyiz.
-  const depotItems=merged.filter(r=>palletStockName(r.name)&&(r.unit==='adet'||r.unit==='palet'||r.unit==='unknown'));
-  const direct=depotItems.filter(r=>Number.isSafeInteger(r.rawAmount)&&r.rawAmount>0);
-  const overrides=Array.isArray(options.depotPalletCandidates)?options.depotPalletCandidates.filter(n=>Number.isSafeInteger(n)&&n>0):[];
-  const depotPallets=direct.length===1?direct[0].rawAmount:direct.length===0&&overrides.length===1?overrides[0]:null;
-  const palletLines=lines.filter(line=>palletStockName(line));
-  const depotPalletType=depotItems[0]?.name||palletLines.find(Boolean)||'';
-  const goods=merged.filter(r=>!depotItems.includes(r));
+  // Excel'de tanımlı 22 palet/kasa/box kodu tam kod eşleşmesiyle ayrılır.
+  // Aynı belgeyi farklı OCR geçişleri okuduğunda aynı satır tekrar ürün olmaz.
+  const packagingCandidates=[];
+  for(const row of merged){
+   const kind=packagingKind(row);
+   if(kind)packagingCandidates.push({...row,sku:kind.code||row.sku||'',name:kind.name,kind:kind.type,knownPackaging:kind.known});
+  }
+  for(const line of lines){
+   const code=knownCodeIn(line),ref=packagingReference(code);
+   if(!ref)continue;
+   const extracted=productFromLine(line,true);
+   const valid=extracted&&(extracted.sku===code||knownCodeIn(extracted.name)===code||fold(line).includes(fold(ref.name).slice(0,12)));
+   packagingCandidates.push({name:ref.name,sku:code,kind:ref.type,knownPackaging:true,
+    rawAmount:valid?extracted.rawAmount:null,unit:valid?extracted.unit:'unknown',
+    cartons:null,pallets:0,review:true,source:'metin-kod'});
+  }
+  const packagingMap=new Map();
+  const quality=r=>(r.rawAmount!=null?8:0)+(r.unit!=='unknown'?4:0)+(r.source==='tablo-konumu'?2:0);
+  for(const row of packagingCandidates){
+   const key=row.sku&&packagingReference(row.sku)?'CODE:'+row.sku:'NAME:'+signature(row.name);
+   if(!packagingMap.has(key)){packagingMap.set(key,{...row,conflict:false});continue}
+   const previous=packagingMap.get(key);
+   const best=quality(row)>quality(previous)?row:previous;
+   const a=previous.rawAmount,b=row.rawAmount;
+   const conflict=previous.conflict||(a!=null&&b!=null&&a!==b);
+   packagingMap.set(key,{...best,rawAmount:conflict?null:(best.rawAmount??previous.rawAmount??null),
+    unit:best.unit==='unknown'?previous.unit:best.unit,conflict,review:conflict||best.review});
+  }
+  const packagingRows=[...packagingMap.values()];
+  const hints=Array.isArray(options.packagingQuantityHints)?options.packagingQuantityHints:[];
+  for(const row of packagingRows){
+   if(row.conflict)continue;
+   const matches=hints.filter(h=>h&&String(h.code||'')===String(row.sku||'')&&Number.isSafeInteger(h.amount)&&h.amount>0);
+   const amounts=[...new Set(matches.map(h=>h.amount))];
+   if(amounts.length>1||(row.rawAmount!=null&&amounts.length===1&&row.rawAmount!==amounts[0])){
+    row.conflict=true;row.rawAmount=null;row.unit='unknown';row.review=true;continue;
+   }
+   if(row.rawAmount==null&&amounts.length===1){
+    row.rawAmount=amounts[0];row.unit=matches.find(h=>h.amount===amounts[0])?.unit||'unknown';row.review=true;
+   }
+  }
+  const legacy=Array.isArray(options.depotPalletCandidates)?options.depotPalletCandidates.filter(n=>Number.isSafeInteger(n)&&n>0):[];
+  if(packagingRows.length===1&&packagingRows[0].kind==='palet'&&packagingRows[0].rawAmount==null&&!packagingRows[0].conflict&&legacy.length===1){
+   packagingRows[0].rawAmount=legacy[0];packagingRows[0].unit='adet';
+  }
+  const goods=merged.filter(r=>!packagingKind(r));
+  const depotItems=packagingRows.filter(r=>r.kind==='palet');
+  const depotPallets=depotItems.length===1?depotItems[0].rawAmount:null;
+  const depotPalletType=depotItems.length===1?depotItems[0].name:'';
   // Genel palet sayısı, tek ürün olsa bile otomatik ürün paleti değildir.
   const confidence={supplier:supplier.score>=12?'yüksek':supplier.score>=6?'orta':'düşük',invoice:invoice.score>=12?'yüksek':invoice.score>=7?'orta':'düşük',plate:plate.score>=20&&!plate.ambiguous&&!plate.repaired?'yüksek':plate.score>=8?'orta':'düşük',pallets:pal.score>=10&&!pal.ambiguous?'yüksek':pal.score>=5?'orta':'düşük'};
-  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Sevkiyatın toplam taşıma palet sayısı belirtilmemiş olabilir; boş bırakın.':null,goods.some(x=>['adet','paket','palet'].includes(x.unit))?'Koli dışındaki ürün birimlerini doğrudan koliye çevirmeyin; kayıt öncesi koli karşılığını doğrulayın.':null,goods.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null].filter(Boolean);
-  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,trailerPlate:plate.trailer,plateCandidates:plate.candidates,plateHint:plate.hint,totalPallets:pal.value,depotPallets,depotPalletType,depotPalletRows:depotItems,confidence,rows:goods,notes,raw:String(raw||'')};
+  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Sevkiyatın toplam taşıma palet sayısı belirtilmemiş olabilir; boş bırakın.':null,goods.some(x=>['adet','paket','palet'].includes(x.unit))?'Koli dışındaki ürün birimlerini doğrudan koliye çevirmeyin; kayıt öncesi koli karşılığını doğrulayın.':null,goods.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null,packagingRows.some(x=>x.conflict)?'Aynı palet/kasa koduna farklı miktarlar okundu; belgeyi kontrol edin.':null,packagingRows.some(x=>x.rawAmount==null)?'Palet/kasa miktarları eksik olabilir; gözle doğrulayın.':null].filter(Boolean);
+  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,trailerPlate:plate.trailer,plateCandidates:plate.candidates,plateHint:plate.hint,totalPallets:pal.value,depotPallets,depotPalletType,depotPalletRows:depotItems,packagingRows,confidence,rows:goods,notes,raw:String(raw||'')};
  }
- const api={parse,parseTableTSV,findDepotCell,findInvoiceCell,readFocusedDepotQuantity,productFromLine,linesOf};root.AKTIVA_WAYBILL_PARSE=api;
+ const api={parse,parseTableTSV,findDepotCell,findPackagingCells,findInvoiceCell,readFocusedDepotQuantity,readFocusedPackagingQuantity,productFromLine,linesOf,PACKAGING_REFERENCE,packagingKind};root.AKTIVA_WAYBILL_PARSE=api;
  if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

@@ -1,4 +1,4 @@
-/* AKTİVA - Yeni Sevkiyat Kaydı / Akıllı İrsaliye Okuma V8
+/* AKTİVA - Yeni Sevkiyat Kaydı / Akıllı İrsaliye Okuma V9
  * Fotoğraflar kullanıcı cihazında Tesseract.js ile çözümlenir. Otomatik veritabanı kaydı YOK.
  */
 (()=>{'use strict';
@@ -11,7 +11,7 @@
   const form=byId('ak-form');if(!form||form.querySelector('#ak-waybill-start'))return;
   const products=[...form.querySelectorAll('h3')].find(h=>h.textContent.trim()==='Ürün Listesi');if(!products)return;
   const btn=document.createElement('button');btn.type='button';btn.id='ak-waybill-start';btn.className='ak-waybill-entry';
-  btn.innerHTML='<span class="akw-entry-icon" aria-hidden="true">▤</span><span><strong>İrsaliye Fotoğrafından Toplu Ürün Ekle</strong><small>Çekici/dorse plakası, gerçek ürünler ve palet kayıtlarını tara · Önce kontrol et</small></span><span aria-hidden="true">›</span>';
+  btn.innerHTML='<span class="akw-entry-icon" aria-hidden="true">▤</span><span><strong>İrsaliye Fotoğrafından Toplu Ürün Ekle</strong><small>Çekici/dorse plakası, gerçek ürünler ve palet/kasa kodlarını tara · Önce kontrol et</small></span><span aria-hidden="true">›</span>';
   products.before(btn);btn.onclick=open;
  }
  let observer;function observe(){attachButton();observer=new MutationObserver(attachButton);const root=byId('aktivaCountUI');if(root)observer.observe(root,{subtree:true,childList:true});else{const inter=new MutationObserver(()=>{if(byId('aktivaCountUI')){inter.disconnect();observe()}});inter.observe(document.body,{childList:true,subtree:true})}}
@@ -19,7 +19,7 @@
  function status(s,type=''){const t=byId('akw-status');if(t){t.textContent=s;t.dataset.type=type}}
  function close(){if(busy){status('Fotoğraf işlenirken pencereyi kapatmak için işlemin bitmesini bekleyin.','warn');return;}const dlg=byId('akw-overlay');if(dlg)dlg.remove();objectUrls.forEach(u=>URL.revokeObjectURL(u));objectUrls=[];files=[];parsed=null;rotation=0;document.body.classList.remove('akw-open')}
  function open(){if(byId('akw-overlay'))return;
-  const dlg=document.createElement('div');dlg.id='akw-overlay';dlg.className='akw-overlay';dlg.innerHTML=`<section class="akw-dialog" role="dialog" aria-modal="true" aria-labelledby="akw-title"><header class="akw-head"><div><small>MAL KABUL • BELGE OKUMA</small><h2 id="akw-title">Akıllı İrsaliye Tarama</h2></div><button type="button" id="akw-close" aria-label="Kapat">×</button></header><div class="akw-body"><p class="akw-muted">Belge üzerinde yazıların olduğu bölüm otomatik büyütülür; alanlar farklı köşelerde olsa da aranır. Birden fazla sayfayı da galeriden yükleyebilirsiniz.</p><div class="akw-actions"><label class="akw-upload"><span>📷 Fotoğraf Çek</span><input type="file" accept="image/*" capture="environment" id="akw-camera"></label><label class="akw-upload alt"><span>🖼 Galeriden Yükle</span><input type="file" accept="image/*" multiple id="akw-gallery"></label></div><p class="akw-small">En fazla 3 fotoğraf, her biri en fazla 12 MB. Destek: JPG, PNG, WebP; cihaz açabiliyorsa HEIC.</p><div id="akw-thumbs" class="akw-thumbs"></div><div class="akw-actions"><label>Fotoğraf yönü<select id="akw-rotate"><option value="0">Normal</option><option value="90">90° sağa döndür</option><option value="270">90° sola döndür</option><option value="180">Ters çevir</option></select></label><button id="akw-read" type="button">Fotoğrafları Oku</button></div><p id="akw-status" role="status" aria-live="polite"></p><div id="akw-review" hidden><div class="akw-section"><h3>Algılanan belge bilgileri</h3><div class="akw-grid"><label>Gönderen firma <small id="akw-supplier-confidence"></small><input id="akw-supplier" maxlength="150" placeholder="Firma bulunamadı, yazın"></label><label>İrsaliye numarası <small id="akw-invoice-confidence"></small><input id="akw-invoice" maxlength="100" placeholder="İrsaliye no bulunamadı, yazın"></label><label>Çekici / araç plakası <small id="akw-plate-confidence"></small><input id="akw-plate" maxlength="20" autocomplete="off" placeholder="Örn. 48 ABC 123"></label><label>Dorse plakası <small id="akw-trailer-confidence"></small><input id="akw-trailer" maxlength="20" autocomplete="off" placeholder="Örn. 35 BZC 767"></label><label>Sevkiyat taşıma paleti (varsa) <small id="akw-pallets-confidence"></small><input id="akw-total-pallets" type="number" min="0" step="1" max="999999" placeholder="Belgede bulunamadı"></label></div><div class="akw-depot"><label>Depoda kalan palet (irsaliye satırı)<input id="akw-depot-pallets" type="number" min="0" step="1" max="999999" placeholder="İrsaliyede yok"></label><p id="akw-depot-hint" class="akw-small">Bu sayı, toplam taşıma paleti değildir. Bu ekranda kontrol amaçlı gösterilir; palet stoklarına otomatik işlenmez.</p></div><p class="akw-small">Plaka, belgenin farklı bölümlerinden aranır. Çekici/dorse plakalarını ve alıcı/gönderen firmayı kontrol edin. Depoda kalan palet türü farklı olabilir; sevkiyatın taşıma paletinden ayrıdır.</p></div><div class="akw-section"><div class="akw-row"><h3>Olası ürünler <span id="akw-count"></span></h3><button type="button" id="akw-add">+ Satır Ekle</button></div><div id="akw-rows" class="akw-rows"></div><p class="akw-small">Her ürün için belge üzerindeki miktar ve birim (Koli / Adet / Paket / Palet) ayrı gösterilir. Birim net değilse seçmeniz gerekir. Mevcut Mal Kabul sevkiyat formu koli ile çalıştığından, koli dışındaki ürünler için yalnızca doğruladığınız koli karşılığını aktarabiliriz; otomatik dönüşüm yapılmaz. Palet kayıtları ürünlerden ayrıdır.</p></div><p id="akw-pal-check" class="akw-pal-check" role="status"></p><details class="akw-raw"><summary>Okunan metni gör / düzelt ve yeniden çözümle</summary><textarea id="akw-raw" rows="8" placeholder="İrsaliye metnini buraya yapıştırabilirsiniz"></textarea><button type="button" id="akw-reparse">Metinden Tekrar Algıla</button></details><label class="akw-approve"><input type="checkbox" id="akw-approve"><span>Firma, çekici/dorse plakası, ürünler ve depoda kalan palet bilgisini kontrol ettim.</span></label><button id="akw-transfer" type="button" class="akw-transfer">Kontrol Ettim · Ürünleri Sevkiyata Ekle</button><p class="akw-small">Bu işlem yalnızca açık sevkiyat formunu doldurur. Veritabanına kayıt için ayrıca “Sevkiyatı Kaydet” seçilir.</p></div><details class="akw-raw"><summary>Fotoğraf okunmazsa metni elle yapıştır</summary><textarea id="akw-manual" rows="5" placeholder="Metni buraya yapıştırın. Örn. İrsaliye No: ABC2026000001234..."></textarea><button id="akw-fromtext" type="button">Metni Analiz Et</button></details></div></section>`;
+  const dlg=document.createElement('div');dlg.id='akw-overlay';dlg.className='akw-overlay';dlg.innerHTML=`<section class="akw-dialog" role="dialog" aria-modal="true" aria-labelledby="akw-title"><header class="akw-head"><div><small>MAL KABUL • BELGE OKUMA</small><h2 id="akw-title">Akıllı İrsaliye Tarama</h2></div><button type="button" id="akw-close" aria-label="Kapat">×</button></header><div class="akw-body"><p class="akw-muted">Belge üzerinde yazıların olduğu bölüm otomatik büyütülür; alanlar farklı köşelerde olsa da aranır. Birden fazla sayfayı da galeriden yükleyebilirsiniz.</p><div class="akw-actions"><label class="akw-upload"><span>📷 Fotoğraf Çek</span><input type="file" accept="image/*" capture="environment" id="akw-camera"></label><label class="akw-upload alt"><span>🖼 Galeriden Yükle</span><input type="file" accept="image/*" multiple id="akw-gallery"></label></div><p class="akw-small">En fazla 3 fotoğraf, her biri en fazla 12 MB. Destek: JPG, PNG, WebP; cihaz açabiliyorsa HEIC.</p><div id="akw-thumbs" class="akw-thumbs"></div><div class="akw-actions"><label>Fotoğraf yönü<select id="akw-rotate"><option value="0">Normal</option><option value="90">90° sağa döndür</option><option value="270">90° sola döndür</option><option value="180">Ters çevir</option></select></label><button id="akw-read" type="button">Fotoğrafları Oku</button></div><p id="akw-status" role="status" aria-live="polite"></p><div id="akw-review" hidden><div class="akw-section"><h3>Algılanan belge bilgileri</h3><div class="akw-grid"><label>Gönderen firma <small id="akw-supplier-confidence"></small><input id="akw-supplier" maxlength="150" placeholder="Firma bulunamadı, yazın"></label><label>İrsaliye numarası <small id="akw-invoice-confidence"></small><input id="akw-invoice" maxlength="100" placeholder="İrsaliye no bulunamadı, yazın"></label><label>Çekici / araç plakası <small id="akw-plate-confidence"></small><input id="akw-plate" maxlength="20" autocomplete="off" placeholder="Örn. 48 ABC 123"></label><label>Dorse plakası <small id="akw-trailer-confidence"></small><input id="akw-trailer" maxlength="20" autocomplete="off" placeholder="Örn. 35 BZC 767"></label><label>Sevkiyat taşıma paleti (varsa) <small id="akw-pallets-confidence"></small><input id="akw-total-pallets" type="number" min="0" step="1" max="999999" placeholder="Belgede bulunamadı"></label></div><div class="akw-depot"><strong>Palet / Kasa ayrımı</strong><p class="akw-small">Palet ve kasa kodları, referans listesindeki 22 koddan tanınır. Farklı türler ayrı kayıt olur; sevkiyat taşıma paleti değildir.</p></div><p class="akw-small">Plaka, belgenin farklı bölümlerinden aranır. Çekici/dorse plakalarını ve alıcı/gönderen firmayı kontrol edin. Depoda kalan palet türü farklı olabilir; sevkiyatın taşıma paletinden ayrıdır.</p></div><div class="akw-section"><div class="akw-row"><h3>İrsaliyedeki palet ve kasalar <span id="akw-packaging-count"></span></h3><button type="button" id="akw-packaging-add">+ Palet/Kasa Ekle</button></div><div id="akw-packaging-rows" class="akw-rows"></div><p class="akw-small">Her palet/kasa için kod, tür, miktar ve birim ayrı gösterilir. Bu satırlar normal ürün değildir ve otomatik palet/kasa stok hareketi oluşturmaz.</p></div><div class="akw-section"><div class="akw-row"><h3>Olası ürünler <span id="akw-count"></span></h3><button type="button" id="akw-add">+ Satır Ekle</button></div><div id="akw-rows" class="akw-rows"></div><p class="akw-small">Her ürün için belge üzerindeki miktar ve birim (Koli / Adet / Paket / Palet) ayrı gösterilir. Birim net değilse seçmeniz gerekir. Mevcut Mal Kabul sevkiyat formu koli ile çalıştığından, koli dışındaki ürünler için yalnızca doğruladığınız koli karşılığını aktarabiliriz; otomatik dönüşüm yapılmaz. Palet ve kasa kayıtları ürünlerden ayrıdır.</p></div><p id="akw-pal-check" class="akw-pal-check" role="status"></p><details class="akw-raw"><summary>Okunan metni gör / düzelt ve yeniden çözümle</summary><textarea id="akw-raw" rows="8" placeholder="İrsaliye metnini buraya yapıştırabilirsiniz"></textarea><button type="button" id="akw-reparse">Metinden Tekrar Algıla</button></details><label class="akw-approve"><input type="checkbox" id="akw-approve"><span>Firma, çekici/dorse plakası, ürünler ve palet/kasa kayıtlarını kontrol ettim.</span></label><button id="akw-transfer" type="button" class="akw-transfer">Kontrol Ettim · Ürünleri Sevkiyata Ekle</button><p class="akw-small">Bu işlem yalnızca açık sevkiyat formunu doldurur. Veritabanına kayıt için ayrıca “Sevkiyatı Kaydet” seçilir.</p></div><details class="akw-raw"><summary>Fotoğraf okunmazsa metni elle yapıştır</summary><textarea id="akw-manual" rows="5" placeholder="Metni buraya yapıştırın. Örn. İrsaliye No: ABC2026000001234..."></textarea><button id="akw-fromtext" type="button">Metni Analiz Et</button></details></div></section>`;
   document.body.append(dlg);document.body.classList.add('akw-open');
   dlg.querySelector('#akw-close').onclick=close;dlg.addEventListener('click',e=>{if(e.target===dlg)close()});
   dlg.querySelector('#akw-camera').onchange=e=>addFiles(e.target.files);
@@ -28,6 +28,7 @@
   dlg.querySelector('#akw-read').onclick=readImages;
   dlg.querySelector('#akw-fromtext').onclick=()=>parseText(byId('akw-manual').value);
   dlg.querySelector('#akw-reparse').onclick=()=>parseText(byId('akw-raw').value);
+  dlg.querySelector('#akw-packaging-add').onclick=()=>addPackagingRow({sku:'',name:'',kind:'palet',rawAmount:null,unit:'unknown'});
   dlg.querySelector('#akw-add').onclick=()=>addRow({name:'',sku:'',cartons:null,rawAmount:null,unit:'unknown',pallets:0,review:true});
   dlg.querySelector('#akw-transfer').onclick=transfer;
   dlg.querySelector('#akw-total-pallets').addEventListener('input', updatePalletSummary);
@@ -86,6 +87,23 @@
   else info.textContent=(amount||'—')+' '+labels[unit]+' okunuyor. Sistem bunu koli saymayacak; aktarım için doğruladığınız koli karşılığını ayrıca girin.';
   if(original!=='unknown'&&unit!==original)info.textContent+=' Birimi OCR sonucundan değiştirdiniz; irsaliyeyi kontrol edin.';
  }
+ function addPackagingRow(row){
+  const host=byId('akw-packaging-rows');if(!host)return;
+  const data=window.AKTIVA_WAYBILL_PARSE?.PACKAGING_REFERENCE||{};
+  const i=host.children.length,el=document.createElement('section');el.className='akw-packaging';
+  const known=!!data[String(row.sku||'')];
+  const values=Object.entries(data).map(([code,ref])=>`<option value="${esc(code)}" ${String(row.sku)===code?'selected':''}>${esc(code+' • '+ref.name)}</option>`).join('');
+  const special=!known&&(row.kind==='kasa'?'other-kasa':'other-palet');
+  el.innerHTML=`<div class="akw-row"><strong>Ambalaj ${i+1}</strong><button type="button" class="akw-delete" aria-label="Palet/kasa satırını kaldır">Sil</button></div><label>Kod / tür<select class="akw-pkg-code"><option value="">Kod seçin</option>${values}<option value="other-palet" ${special==='other-palet'?'selected':''}>Diğer palet (listede yok)</option><option value="other-kasa" ${special==='other-kasa'?'selected':''}>Diğer kasa / box (listede yok)</option></select></label><label>Palet / kasa adı<input class="akw-pkg-name" maxlength="200" value="${esc(row.name||'')}" placeholder="İrsaliyedeki palet/kasa adı"></label><div class="akw-triple"><label>Tür<input class="akw-pkg-kind" value="${row.kind==='kasa'?'Kasa / Box':'Palet'}" readonly></label><label>Miktar<input class="akw-pkg-amount" type="number" min="0" max="999999" step="1" placeholder="Kontrol et" value="${esc(row.rawAmount??'')}"></label><label>Birim<select class="akw-pkg-unit"><option value="unknown" ${row.unit==='unknown'?'selected':''}>Bilinmiyor</option><option value="adet" ${row.unit==='adet'?'selected':''}>Adet</option><option value="koli" ${row.unit==='koli'?'selected':''}>Koli</option><option value="palet" ${row.unit==='palet'?'selected':''}>Palet</option><option value="paket" ${row.unit==='paket'?'selected':''}>Paket</option></select></label></div><small class="akw-pkg-note">${row.conflict?'Birden fazla farklı miktar okundu, fotoğraftan doğrulayın.':row.rawAmount==null?'Miktar net okunamadı; fotoğraftan doğrulayın.':known?'Kod referans listesinden tanındı.':'Tür/kod için irsaliyeyi doğrulayın.'}</small>`;
+  el.querySelector('.akw-delete').onclick=()=>{el.remove();updatePackagingCount()};
+  el.querySelector('.akw-pkg-code').onchange=()=>{
+   const code=el.querySelector('.akw-pkg-code').value,ref=data[code];
+   if(ref){el.querySelector('.akw-pkg-name').value=ref.name;el.querySelector('.akw-pkg-kind').value=ref.type==='kasa'?'Kasa / Box':'Palet';}
+   else el.querySelector('.akw-pkg-kind').value=code==='other-kasa'?'Kasa / Box':'Palet';
+  };
+  host.append(el);updatePackagingCount();
+ }
+ function updatePackagingCount(){const counter=byId('akw-packaging-count');if(counter)counter.textContent='('+(byId('akw-packaging-rows')?.children.length||0)+')'}
  function updateCount(){const t=byId('akw-count');if(t)t.textContent='('+byId('akw-rows').children.length+')'}
  function updatePalletSummary(){
   const host=byId('akw-pal-check'),totalInput=byId('akw-total-pallets'),rows=byId('akw-rows');
@@ -98,12 +116,10 @@
  }
  function showParse(result){parsed=result;byId('akw-review').hidden=false;
   byId('akw-supplier').value=result.supplier||'';byId('akw-invoice').value=result.invoice||'';
-  byId('akw-plate').value=result.plate||'';byId('akw-trailer').value=result.trailerPlate||'';byId('akw-depot-pallets').value=result.depotPallets??'';if(result.plateHint)byId('akw-plate').placeholder='Şüpheli OCR: '+result.plateHint+' (kontrol et)';byId('akw-total-pallets').value=result.totalPallets??'';
+  byId('akw-plate').value=result.plate||'';byId('akw-trailer').value=result.trailerPlate||'';if(result.plateHint)byId('akw-plate').placeholder='Şüpheli OCR: '+result.plateHint+' (kontrol et)';byId('akw-total-pallets').value=result.totalPallets??'';
   byId('akw-supplier-confidence').textContent='Algılama: '+result.confidence.supplier;byId('akw-invoice-confidence').textContent='Algılama: '+result.confidence.invoice;
   byId('akw-plate-confidence').textContent='Algılama: '+result.confidence.plate;byId('akw-trailer-confidence').textContent=result.trailerPlate?'Dorse olarak bulundu':'Belgede bulunamadı';byId('akw-pallets-confidence').textContent='Algılama: '+result.confidence.pallets;
-  const depotHint=byId('akw-depot-hint');if(depotHint){
-   depotHint.textContent=result.depotPallets!==null?'İrsaliyedeki palet satırından '+result.depotPallets+' adet okundu'+(result.depotPalletType?' ('+result.depotPalletType+').':'.')+' Bu bilgi sevkiyatın taşıma paletine eklenmez ve otomatik stok hareketi oluşturmaz.':'Palet satırı veya miktarı güvenilir şekilde okunamadı. Euro, ahşap, plastik vb. palet türlerinden herhangi biri olabilir; fotoğraftan doğrulayın.';
-  }
+  byId('akw-packaging-rows').innerHTML='';(result.packagingRows||[]).forEach(addPackagingRow);updatePackagingCount();
   byId('akw-rows').innerHTML='';result.rows.forEach(addRow);updatePalletSummary();byId('akw-approve').checked=false;
   byId('akw-raw').value=result.raw||'';
   const text=(result.rows.length?result.rows.length+' olası ürün bulundu. ':'Otomatik ürün satırı bulunamadı. Metni kontrol edip satır ekleyebilirsiniz. ')+result.notes.join(' ');
@@ -205,7 +221,7 @@
  async function readImages(){if(busy)return;if(!files.length){status('Önce irsaliye fotoğrafı ekleyin.','warn');return}
   busy=true;byId('akw-read').disabled=true;byId('akw-close').disabled=true;status('Türkçe ve İngilizce belge okuma hazırlanıyor. İlk kullanımda internet gerekir.');
   try{
-   const tess=await ensureTesseract(),all=[],tables=[],depotPalletCandidates=[];
+   const tess=await ensureTesseract(),all=[],tables=[],depotPalletCandidates=[],packagingQuantityHints=[];
    worker=await tess.createWorker('tur+eng',1,{logger:m=>{if(m.status==='recognizing text')status('Belge okunuyor: %'+Math.round((m.progress||0)*100))}});
    await worker.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:tess.PSM?.AUTO||'3',user_defined_dpi:'300'});
    for(let i=0;i<files.length;i++){
@@ -238,7 +254,17 @@
      if(productData.tsv){
       const parser=window.AKTIVA_WAYBILL_PARSE;
       const tableResult=parser?.parse(productText,{tables:[productData.tsv]});
-      const depotFocus=tableResult?.depotPallets==null?parser?.findDepotCell(productData.tsv,picture.tableWidth,picture.tableHeight):null;
+      const packagingFocus=parser?.findPackagingCells?.(productData.tsv,picture.tableWidth,picture.tableHeight)||[];
+      const depotFocus=!packagingFocus.length&&tableResult?.depotPallets==null?parser?.findDepotCell(productData.tsv,picture.tableWidth,picture.tableHeight):null;
+      for(const item of packagingFocus.slice(0,10)){
+       try{
+        status('Palet/kasa kodu '+item.code+' için miktar hücresi yakından okunuyor...');
+        await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SINGLE_LINE||'7'});
+        const near=(await worker.recognize(picture.table,{rectangle:item.rectangle})).data.text||'';
+        const focused=parser.readFocusedPackagingQuantity(near);
+        if(focused)packagingQuantityHints.push({code:item.code,...focused});
+       }catch(err){console.warn('AKTİVA: ambalaj miktarı odak okuması atlandı',err)}
+      }
       if(depotFocus){
        status('Palet satırının miktar hücresi yakından okunuyor...');
        try{
@@ -253,7 +279,7 @@
      if(productText.trim())words+='\n'+productText;
     }
     if(!picture.table&&baseData.tsv)tables.push(baseData.tsv);
-    let first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
+    let first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates,packagingQuantityHints});
     if(picture.plateImage&&(!first?.plate||first.confidence?.plate!=='yüksek'||!first.trailerPlate)){
      status('Fotoğraf '+(i+1)+' çekici/dorse plakası için alt bölge yakın okunuyor...');
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SINGLE_BLOCK||'6'});
@@ -261,7 +287,7 @@
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
      if(plateText.trim())words+='\n'+plateText;
     }
-    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
+    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates,packagingQuantityHints});
     // Düzene bağlı kalmadan 2x2 örtüşen bölgeleri tek tek tarar. Özellikle
     // sağ sütundaki belge no, tablo miktarı ve alt kutudaki plaka için.
     if(!first?.supplier||!first?.invoice||!first?.plate||!first?.rows?.length||!picture.table){
@@ -277,13 +303,13 @@
       status('Fotoğraf '+(i+1)+' için detay taraması '+(k+1)+'/4');
       const extra=(await worker.recognize(picture.primary,{rectangle:tiles[k]})).data.text||'';
       if(extra.trim())words+='\n'+extra;
-      const chk=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
+      const chk=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates,packagingQuantityHints});
       if(chk?.supplier&&chk?.invoice&&chk?.plate&&chk?.rows?.length&&(picture.table||k>=2))break;
      }
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
     }
     // Kontrastlı odakta hâlâ alan eksikse tam belgeden seyrek yazıları oku.
-    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
+    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates,packagingQuantityHints});
     if(picture.full&&(!first?.supplier||!first?.plate||!first?.rows?.length||!first?.invoice)){
      status('Okunamayan alanlar için belgenin tamamı kontrol ediliyor...');
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SPARSE_TEXT||'11'});
@@ -291,7 +317,7 @@
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
      words+='\n'+extra;
     }
-    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates});
+    first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates,packagingQuantityHints});
     if(picture.table&&!first?.rows?.length){
      status('Fotoğraf '+(i+1)+' için ürün tablosu alternatif okuma deneniyor...');
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SPARSE_TEXT||'11'});
@@ -302,7 +328,7 @@
     }
     all.push(words);
    }
-   parseText(all.join('\n'),{tables,depotPalletCandidates});
+   parseText(all.join('\n'),{tables,depotPalletCandidates,packagingQuantityHints});
   }catch(e){status('Belge okunamadı: '+e.message+'. Fotoğrafı daha yakından çekebilir veya metin alanından düzeltebilirsiniz.','error')}
   finally{if(worker){try{await worker.terminate()}catch(_){ }worker=null}busy=false;byId('akw-read')&&(byId('akw-read').disabled=false);byId('akw-close')&&(byId('akw-close').disabled=false)}
  }
@@ -318,6 +344,7 @@
     pallets:Number(el.querySelector('.akw-pallets').value)};
   });
   if(!rows.length){status('Önce en az bir ürün satırı ekleyin.','warn');return}
+  if(rows.some(r=>window.AKTIVA_WAYBILL_PARSE?.packagingKind(r))){status('Palet/kasa kodlu satırlar ürün olarak aktarılamaz. Bu satırı üstteki Palet/Kasa bölümüne taşıyın.','warn');return}
   if(rows.some(r=>r.unit==='unknown')){status('Bazı ürünlerin birimi belli değil. Her satırdaki Birim alanını irsaliyeye göre seçin.','warn');return}
   if(rows.some(r=>!r.name||r.name.length>200||r.sku.length>80||r.emptyAmount||!Number.isSafeInteger(r.rawAmount)||r.rawAmount<=0||r.rawAmount>999999||!Number.isSafeInteger(r.pallets)||r.pallets<0||r.pallets>999999)){
    status('Ürün adı, miktar, birim ve palet alanlarını kontrol edin.','error');return
@@ -330,11 +357,10 @@
    const summary=converted.slice(0,6).map(r=>'• '+r.name+': '+r.rawAmount+' '+r.unit+' → '+r.cartons+' koli').join('\n');
    if(!confirm('Mevcut Mal Kabul kaydı yalnız KOLİ birimiyle çalışıyor. Aşağıdaki koli karşılıklarını irsaliye veya koli içi bilgisiyle doğruladınız mı?\n\n'+summary+(converted.length>6?'\n…':'')+'\n\nHatalı dönüşüm stok/sayım kaydını yanlış etkiler.'))return;
   }
-  const company=byId('akw-supplier').value.trim(),invoice=byId('akw-invoice').value.trim(),plate=byId('akw-plate').value.trim().toLocaleUpperCase('tr-TR'),trailer=byId('akw-trailer').value.trim().toLocaleUpperCase('tr-TR'),depot=byId('akw-depot-pallets').value.trim(),totalRaw=byId('akw-total-pallets').value.trim();
+  const company=byId('akw-supplier').value.trim(),invoice=byId('akw-invoice').value.trim(),plate=byId('akw-plate').value.trim().toLocaleUpperCase('tr-TR'),trailer=byId('akw-trailer').value.trim().toLocaleUpperCase('tr-TR'),totalRaw=byId('akw-total-pallets').value.trim();
   if(!company){status('Gönderen firma boş bırakılamaz.','error');return}
   if(plate&&(!/^(?:0[1-9]|[1-7]\d|8[01])\s*[A-Z]{1,3}\s*\d{2,5}$/.test(plate))){status('Plakayı kontrol edin. Örneğin 48 ABC 123 biçiminde yazın.','warn');return}
   if(trailer&&!/^(?:0[1-9]|[1-7]\d|8[01])\s*[A-Z]{1,3}\s*\d{2,5}$/.test(trailer)){status('Dorse plakasını kontrol edin.','warn');return}
-  if(depot!==''&&(!Number.isSafeInteger(Number(depot))||Number(depot)<0||Number(depot)>999999)){status('Depoda kalan palet sayısını kontrol edin.','warn');return}
   if(totalRaw!==''){
    const total=Number(totalRaw),allocated=rows.reduce((acc,r)=>acc+r.pallets,0);
    if(!Number.isSafeInteger(total)||total<0||total>999999){status('Toplam palet sayısı geçersiz.','error');return}
@@ -348,7 +374,7 @@
    if(existingInvoice&&invoice&&clean(existingInvoice)!==clean(invoice)&&!confirm('Formdaki irsaliye numarası değiştirilsin mi?')){status('İşlem iptal edildi.','warn');return}
    if(existingPlate&&plate&&clean(existingPlate)!==clean(plate)&&!confirm('Formdaki plaka '+existingPlate+' yerine fotoğraftan okunan '+plate+' yazılsın mı?')){status('İşlem iptal edildi.','warn');return}
    const fn=window.AKTIVA_applyWaybillResult;if(typeof fn!=='function')throw Error('Yeni Sevkiyat formu aktif değil');
-   const result=fn({supplier:company,invoice:invoice||existingInvoice,plate:plate||existingPlate,products:rows});if(depot!=='')alert('Depoda kalan '+depot+' palet okundu. Türü irsaliyeden kontrol edin. Bu miktar sevkiyat palet sayısına eklenmedi ve palet stoğuna otomatik yazılmadı. Palet Takibi/İade işleminizde ayrıca kaydedin.');close();
+   const result=fn({supplier:company,invoice:invoice||existingInvoice,plate:plate||existingPlate,products:rows});if(byId('akw-packaging-rows').children.length)alert('İrsaliyedeki palet/kasa satırları ürün formuna eklenmedi ve stok hareketi oluşturulmadı. Bu kayıtları ilgili palet/kasa sürecinde ayrıca kontrol edin.');close();
    const form=byId('ak-form');if(form)form.scrollIntoView({behavior:'smooth',block:'start'});
    if(result.skipped)console.info('AKTİVA OCR: yinelenen ürünler atlandı',result.skipped);
   }catch(e){status('Aktarım yapılamadı: '+e.message,'error')}

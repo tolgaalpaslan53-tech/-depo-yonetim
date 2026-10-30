@@ -68,3 +68,12 @@ body.akw-open{overflow:hidden!important}
 #akw-overlay .akw-product .akw-unit{font-weight:750;border-color:#88a2bf!important;background:#eef5ff!important}
 #akw-overlay .akw-product .akw-amount{font-variant-numeric:tabular-nums}
 @media(max-width:500px){#akw-overlay .akw-product .akw-triple select{padding:9px 4px!important;font-size:14px!important}#akw-overlay .akw-secondary label{font-size:11px}}
+
+/* V9 - Ambalaj kodları ürünlerden ayrı, mobilde okunaklı kartlar. */
+#akw-overlay .akw-packaging{border:1px solid #bed0e7;border-left:4px solid #1e7bb8;background:#f1f7ff;border-radius:11px;padding:12px;display:grid;gap:9px;margin:10px 0}
+#akw-overlay .akw-packaging strong{color:#18344f;font-size:13px}
+#akw-overlay .akw-packaging .akw-pkg-code{font-size:13px!important}
+#akw-overlay .akw-packaging .akw-pkg-kind{font-size:13px!important;background:#e9f0f8!important}
+#akw-overlay .akw-pkg-note{font-size:11px;line-height:1.5;color:#405a75}
+#akw-overlay .akw-packaging .akw-triple{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:500px){#akw-overlay .akw-packaging .akw-triple input,#akw-overlay .akw-packaging .akw-triple select{padding:8px 5px!important;font-size:13px!important}}

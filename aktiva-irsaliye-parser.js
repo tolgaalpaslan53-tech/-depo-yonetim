@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V6.
+/* AKTIVA / İrsaliye ayrıştırıcı V8.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -11,25 +11,35 @@
  const qty=s=>{const x=clean(s).replace(/\s/g,'').replace(/\./g,'').replace(/,/g,'.');if(!/^\d+(?:\.0+)?$/.test(x))return null;const n=Number(x);return Number.isSafeInteger(n)&&n>=0&&n<=999999?n:null};
  const heading=x=>/^(?:SIRA(?:\s+NO)?|MAL\s*$|MALZEME(?:\s+(?:KODU|TANIMI))?|ÜRÜN(?:\s+(?:ADI|KODU))?|STOK\s+KODU|KALEM|BIRIM|MIKTAR|TOPLAM|VERGI|IRSALIYE|BELGE\s+NO|TARIH|SAYFA|VKN|ETTN|TCKN|ARAC\s+PLAKA|ACIKLAMALAR|TASIYICI|TELEFON|ADRES)/.test(fold(x));
  const footer=x=>/^(?:TASIYICI\s+BILGILERI|ACIKLAMALAR|TESLIM\s+ALAN|GENEL\s+TOPLAM|ODENECEK|TOPLAM\s+(?:KDV|TUTAR)|BANKA|KREDI\s+KARTI)/.test(fold(x));
+ // E-irsaliye no: üç harfli seri + 4 haneli yıl + 9 haneli sıra.
+ // "e-İrsaliye" başlığı veya "İrsaliye Tarihi" numara etiketi DEĞİLDİR.
  function invoiceFrom(lines){
-  const label=/(?:E\s*-?\s*)?(?:SEVK\s+)?IRSALIYE\s*(?:NO|NUMARASI|NUM|#)?|BELGE\s*(?:NUMARASI|NO|#)|DOKUMAN\s*NO/;
-  const code=/\b[A-Z]{2,4}[0O]?20\d{2}[0-9OIS]{7,12}\b/;
-  const ignore=/(?:ETTN|UUID|VKN|TCKN|PLAKA|SAP\s*BELGE|MUSTERI\s*NO|TELEFON|IBAN)/;
-  let opts=[];
+  const label=/(?:^|[\s|])(?:E\s*-?\s*)?(?:SEVK\s+)?IRSALIYE\s*(?:NO(?:SU)?|NUMARASI|NUM|#)\b|\bBELGE\s*(?:NO(?:SU)?|NUMARASI)\b/;
+  const standard=/[A-Z]{3}20[0-9OIS]{2}[0-9OISBL]{9}/g;
+  const ignore=/(?:ETTN|UUID|VKN|TCKN|PLAKA|SAP\s*BELGE|MUSTERI\s+NO|TESLIMAT\s*NO|TELEFON|IBAN)/;
+  const opts=[];
+  const normalize=v=>v.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^([A-Z]{3})20([0-9OIS]{2})([0-9OISBL]{9})$/,
+   (_,series,year,serial)=>series+'20'+year.replace(/O/g,'0').replace(/[IS]/g,'1')+serial.replace(/[O]/g,'0').replace(/[I L]/g,'1').replace(/S/g,'5').replace(/B/g,'8'));
   lines.forEach((line,i)=>{
-   const u=fold(line),m=u.match(code),hasLabel=label.test(u);
-   if(!hasLabel&&ignore.test(u))return;
-   if(m)opts.push({value:m[0],score:hasLabel?15:8,index:i});
-   if(hasLabel){
-    const pos=u.search(label);const tail=clean(u.slice(pos+u.slice(pos).match(label)[0].length).replace(/^[\s:#=.-]+/,''));
-    for(const [value,weight] of [[tail,12],[fold(lines[i+1]||''),6]]){
-     if(!value||ignore.test(value)||/^(?:TARIH|ZAMANI|TIPI|SENARYO|SEVK)$/i.test(value))continue;
-     const exact=value.match(code);if(exact)opts.push({value:exact[0],score:weight+3,index:i});
-     else{const token=value.match(/\b[A-Z0-9][A-Z0-9/-]{7,29}\b/);if(token&&/[A-Z]/.test(token[0])&&/\d/.test(token[0]))opts.push({value:token[0],score:weight-2,index:i});}
+   const u=fold(line);if(ignore.test(u))return;
+   const hasLabel=label.test(u),pos=hasLabel?u.search(label):-1;
+   const tail=hasLabel?u.slice(pos+u.slice(pos).match(label)[0].length).replace(/^[\s:#=.|-]+/,''):'';
+   const contexts=[{value:tail,score:33},{value:hasLabel?fold(lines[i+1]||''):'',score:22},{value:u,score:hasLabel?30:8}];
+   for(const context of contexts){
+    if(!context.value||ignore.test(context.value))continue;
+    const joined=context.value.replace(/\s+(?=[0-9]{4,})/g,'').replace(/([A-Z]{3})\s+(20)/g,'$1$2');
+    standard.lastIndex=0;
+    for(const m of joined.matchAll(standard)){
+     const before=joined[m.index-1]||'',after=joined[m.index+m[0].length]||'';
+     if(/[A-Z0-9]/.test(before)||/[A-Z0-9]/.test(after))continue;
+     const value=normalize(m[0]);
+     if(/^[A-Z]{3}20\d{11}$/.test(value))opts.push({value,score:context.score,index:i});
     }
    }
   });
-  opts.sort((a,b)=>b.score-a.score||a.index-b.index);return opts[0]||{value:'',score:0};
+  opts.sort((a,b)=>b.score-a.score||a.index-b.index);
+  // Kodu hiç göremediysek ilişkili başka bir numarayı uydurup koyma.
+  return opts[0]||{value:'',score:0};
  }
  function supplierFrom(lines){
   const sayin=lines.findIndex(x=>/^(?:SAYIN|ALICI|MUSTERI|TESLIM\s+ALAN)\b/.test(fold(x)));
@@ -119,7 +129,7 @@
   let unit='unknown',rawAmount=null,pallets=0,core=s,code='';
   // Mimari: geniş boşluklara dayanmadan, tabloda '8450 Adet' veya '8450 Koli' yakala.
   const explicit=[...s.matchAll(/(\d{1,6}(?:[.,]\d{3})?(?:,0+)?)\s*[|;):]?\s*(KOL[Iİ]|KOL\.?|KT|ADET|AD|PALET|PALLET|PLT|PAKET)\b/gi)];
-  if(explicit.length){const hit=explicit.find(x=>/KOL[Iİ]|KT/i.test(x[2]))||explicit[explicit.length-1];rawAmount=qty(hit[1]);unit=/KOL[Iİ]|KT/i.test(hit[2])?'koli':/PALET|PLT/i.test(hit[2])?'palet':'adet';core=clean(s.slice(0,hit.index));const after=s.slice(hit.index+hit[0].length);const cm=after.match(/^\s*[|;:]?\s*(\d{5,10})\b/);if(cm)code=cm[1];}
+  if(explicit.length){const hit=explicit.find(x=>/KOL[Iİ]|KT/i.test(x[2]))||explicit[explicit.length-1];rawAmount=qty(hit[1]);unit=/KOL[Iİ]|KT/i.test(hit[2])?'koli':/PALET|PALLET|PLT/i.test(hit[2])?'palet':/PAKET/i.test(hit[2])?'paket':'adet';core=clean(s.slice(0,hit.index));const after=s.slice(hit.index+hit[0].length);const cm=after.match(/^\s*[|;:]?\s*(\d{5,10})\b/);if(cm)code=cm[1];}
   else if(inTable){const m=s.match(/^(.*?)\s+(\d{1,6}(?:[.,]\d{3})?)(?:\s+\d{1,6}(?:[.,]\d{3})?){0,2}\s*$/);if(m){core=m[1];rawAmount=qty(m[2]);unit='unknown';}}
   if(rawAmount===null||rawAmount===0)return null;
   // Ürün adının sonundan K. İçi / K. Ad / Toplam numeric hücrelerini kaldır.
@@ -129,7 +139,7 @@
   core=clean(core.replace(/^(?:[|!iıI\]\[.,\s]+)+/g,'').replace(/^\d{1,3}(?:[.)-])?\s+(?=[A-Za-zÇĞİÖŞÜçğıöşü])/, '').replace(/^[|;\s]+|[|;\s]+$/g,''));
   const title=fold(core);
   if(core.length<7||core.length>200||(core.match(/[a-zA-ZçğıöşüÇĞİÖŞÜ]{3,}/g)||[]).length<2||heading(core)||/^(?:K\.?\s*(?:ICI|AD)|BIRIM|TOPLAM|MIKTAR|SIRA\s*NO|BELGE)/.test(title))return null;
-  const pm=s.match(/\b(\d{1,5})\s*(?:PALET|PALLET|PLT)\b/i);if(pm&&unit!=='palet')pallets=Number(pm[1]);
+  const pm=s.match(/\b(\d{1,5})\s*(?:PALET|PALLET|PLT)\b/i);if(pm&&unit==='koli'&&!/^(?:\d{1,3}\s+)?(?:PALET|PALLET|PLT)\b/i.test(core))pallets=Number(pm[1]);
   return {name:core,sku:code,cartons:unit==='koli'?rawAmount:null,rawAmount,unit,pallets,review:unit!=='koli'||!inTable};
  }
  // Tesseract TSV'sinde her kelimenin gerçek x/y konumu vardır. Miktar ve
@@ -157,7 +167,7 @@
    for(const sample of [w.text,w.text+' '+nearby.map(v=>v.text).join(' ')]){
     const m=sample.match(unitRx);if(!m)continue;
     const n=qty(m[1]);if(n===null||n===0)continue;
-    const unit=/KOL[Iİ]|KT/i.test(m[2])?'koli':/PALET|PLT/i.test(m[2])?'palet':'adet';
+    const unit=/KOL[Iİ]|KT/i.test(m[2])?'koli':/PALET|PALLET|PLT/i.test(m[2])?'palet':/PAKET/i.test(m[2])?'paket':'adet';
     if(!qtyCandidates.some(c=>c.w===w))qtyCandidates.push({w,n,unit});break;
    }
   }
@@ -183,37 +193,115 @@
  // Euro palet satırının küçük miktar hücresi, tam tablo OCR'ında
  // çizgilerle birleşebiliyor. TSV koordinatlarıyla sadece o hücreye bakılır.
  // Kesin sayı bu fonksiyonda üretilmez; fotoğraf tekrar OCR edilir.
+ // Palet türü EURO/PLASTİK/AHŞAP vb. olabilir. Tür adını zorunlu tutma.
+ // Yalnızca miktar sütununun aynı hizasındaki palet kalemini hedefle.
  function findDepotCell(tsv,width,height){
   if(!tsv||!width||!height)return null;
   const words=[];
   for(const line of String(tsv).split(/\r?\n/).slice(1)){
-   const c=line.split('\t');if(Number(c[0])!==5||c.length<12)continue;
-   const text=clean(c.slice(11).join(' ')),x=Number(c[6]),y=Number(c[7]),w=Number(c[8]),h=Number(c[9]),conf=Number(c[10]);
-   if(text&&Number.isFinite(x)&&Number.isFinite(y)&&w>0&&h>0&&conf>=20)words.push({text,x,y,w,h,mid:y+h/2});
+   const c=line.split('\t');if(c.length<12||Number(c[0])!==5)continue;
+   const value=clean(c.slice(11).join(' ')),x=Number(c[6]),y=Number(c[7]),w=Number(c[8]),h=Number(c[9]);
+   if(value&&Number.isFinite(x)&&Number.isFinite(y)&&w>0&&h>0)words.push({text:value,x,y,w,h,mid:y+h/2});
   }
-  if(!words.length)return null;
-  const target=words.filter(w=>/^(?:PALET|PALLET|TURPAL|PALEX)$/i.test(w.text)&&w.x<width*.65)
-   .filter(w=>words.some(v=>Math.abs(v.mid-w.mid)<Math.max(28,w.h*1.7)&&/^(?:EURO|TURPAL|PALEX|PALET|PALLET)$/i.test(v.text)&&v!==w));
-  // Ürün satırından emin değilsek rastgele sayı eşleştirme.
-  if(!target.length)return null;
-  const zones=[];
-  for(const w of target){if(zones.some(z=>Math.abs(z.mid-w.mid)<Math.max(26,w.h*1.3)))continue;zones.push(w)}
-  if(zones.length!==1)return null;
-  const w=zones[0];
-  const anchors=words.filter(v=>v.x>w.x+width*.12&&v.x<width*.82&&/(?:MIKTAR|KOL[Iİ]|ADET)/i.test(fold(v.text))&&v.y<w.y);
-  anchors.sort((a,b)=>Math.abs(a.y-w.y)-Math.abs(b.y-w.y));
-  const xAnchor=anchors[0]?.x??width*.52;
-  const left=Math.max(0,Math.floor(xAnchor-Math.max(55,width*.035)));
-  const top=Math.max(0,Math.floor(w.mid-Math.max(42,w.h*1.3)));
-  const right=Math.min(width,Math.ceil(xAnchor+Math.max(340,width*.15)));
-  const bottom=Math.min(height,Math.ceil(w.mid+Math.max(45,w.h*1.6)));
-  if(right-left<150||bottom-top<30)return null;
-  return {left,top,width:right-left,height:bottom-top};
+  const targets=words.filter(w=>/^(?:PALET|PALLET|PLT|TURPAL|PALEX)$/i.test(w.text)&&w.x<width*.63);
+  if(!targets.length)return null;
+  const headings=words.filter(w=>/MIKTAR|KOL[Iİ]|ADET/i.test(fold(w.text))&&w.y<height*.65);
+  let options=[];
+  for(const w of targets){
+   // Palet tek başına belge başlığında geçiyorsa tablo satırı sanma.
+   const same=words.filter(v=>Math.abs(v.mid-w.mid)<Math.max(24,w.h*1.7));
+   if(same.length<3||!same.some(v=>v!==w&&v.x>w.x))continue;
+   const anchors=headings.filter(v=>v.y<w.y&&v.x>w.x+width*.035&&v.x<width*.75)
+    .sort((a,b)=>Math.abs(a.x-width*.54)-Math.abs(b.x-width*.54));
+   const otherQuantities=words.filter(v=>/^(?:\d{1,6}(?:[.,]\d{3})?|ADET|KOL[Iİ])$/i.test(v.text)&&v.x>w.x+width*.05&&v.x<width*.74)
+    .sort((a,b)=>Math.abs(a.mid-w.mid)-Math.abs(b.mid-w.mid));
+   const x=anchors[0]?.x??otherQuantities[0]?.x??width*.54;
+   options.push({mid:w.mid,x,score:(anchors.length?3:0)+(same.some(v=>/^(?:EURO|PLASTIK|AH[SŞ]AP|TURPAL|PALEX)$/i.test(v.text))?2:0)});
+  }
+  options.sort((a,b)=>b.score-a.score);
+  if(!options.length||options.slice(1).some(v=>v.score===options[0].score&&Math.abs(v.mid-options[0].mid)>55))return null;
+  const {mid,x}=options[0];
+  const left=Math.max(0,Math.floor(x-Math.max(80,width*.045))),right=Math.min(width,Math.ceil(x+Math.max(300,width*.14)));
+  const top=Math.max(0,Math.floor(mid-Math.max(45,height*.025))),bottom=Math.min(height,Math.ceil(mid+Math.max(48,height*.028)));
+  return right-left>=120&&bottom-top>=30?{left,top,width:right-left,height:bottom-top}:null;
+ }
+ // İrsaliye No etiketinin karşısındaki dar hücreyi yüksek çözünürlükle tekrar oku.
+ function findInvoiceCell(tsv,width,height){
+  if(!tsv||!width||!height)return null;
+  const words=[];
+  for(const line of String(tsv).split(/\r?\n/).slice(1)){
+   const c=line.split('\t');if(c.length<12||Number(c[0])!==5)continue;
+   const value=fold(c.slice(11).join(' ')),x=Number(c[6]),y=Number(c[7]),w=Number(c[8]),h=Number(c[9]),conf=Number(c[10]);
+   if(value&&Number.isFinite(x)&&Number.isFinite(y)&&w>0&&h>0&&conf>=12)words.push({value,x,y,w,h,mid:y+h/2});
+  }
+  const options=[];
+  for(const word of words){
+   if(!/IRSALIYE/.test(word.value))continue;
+   const nearby=words.filter(v=>v!==word&&Math.abs(v.mid-word.mid)<Math.max(word.h*1.5,25));
+   const no=nearby.find(v=>/^(?:NO|NO:|NOSU|NUMARASI)$/.test(v.value)&&v.x>=word.x);
+   // "İrsaliye Tarihi" ve yalnız "e-İrsaliye" başlıklarına göre hücre açma.
+   if(!no)continue;
+   const x=Math.min(width-1,Math.floor(no.x+no.w+4)),left=Math.max(0,x-12),top=Math.max(0,Math.floor(word.mid-Math.max(28,word.h*1.25)));
+   const right=Math.min(width,Math.ceil(x+Math.max(200,width*.24))),bottom=Math.min(height,Math.ceil(word.mid+Math.max(30,word.h*1.35)));
+   if(right-left>=100)options.push({left,top,width:right-left,height:bottom-top,score:word.x+no.x});
+  }
+  options.sort((a,b)=>b.score-a.score);
+  return options[0]||null;
  }
  function readFocusedDepotQuantity(text){
   const m=fold(text).match(/(?:^|[^\d])(\d{1,5})\s*[|;):.\]}JİIıi\-]?\s*(ADET|AD\.?|KOLI|PALET|PALLET)\b/);
-  if(!m||m[2]!=='ADET'&&m[2]!=='AD')return null;
+  if(!m||!['ADET','AD','PALET','PALLET'].includes(m[2]))return null;
   const n=qty(m[1]);return n!==null&&n>0?n:null;
+ }
+ // Birden fazla OCR geçişi aynı ürünü hatalı harflerle yeniden üretebilir.
+ // Farklı kodu olan veya farklı miktarlı gerçek ürünleri SİLME.
+ function sameProduct(a,b){
+  if(a.sku&&b.sku)return a.sku===b.sku;
+  const corrupt=x=>/(?:\bIE\s+DAN\b|\bCON\s*5532\b|[<>\[\]]{2,})/.test(fold(x.name));
+  // Tek iyi kodlu koli satırının yanında aynı ismin bozuk/eksik kodlu OCR
+  // yankısı varsa miktar da yanlış okunmuş olabilir. Birim/miktar farkını
+  // yalnız açıkça bozuk satırda görmezden gel.
+  const ghost=((!!a.sku&&!b.sku&&corrupt(b))||(!a.sku&&!!b.sku&&corrupt(a)));
+  if(!ghost&&a.rawAmount!=null&&b.rawAmount!=null&&a.rawAmount!==b.rawAmount)return false;
+  if(!ghost&&a.unit!=='unknown'&&b.unit!=='unknown'&&a.unit!==b.unit)return false;
+  const normalize=x=>fold(x).replace(/(?<=\d)[O](?=\d)/g,'0').replace(/[^A-Z0-9]+/g,' ').trim();
+  const an=normalize(a.name),bn=normalize(b.name);
+  const measures=x=>[...fold(x).matchAll(/\b\d+(?:[.,]\d+)?\s*(?:KG|GR|G|ML|LT|L)\b/g)].map(m=>m[0].replace(/\s/g,'')).sort().join('|');
+  const am=measures(a.name),bm=measures(b.name);
+  // 100G / 200G gibi gerçekten farklı ambalaj ölçülerini birleştirme.
+  if(!ghost&&am&&bm&&am!==bm)return false;
+  if(an===bn)return true;
+  const aw=an.split(' ').filter(w=>w.length>=3),bw=bn.split(' ').filter(w=>w.length>=3);
+  if(aw.length<3||bw.length<3)return false;
+  const min=Math.min(aw.length,bw.length);
+  const shared=aw.filter(x=>bw.includes(x)).length;
+  if(shared>=3&&shared/min>=.70)return true;
+  // OCR 100G -> 1006 gibi hata yapınca karakter sıralaması çoğunlukla korunur.
+  const compact=x=>x.replace(/\s+/g,'');let a1=compact(an),b1=compact(bn);
+  if(Math.min(a1.length,b1.length)<14)return false;
+  const len=Math.min(a1.length,b1.length),lim=Math.floor(len*.24);
+  // Fazla sonda kalan başlık/sipariş metnini karşılaştırmaya dahil etme.
+  a1=a1.slice(0,Math.min(a1.length,len+2));b1=b1.slice(0,Math.min(b1.length,len+2));
+  let prev=Array.from({length:b1.length+1},(_,j)=>j);
+  for(let i=1;i<=a1.length;i++){
+   const row=[i];for(let j=1;j<=b1.length;j++)row[j]=Math.min(prev[j]+1,row[j-1]+1,prev[j-1]+(a1[i-1]===b1[j-1]?0:1));
+   prev=row;
+  }
+  return prev[b1.length]<=lim;
+ }
+ const palletStockName=name=>/^(?:\d{5,14}\s+)?(?:PALET|PALLET|PLT)\b/.test(fold(name)) ||
+  /(?:\bPALET\b|\bPALLET\b|\bTURPAL\b|\bPALEX\b)/.test(fold(name))&&
+  /(?:\bEURO\b|\bAHSA[P B]\b|\bPLASTIK\b|\bTAHTA\b|\bTURPAL\b|\bPALEX\b|\b80\s*[X*]\s*120\b)/.test(fold(name));
+ function dedupeProductRows(rows){
+  const result=[];
+  const quality=r=>(r.sku?8:0)+(r.unit!=='unknown'?5:0)+(r.rawAmount!=null?5:0)+(r.source==='tablo-konumu'?3:0)-(/\b(?:IE|DAN|CON|5532)\b/.test(fold(r.name))?3:0);
+  for(const r of rows){
+   const found=result.findIndex(old=>sameProduct(old,r));
+   if(found<0){result.push(r);continue}
+   const prev=result[found],best=quality(r)>quality(prev)?r:prev,second=best===r?prev:r;
+   result[found]={...best,sku:best.sku||second.sku,cartons:best.cartons??second.cartons,rawAmount:best.rawAmount??second.rawAmount,unit:best.unit==='unknown'?second.unit:best.unit};
+  }
+  return result;
  }
  function parse(raw,options={}){
   const lines=linesOf(raw),invoice=invoiceFrom(lines),supplier=supplierFrom(lines),plate=plateFrom(lines),pal=palletFrom(lines);
@@ -273,26 +361,25 @@
   // tahminlere önceliklidir. Farklı taramaların metinlerini birleştirerek
   // asla hayali ikinci/üçüncü ürün üretmeyiz.
   const structured=(Array.isArray(options.tables)?options.tables:[]).flatMap(parseTableTSV);
-  if(structured.length){
-   const verified=[];for(const r of structured){
-    const duplicate=verified.find(v=>(r.sku&&r.sku===v.sku)||(signature(r.name)===signature(v.name)&&r.rawAmount===v.rawAmount));
-    if(!duplicate)verified.push(r);
-    else if(!duplicate.sku&&r.sku)duplicate.sku=r.sku;
-   }
-   rows.length=0;rows.push(...verified);
-  }
-  // Euro palet satırı ürün kolisi değildir. Kullanıcının işlemi açısından
-  // 'depoda kalan palet' olarak ayrı göster; sevkiyat palet toplamına ekleme.
-  const palletPattern=/(?:\bPALET\b|\bPALLET\b|\bTURPAL\b|\bPALEX\b)/;
-  const depotItems=rows.filter(r=>r.unit==='adet'&&palletPattern.test(fold(r.name))&&Number.isSafeInteger(r.rawAmount)&&r.rawAmount>0);
+  // Kontrol edilmiş gerçek tablo satırları, belgenin genel OCR satırlarından önceliklidir.
+  const verified=dedupeProductRows(structured);
+  const merged=dedupeProductRows(verified.length?[
+   ...verified,...rows.filter(r=>r.unit!=='unknown'&&(r.sku||r.rawAmount)&&!verified.some(v=>sameProduct(r,v)))
+  ]:rows);
+  // Paletler yalnızca EURO değildir. Palet stok satırını ürün olarak gösterme;
+  // miktarı okunamasa da ham metinden palet türünü tanıyabilmeliyiz.
+  const depotItems=merged.filter(r=>palletStockName(r.name)&&(r.unit==='adet'||r.unit==='palet'||r.unit==='unknown'));
+  const direct=depotItems.filter(r=>Number.isSafeInteger(r.rawAmount)&&r.rawAmount>0);
   const overrides=Array.isArray(options.depotPalletCandidates)?options.depotPalletCandidates.filter(n=>Number.isSafeInteger(n)&&n>0):[];
-  const depotPallets=depotItems.length===1?depotItems[0].rawAmount:depotItems.length===0&&overrides.length===1?overrides[0]:null;
-  const goods=rows.filter(r=>!depotItems.includes(r));
+  const depotPallets=direct.length===1?direct[0].rawAmount:direct.length===0&&overrides.length===1?overrides[0]:null;
+  const palletLines=lines.filter(line=>palletStockName(line));
+  const depotPalletType=depotItems[0]?.name||palletLines.find(Boolean)||'';
+  const goods=merged.filter(r=>!depotItems.includes(r));
   // Genel palet sayısı, tek ürün olsa bile otomatik ürün paleti değildir.
   const confidence={supplier:supplier.score>=12?'yüksek':supplier.score>=6?'orta':'düşük',invoice:invoice.score>=12?'yüksek':invoice.score>=7?'orta':'düşük',plate:plate.score>=20&&!plate.ambiguous&&!plate.repaired?'yüksek':plate.score>=8?'orta':'düşük',pallets:pal.score>=10&&!pal.ambiguous?'yüksek':pal.score>=5?'orta':'düşük'};
-  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Sevkiyatın toplam taşıma palet sayısı belirtilmemiş olabilir; boş bırakın.':null,goods.some(x=>x.unit==='adet')?'Adet cinsinden okunan ürünleri koli olarak kaydetmeden önce karşılığını kontrol edin.':null,goods.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null].filter(Boolean);
-  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,trailerPlate:plate.trailer,plateCandidates:plate.candidates,plateHint:plate.hint,totalPallets:pal.value,depotPallets,depotPalletRows:depotItems,confidence,rows:goods,notes,raw:String(raw||'')};
+  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Sevkiyatın toplam taşıma palet sayısı belirtilmemiş olabilir; boş bırakın.':null,goods.some(x=>['adet','paket','palet'].includes(x.unit))?'Koli dışındaki ürün birimlerini doğrudan koliye çevirmeyin; kayıt öncesi koli karşılığını doğrulayın.':null,goods.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null].filter(Boolean);
+  return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,trailerPlate:plate.trailer,plateCandidates:plate.candidates,plateHint:plate.hint,totalPallets:pal.value,depotPallets,depotPalletType,depotPalletRows:depotItems,confidence,rows:goods,notes,raw:String(raw||'')};
  }
- const api={parse,parseTableTSV,findDepotCell,readFocusedDepotQuantity,productFromLine,linesOf};root.AKTIVA_WAYBILL_PARSE=api;
+ const api={parse,parseTableTSV,findDepotCell,findInvoiceCell,readFocusedDepotQuantity,productFromLine,linesOf};root.AKTIVA_WAYBILL_PARSE=api;
  if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

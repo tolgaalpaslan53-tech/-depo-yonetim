@@ -61,3 +61,10 @@ body.akw-open{overflow:hidden!important}
 #akw-overlay .akw-depot{border:1px solid #bfd5ee;border-left:4px solid #2581ce;border-radius:12px;padding:12px;background:#eff7ff;margin:10px 0}
 #akw-overlay .akw-depot label{font-size:13px;font-weight:750}
 #akw-overlay .akw-depot p{color:#2c4f76;font-size:12px;line-height:1.5}
+
+/* V8: miktar/birim ayri; koli esdegeri yalniz koli disi urunlerde. */
+#akw-overlay .akw-secondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#akw-overlay .akw-conversion[hidden]{display:none!important}
+#akw-overlay .akw-product .akw-unit{font-weight:750;border-color:#88a2bf!important;background:#eef5ff!important}
+#akw-overlay .akw-product .akw-amount{font-variant-numeric:tabular-nums}
+@media(max-width:500px){#akw-overlay .akw-product .akw-triple select{padding:9px 4px!important;font-size:14px!important}#akw-overlay .akw-secondary label{font-size:11px}}

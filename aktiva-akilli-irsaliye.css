@@ -80,3 +80,9 @@ body.akw-open{overflow:hidden!important}
 
 /* V10: Ürün paleti kaldırıldı; koli karşılığı alanı tek sütunu doldurur. */
 #akw-overlay .akw-product .akw-secondary{grid-template-columns:minmax(0,1fr)}
+
+/* V11: doğrulama sırasında fotoğrafı hızlıca karşılaştır. */
+#akw-overlay .akw-proof{margin:0 0 16px;background:#eef4fc;border:1px solid #b9cde4;border-radius:12px;padding:12px}
+#akw-overlay .akw-proof summary{cursor:pointer;font-weight:700;color:#12395f}
+#akw-overlay #akw-proof-images{max-height:400px;overflow:auto;margin-top:12px}
+#akw-overlay #akw-proof-images img{max-width:100%;display:block;margin:8px auto;border-radius:5px;object-fit:contain}

@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V10.
+/* AKTIVA / İrsaliye ayrıştırıcı V11.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -20,7 +20,7 @@
   const name=fold(row.name||'');
   // Gerçek ürünlerin içindeki genel 'kasa' kelimesini tek başına ambalaj sanma.
   if(/^(?:\d{1,3}\s+)?(?:PALET|PALLET|PLT)\b/.test(name)||/\b(?:TURPAL|PALEX)\b/.test(name))return {code:row.sku||'',type:'palet',name:clean(row.name),known:false};
-  if(/^(?:(?:IFCO|TRENTO|SEBZE|YOGURT|KARPUZ)\s+)?(?:KASA|BOX)\b/.test(name)||/\b(?:KASASI|KATLANABILIR\s+KASA|KATLANIR\s+KASA|KARPUZ\s+BOX)\b/.test(name))return {code:row.sku||'',type:'kasa',name:clean(row.name),known:false};
+  if((/^(?:KASA|BOX)\b/.test(name)&&/\b(?:IFCO|TRENTO|KATLANIR|KATLANABILIR|PLASTIK|SEBZE|YOGURT|KARPUZ|DEPO)\b/.test(name))||/\b(?:KASASI|KATLANABILIR\s+KASA|KATLANIR\s+KASA|KARPUZ\s+BOX|IFCO\s+KASA)\b/.test(name))return {code:row.sku||'',type:'kasa',name:clean(row.name),known:false};
   return null;
  }
  const heading=x=>/^(?:SIRA(?:\s+NO)?|MAL\s*$|MALZEME(?:\s+(?:KODU|TANIMI))?|ÜRÜN(?:\s+(?:ADI|KODU))?|STOK\s+KODU|KALEM|BIRIM|MIKTAR|TOPLAM|VERGI|IRSALIYE|BELGE\s+NO|TARIH|SAYFA|VKN|ETTN|TCKN|ARAC\s+PLAKA|ACIKLAMALAR|TASIYICI|TELEFON|ADRES)/.test(fold(x));
@@ -142,8 +142,8 @@
   let s=clean(original),u=fold(s);if(s.length<8||footer(s)||heading(s)||/\b(?:VKN|TCKN|ETTN|VERGI|TELEFON|PLAKA|IBAN|KS:|SAYFA|TOPLAM\s+TUTAR|BAYI|MERSIS)\b/.test(u))return null;
   let unit='unknown',rawAmount=null,pallets=0,core=s,code='';
   // Mimari: geniş boşluklara dayanmadan, tabloda '8450 Adet' veya '8450 Koli' yakala.
-  const explicit=[...s.matchAll(/(\d{1,6}(?:[.,]\d{3})?(?:,0+)?)\s*[|;):]?\s*(KOL[Iİ]|KOL\.?|KT|ADET|AD|PALET|PALLET|PLT|PAKET)\b/gi)];
-  if(explicit.length){const hit=explicit.find(x=>/KOL[Iİ]|KT/i.test(x[2]))||explicit[explicit.length-1];rawAmount=qty(hit[1]);unit=/KOL[Iİ]|KT/i.test(hit[2])?'koli':/PALET|PALLET|PLT/i.test(hit[2])?'palet':/PAKET/i.test(hit[2])?'paket':'adet';core=clean(s.slice(0,hit.index));const after=s.slice(hit.index+hit[0].length);const cm=after.match(/^\s*[|;:]?\s*(\d{5,10})\b/);if(cm)code=cm[1];}
+  const explicit=[...s.matchAll(/(?<![A-Z0-9])(\d{1,6}(?:[.,]\d{3})?(?:,0+)?)(?!\d)\s*[|;):]?\s*(KOL[Iİ]|KOL\.?|KT|ADET|AD|PALET|PALLET|PLT|PAKET)\b/gi)];
+  if(explicit.length){const hit=explicit[0];rawAmount=qty(hit[1]);unit=/KOL[Iİ]|KT/i.test(hit[2])?'koli':/PALET|PALLET|PLT/i.test(hit[2])?'palet':/PAKET/i.test(hit[2])?'paket':'adet';core=clean(s.slice(0,hit.index));const after=s.slice(hit.index+hit[0].length);const cm=after.match(/^\s*[|;:]?\s*(\d{5,10})\b/);if(cm)code=cm[1];}
   else if(inTable){const m=s.match(/^(.*?)\s+(\d{1,6}(?:[.,]\d{3})?)(?:\s+\d{1,6}(?:[.,]\d{3})?){0,2}\s*$/);if(m){core=m[1];rawAmount=qty(m[2]);unit='unknown';}}
   if(rawAmount===null||rawAmount===0)return null;
   // Palet stok kodunun (örn. 9900022) bir rakamı OCR'da kaybolduğunda
@@ -177,7 +177,7 @@
   // sütunları OCR tarafından ayrı bloklara bölünse de aynı satıra alınır.
   const heights=words.map(w=>w.h).sort((a,b)=>a-b),median=heights[Math.floor(heights.length/2)]||20;
   const result=[];const qtyCandidates=[];
-  const unitRx=/(?:^|[^\d])(\d{1,6}(?:[.,]\d{3})?)\s*[|;):.\-İIıi]{0,2}\s*(KOL[Iİ]|KOL\.?|KT|ADET|AD\.?|PALET|PALLET|PLT|PAKET)\b/i;
+  const unitRx=/(?<![A-Z0-9])(\d{1,6}(?:[.,]\d{3})?)(?!\d)\s*[|;):.\-İIıi]{0,2}\s*(KOL[Iİ]|KOL\.?|KT|ADET|AD\.?|PALET|PALLET|PLT|PAKET)\b/i;
   // Birim ve miktar OCR'da ayrı kelimeler de olabilir.
   const spatial=words.slice().sort((a,b)=>a.y-b.y||a.x-b.x);
   for(const w of spatial){
@@ -205,6 +205,60 @@
    if(name.length<8||name.length>200||(name.match(/[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/g)||[]).length<2||heading(name)||footer(name)||/\b(?:ETTN|VKN|TCKN|PLAKA|SIPARIS\s+NO)\b/.test(normalized))continue;
    const duplicated=result.some(v=>signature(v.name)===signature(name)&&v.rawAmount===n);
    if(!duplicated)result.push({name,sku,cartons:unit==='koli'?n:null,rawAmount:n,unit,pallets:0,review:unit!=='koli',source:'tablo-konumu'});
+  }
+  // Satır numarası okunmasa bile kelimeler fiziksel olarak yan yana
+  // duruyorsa ve aynı TABLO bölgesindeyse ürün adını aday olarak kurtar.
+  // Özellikle 7.800 / 15 gibi hücreleri Tesseract tümden atlarken gereklidir.
+  const pageWidth=Math.max(...words.map(w=>w.x+w.w));
+  const knownTableItems=words.filter(w=>knownCodeIn(w.text));
+  const tableLabels=words.filter(w=>/^(?:MAL|MIKTAR|MALZEME|URUN)$/i.test(fold(w.text)));
+  const hasPhysicalTable=knownTableItems.length||tableLabels.length>=2;
+  if(hasPhysicalTable){
+   const anchors=words.filter(w=>w.x>pageWidth*.085&&w.x<pageWidth*.51&&w.conf>=35&&/[A-Za-zÇĞİÖŞÜçğıöşü]{3}/.test(w.text))
+    .sort((a,b)=>a.mid-b.mid||a.x-b.x);
+   const groups=[];
+   for(const w of anchors){
+    let g=groups.find(g=>Math.abs(g.mid-w.mid)<Math.max(12,median*.9));
+    if(!g){g={mid:w.mid,words:[]};groups.push(g)}
+    g.words.push(w);
+    g.mid=g.words.reduce((sum,x)=>sum+x.mid,0)/g.words.length;
+   }
+   for(const g of groups){
+    if(knownTableItems.length&&!knownTableItems.some(v=>Math.abs(v.mid-g.mid)<Math.max(65,median*3.5)))continue;
+    if(!knownTableItems.length&&tableLabels.length&&g.mid<Math.min(...tableLabels.map(v=>v.mid))+median)continue;
+    const physical=words.filter(v=>Math.abs(v.mid-g.mid)<Math.max(14,median*.9)&&v.x>pageWidth*.075&&v.x<pageWidth*.51&&v.conf>=27)
+      .sort((a,b)=>a.x-b.x);
+    const description=clean(physical.map(w=>w.text).join(' '));
+    if(description.length<12||description.length>180)continue;
+    const alpha=(description.match(/[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/g)||[]).length;
+    if(alpha<3||heading(description)||footer(description)||/\b(?:SAYIN|VERGI|VKN|ETTN|TCKN|TEL|ALIAS|ACIKLAMA|TASIYICI|DORSE|SOFOR|PLAKA|MUSTERI|SIPARIS|KODU|MALZEME|ADRES)\b/.test(fold(description)))continue;
+    const initial=description.replace(/^(?:(?:[iIlL1|.]|We)\s+){1,3}/i,'').replace(/^\d{1,3}[.)]?\s+(?=\w)/,'').trim();
+    const mark=initial.match(/^(\d{5,14})\s+(.+)$/);
+    const sku=mark?.[1]||'',ref=packagingReference(sku);
+    const name=ref?ref.name:mark?mark[2]:initial;
+    if(name.length<8||result.some(v=>sameProduct(v,{name,sku,unit:'unknown',rawAmount:null})))continue;
+    result.push({name,sku,cartons:null,rawAmount:null,unit:'unknown',pallets:0,review:true,source:'tablo-eksik-miktar'});
+   }
+  }
+  // Birim/miktar OCR'da kaybolsa bile ürün SATIRINI kaybetme. Yalnızca
+  // tablo solundaki sıra numarası + aynı hizadaki ürün metni varsa aday oluştur.
+  // Birim ve miktar asla uydurulmaz, kullanıcının kontrolüne bırakılır.
+  const mx=Math.max(...words.map(w=>w.x+w.w));
+  const rowWords=words.filter(w=>w.x<mx*.23&&/^\d{1,3}[.)]?$/.test(w.text)&&w.conf>=25);
+  for(const indexWord of rowWords){
+   const cells=words.filter(w=>Math.abs(w.mid-indexWord.mid)<Math.max(14,median*.83)&&w.x>indexWord.x+indexWord.w+4&&w.x<mx*.59&&w.conf>=28)
+    .sort((a,b)=>a.x-b.x);
+   const snippet=clean(cells.map(w=>w.text).join(' '));
+   const no=Number(indexWord.text.replace(/\D/g,''));
+   if(!no||no>150||snippet.length<9||/(?:SIRA|MIKTAR|BIRIM|TOPLAM)/.test(fold(snippet)))continue;
+   const letters=snippet.match(/[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/g)||[];
+   if(letters.length<2)continue;
+   const leading=snippet.match(/^(\d{5,14})\s+(.+)$/);
+   const known=leading?packagingReference(leading[1]):null;
+   const name=known?known.name:leading?leading[2]:snippet;
+   const rowSku=leading?leading[1]:'';
+   if(result.some(v=>(rowSku&&v.sku===rowSku)||sameProduct(v,{name,sku:rowSku,unit:'unknown',rawAmount:null})))continue;
+   result.push({name,sku:rowSku,cartons:null,rawAmount:null,unit:'unknown',pallets:0,review:true,source:'tablo-eksik-miktar',lineNumber:no});
   }
   return result;
  }
@@ -245,6 +299,9 @@
  }
  // Birden fazla palet/kasa satırında her kodun miktar hücresini ayrı oku.
  // Kod yoksa 'diğer palet/kasa' için yanlış satıra miktar atamamak adına tahmin yapma.
+ // Palet/kasa miktarı: stok kodu sağdaki kolon olabilir; miktar KONUMUNU
+ // kodun sağındaki ilk rakamdan çıkarmak ciddi hata yaratır (9900022 -> 5 vb.).
+ // Birim sütunundan ve tabloda ortak x hizasından geri hesapla.
  function findPackagingCells(tsv,width,height){
   if(!tsv||!width||!height)return [];
   const words=[];
@@ -253,24 +310,30 @@
    const value=clean(c.slice(11).join(' ')),x=Number(c[6]),y=Number(c[7]),w=Number(c[8]),h=Number(c[9]);
    if(value&&Number.isFinite(x)&&Number.isFinite(y)&&w>0&&h>0)words.push({value,x,y,w,h,mid:y+h/2});
   }
+  const unitWords=words.filter(v=>/^(?:KOL[Iİ]?|OLI|ADET|ADE|AD|PALET|PAKET)$/i.test(fold(v.value))&&v.x>width*.34&&v.x<width*.84);
+  const headerWords=words.filter(v=>/^MIKTAR$/i.test(fold(v.value))&&v.x>width*.26&&v.x<width*.72);
   const byCode=new Map();
-  for(const w of words){
-   const code=knownCodeIn(w.value);if(!code||byCode.has(code))continue;
-   const same=words.filter(v=>Math.abs(v.mid-w.mid)<Math.max(26,w.h*1.9));
-   const label=same.map(v=>v.value).join(' ');
-   if(!/(?:PALET|PALLET|PLT|KASA|KASASI|BOX|TURPAL|IFCO)/i.test(fold(label)))continue;
-   const headers=words.filter(v=>v.y<w.y&&v.y>0&&/MIKTAR|ADET|BIRIM/i.test(fold(v.value))&&v.x>w.x+width*.06&&v.x<width*.82)
-    .sort((a,b)=>Math.abs(a.x-width*.55)-Math.abs(b.x-width*.55));
-   const numbers=same.filter(v=>v.x>w.x+width*.06&&v.x<width*.82&&/^(?:\d{1,6}|ADET|KOL[Iİ])$/i.test(v.value));
-   // Sağdaki Adet kelimesi birim sütununun başındadır; miktar soldaki hücrededir.
-   // Tek haneli görünümde 15'in başındaki ince '1' kesilmesin diye
-   // miktar ile birimi beraber ve geniş sol payla tara.
-   const x=headers[0]?.x??numbers[0]?.x??width*.54;
-   const left=Math.max(0,Math.floor(x-Math.max(210,width*.115))),right=Math.min(width,Math.ceil(x+Math.max(315,width*.17)));
-   const top=Math.max(0,Math.floor(w.mid-Math.max(40,height*.020))),bottom=Math.min(height,Math.ceil(w.mid+Math.max(42,height*.022)));
-   if(right-left>130&&bottom-top>30)byCode.set(code,{code,rectangle:{left,top,width:right-left,height:bottom-top}});
+  for(const word of words){
+   const code=knownCodeIn(word.value);if(!code||byCode.has(code))continue;
+   const same=words.filter(v=>Math.abs(v.mid-word.mid)<Math.max(25,word.h*1.8));
+   const nearby=fold(same.map(v=>v.value).join(' '));
+   if(!/(?:PALET|PALLET|PLT|KASA|KASASI|BOX|TURPAL|IFCO)/.test(nearby))continue;
+   // Miktar genellikle birim sütununun hemen solunda. Başlıktaki "Miktar"
+   // doğrulanmışsa ilkini kullan; stok kodu (sağ kolon) hiçbir zaman anchor değil.
+   let unitX=unitWords.slice().sort((a,b)=>Math.abs(a.mid-word.mid)-Math.abs(b.mid-word.mid))[0]?.x;
+   const closestHeader=headerWords.slice().sort((a,b)=>Math.abs(a.x-width*.52)-Math.abs(b.x-width*.52))[0];
+   const quantityX=closestHeader?.x??(unitX!=null?unitX-width*.065:width*.55);
+   const left=Math.max(0,Math.floor(quantityX-Math.max(100,width*.085)));
+   const right=Math.min(width,Math.ceil((unitX!=null?Math.max(quantityX+width*.12,unitX+width*.05):quantityX+width*.15)));
+   const top=Math.max(0,Math.floor(word.mid-Math.max(23,word.h*1.6)));
+   const bottom=Math.min(height,Math.ceil(word.mid+Math.max(25,word.h*1.75)));
+   if(right-left<80||bottom-top<25)continue;
+   const amountRight=unitX!=null?Math.min(right,unitX+Math.max(10,width*.01)):Math.min(right,quantityX+width*.12);
+   // Sayısal alternatif okuma: '15' değeri '5' diye okunursa sol kenarı geniş.
+   const amountRectangle={left,top,width:Math.max(50,Math.ceil(amountRight-left)),height:bottom-top};
+   byCode.set(code,{code,rectangle:{left,top,width:right-left,height:bottom-top},amountRectangle});
   }
-  return [...byCode.values()].slice(0,15);
+  return [...byCode.values()].slice(0,20);
  }
  // İrsaliye No etiketinin karşısındaki dar hücreyi yüksek çözünürlükle tekrar oku.
  function findInvoiceCell(tsv,width,height){
@@ -315,8 +378,10 @@
   // yankısı varsa miktar da yanlış okunmuş olabilir. Birim/miktar farkını
   // yalnız açıkça bozuk satırda görmezden gel.
   const ghost=((!!a.sku&&!b.sku&&corrupt(b))||(!a.sku&&!!b.sku&&corrupt(a)));
-  if(!ghost&&a.rawAmount!=null&&b.rawAmount!=null&&a.rawAmount!==b.rawAmount)return false;
-  if(!ghost&&a.unit!=='unknown'&&b.unit!=='unknown'&&a.unit!==b.unit)return false;
+  // Aynı ürün iki OCR geçişinde farklı sayıda okunmuş olabilir. Ad ve kod
+  // uyuşuyorsa adayı ayırıp hayali yeni ürün oluşturma; çelişkiyi işaretle.
+  if(!ghost&&a.rawAmount!=null&&b.rawAmount!=null&&a.rawAmount!==b.rawAmount&&a.sku&&b.sku&&a.sku!==b.sku)return false;
+  if(!ghost&&a.unit!=='unknown'&&b.unit!=='unknown'&&a.unit!==b.unit&&a.sku&&b.sku&&a.sku!==b.sku)return false;
   const normalize=x=>fold(x).replace(/(?<=\d)[O](?=\d)/g,'0').replace(/[^A-Z0-9]+/g,' ').trim();
   const an=normalize(a.name),bn=normalize(b.name);
   const measures=x=>[...fold(x).matchAll(/\b\d+(?:[.,]\d+)?\s*(?:KG|GR|G|ML|LT|L)\b/g)].map(m=>m[0].replace(/\s/g,'')).sort().join('|');
@@ -347,12 +412,22 @@
   /(?:\bEURO\b|\bAHSA[P B]\b|\bPLASTIK\b|\bTAHTA\b|\bTURPAL\b|\bPALEX\b|\b80\s*[X*]\s*120\b)/.test(fold(name));
  function dedupeProductRows(rows){
   const result=[];
-  const quality=r=>(r.sku?8:0)+(r.unit!=='unknown'?5:0)+(r.rawAmount!=null?5:0)+(r.source==='tablo-konumu'?3:0)-(/\b(?:IE|DAN|CON|5532)\b/.test(fold(r.name))?3:0);
+  const quality=r=>(r.sku?8:0)+(r.unit!=='unknown'?5:0)+(r.rawAmount!=null?5:0)+(r.source==='tablo-konumu'?3:0)
+    -(/\b(?:IE|DAN|CON|5532)\b/.test(fold(r.name))?3:0);
   for(const r of rows){
    const found=result.findIndex(old=>sameProduct(old,r));
-   if(found<0){result.push(r);continue}
+   if(found<0){result.push({...r});continue}
    const prev=result[found],best=quality(r)>quality(prev)?r:prev,second=best===r?prev:r;
-   result[found]={...best,sku:best.sku||second.sku,cartons:best.cartons??second.cartons,rawAmount:best.rawAmount??second.rawAmount,unit:best.unit==='unknown'?second.unit:best.unit};
+   const quantityConflict=!!(prev.quantityConflict||r.quantityConflict||
+     (prev.rawAmount!=null&&r.rawAmount!=null&&prev.rawAmount!==r.rawAmount));
+   const unitConflict=!!(prev.unitConflict||r.unitConflict||
+     (prev.unit!=='unknown'&&r.unit!=='unknown'&&prev.unit!==r.unit));
+   result[found]={...best,sku:best.sku||second.sku,
+    cartons:quantityConflict||unitConflict?null:(best.cartons??second.cartons),
+    rawAmount:quantityConflict||unitConflict?null:(best.rawAmount??second.rawAmount),
+    unit:unitConflict?'unknown':best.unit==='unknown'?second.unit:best.unit,
+    review:quantityConflict||unitConflict||best.review||second.review,
+    quantityConflict,unitConflict};
   }
   return result;
  }
@@ -417,7 +492,7 @@
   // Kontrol edilmiş gerçek tablo satırları, belgenin genel OCR satırlarından önceliklidir.
   const verified=dedupeProductRows(structured);
   const merged=dedupeProductRows(verified.length?[
-   ...verified,...rows.filter(r=>r.unit!=='unknown'&&(r.sku||r.rawAmount)&&!verified.some(v=>sameProduct(r,v)))
+   ...verified,...rows.filter(r=>r.unit!=='unknown'&&(r.sku||r.rawAmount))
   ]:rows);
   // Excel'de tanımlı 22 palet/kasa/box kodu tam kod eşleşmesiyle ayrılır.
   // Aynı belgeyi farklı OCR geçişleri okuduğunda aynı satır tekrar ürün olmaz.
@@ -481,7 +556,7 @@
   const depotPalletType=depotItems.length===1?depotItems[0].name:'';
   // Genel palet sayısı, tek ürün olsa bile otomatik ürün paleti değildir.
   const confidence={supplier:supplier.score>=12?'yüksek':supplier.score>=6?'orta':'düşük',invoice:invoice.score>=12?'yüksek':invoice.score>=7?'orta':'düşük',plate:plate.score>=20&&!plate.ambiguous&&!plate.repaired?'yüksek':plate.score>=8?'orta':'düşük',pallets:pal.score>=10&&!pal.ambiguous?'yüksek':pal.score>=5?'orta':'düşük'};
-  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Sevkiyatın toplam taşıma palet sayısı belirtilmemiş olabilir; boş bırakın.':null,goods.some(x=>['adet','paket','palet'].includes(x.unit))?'Koli dışındaki ürün birimlerini doğrudan koliye çevirmeyin; kayıt öncesi koli karşılığını doğrulayın.':null,goods.some(x=>x.review)?'Bazı ürün satırlarında miktar/birim doğrulaması gerekiyor.':null,packagingRows.some(x=>x.conflict)?'Aynı palet/kasa koduna farklı miktarlar okundu; belgeyi kontrol edin.':null,packagingRows.some(x=>x.rawAmount==null)?'Palet/kasa miktarları eksik olabilir; gözle doğrulayın.':null].filter(Boolean);
+  const notes=[!invoice.value?'İrsaliye numarası bulunamadı.':null,!supplier.value?'Gönderen firma bulunamadı.':null,!plate.value?'Araç plakası bulunamadı.':null,plate.ambiguous?'Birden fazla plaka adayı bulundu.':null,plate.hint?'Plaka metni şüpheli okundu ('+plate.hint+'); lütfen fotoğraftan kontrol edin.':null,pal.value===null?'Sevkiyatın toplam taşıma palet sayısı belirtilmemiş olabilir; boş bırakın.':null,goods.some(x=>['adet','paket','palet'].includes(x.unit))?'Koli dışındaki ürün birimlerini doğrudan koliye çevirmeyin; kayıt öncesi koli karşılığını doğrulayın.':null,goods.some(x=>x.quantityConflict||x.unitConflict)?'Aynı ürün farklı okumalarda farklı miktar/birim verdi. Miktar boş bırakıldı; irsaliyeden doğrulayın.':null,goods.some(x=>x.rawAmount==null)?'Bazı ürünler bulundu ancak miktarı okunamadı. İrsaliyedeki bütün satırları tek tek karşılaştırın.':null,goods.some(x=>x.review)?'Ürün satırlarını ve miktarlarını irsaliyeden doğrulayın.':null,packagingRows.some(x=>x.conflict)?'Aynı palet/kasa koduna farklı miktarlar okundu; belgeyi kontrol edin.':null,packagingRows.some(x=>x.rawAmount==null)?'Palet/kasa miktarları eksik olabilir; gözle doğrulayın.':null].filter(Boolean);
   return {supplier:supplier.value,invoice:invoice.value,plate:plate.value,trailerPlate:plate.trailer,plateCandidates:plate.candidates,plateHint:plate.hint,totalPallets:pal.value,depotPallets,depotPalletType,depotPalletRows:depotItems,packagingRows,confidence,rows:goods,notes,raw:String(raw||'')};
  }
  const api={parse,parseTableTSV,findDepotCell,findPackagingCells,findInvoiceCell,readFocusedDepotQuantity,readFocusedPackagingQuantity,productFromLine,linesOf,PACKAGING_REFERENCE,packagingKind};root.AKTIVA_WAYBILL_PARSE=api;

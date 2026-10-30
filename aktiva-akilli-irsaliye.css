@@ -77,3 +77,6 @@ body.akw-open{overflow:hidden!important}
 #akw-overlay .akw-pkg-note{font-size:11px;line-height:1.5;color:#405a75}
 #akw-overlay .akw-packaging .akw-triple{grid-template-columns:1fr 1fr 1fr}
 @media(max-width:500px){#akw-overlay .akw-packaging .akw-triple input,#akw-overlay .akw-packaging .akw-triple select{padding:8px 5px!important;font-size:13px!important}}
+
+/* V10: Ürün paleti kaldırıldı; koli karşılığı alanı tek sütunu doldurur. */
+#akw-overlay .akw-product .akw-secondary{grid-template-columns:minmax(0,1fr)}

@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V9.
+/* AKTIVA / İrsaliye ayrıştırıcı V10.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -146,6 +146,10 @@
   if(explicit.length){const hit=explicit.find(x=>/KOL[Iİ]|KT/i.test(x[2]))||explicit[explicit.length-1];rawAmount=qty(hit[1]);unit=/KOL[Iİ]|KT/i.test(hit[2])?'koli':/PALET|PALLET|PLT/i.test(hit[2])?'palet':/PAKET/i.test(hit[2])?'paket':'adet';core=clean(s.slice(0,hit.index));const after=s.slice(hit.index+hit[0].length);const cm=after.match(/^\s*[|;:]?\s*(\d{5,10})\b/);if(cm)code=cm[1];}
   else if(inTable){const m=s.match(/^(.*?)\s+(\d{1,6}(?:[.,]\d{3})?)(?:\s+\d{1,6}(?:[.,]\d{3})?){0,2}\s*$/);if(m){core=m[1];rawAmount=qty(m[2]);unit='unknown';}}
   if(rawAmount===null||rawAmount===0)return null;
+  // Palet stok kodunun (örn. 9900022) bir rakamı OCR'da kaybolduğunda
+  // 900022 gibi bir değer hayali bir ürünün palet miktarı sanılabiliyor.
+  // Beş ve üzeri haneli 'palet' miktarı gerçek satır olarak kabul edilmez.
+  if(unit==='palet'&&rawAmount>=10000)return null;
   // Ürün adının sonundan K. İçi / K. Ad / Toplam numeric hücrelerini kaldır.
   core=core.replace(/(?:\s+[\d.,]+){1,4}\s*$/,'').replace(/^\s*\d{1,3}\s+(?=\d{5,14}\b)/,'');
   const match=core.match(/^(?:\d{1,3}\s*[|;.\-]?\s+)?(\d{5,14}|[A-Z]{1,4}[-/]\d{4,14})\s+(.+)$/i);
@@ -258,9 +262,12 @@
    const headers=words.filter(v=>v.y<w.y&&v.y>0&&/MIKTAR|ADET|BIRIM/i.test(fold(v.value))&&v.x>w.x+width*.06&&v.x<width*.82)
     .sort((a,b)=>Math.abs(a.x-width*.55)-Math.abs(b.x-width*.55));
    const numbers=same.filter(v=>v.x>w.x+width*.06&&v.x<width*.82&&/^(?:\d{1,6}|ADET|KOL[Iİ])$/i.test(v.value));
+   // Sağdaki Adet kelimesi birim sütununun başındadır; miktar soldaki hücrededir.
+   // Tek haneli görünümde 15'in başındaki ince '1' kesilmesin diye
+   // miktar ile birimi beraber ve geniş sol payla tara.
    const x=headers[0]?.x??numbers[0]?.x??width*.54;
-   const left=Math.max(0,Math.floor(x-Math.max(90,width*.05))),right=Math.min(width,Math.ceil(x+Math.max(310,width*.16)));
-   const top=Math.max(0,Math.floor(w.mid-Math.max(48,height*.025))),bottom=Math.min(height,Math.ceil(w.mid+Math.max(51,height*.03)));
+   const left=Math.max(0,Math.floor(x-Math.max(210,width*.115))),right=Math.min(width,Math.ceil(x+Math.max(315,width*.17)));
+   const top=Math.max(0,Math.floor(w.mid-Math.max(40,height*.020))),bottom=Math.min(height,Math.ceil(w.mid+Math.max(42,height*.022)));
    if(right-left>130&&bottom-top>30)byCode.set(code,{code,rectangle:{left,top,width:right-left,height:bottom-top}});
   }
   return [...byCode.values()].slice(0,15);
@@ -289,7 +296,7 @@
   return options[0]||null;
  }
  function readFocusedPackagingQuantity(text){
-  const m=fold(text).match(/(?:^|[^\d])(\d{1,5})\s*[|;):.\]}JİIıi\-]?\s*(ADET|AD\.?|KOLI|PALET|PALLET|PAKET)(?=$|[^A-Z0-9])/);
+  const m=fold(text).match(/(?:^|[^\d])(\d{1,5})\s*[|;):.\]}JİIıi\-]{0,3}\s*(ADET|AD\.?|KOLI|PALET|PALLET|PAKET)(?=$|[^A-Z0-9])/);
   if(!m)return null;
   const amount=qty(m[1]);if(amount===null||amount===0)return null;
   const unit=/^KOLI$/.test(m[2])?'koli':/^(?:PALET|PALLET)$/.test(m[2])?'palet':m[2]==='PAKET'?'paket':'adet';
@@ -446,11 +453,22 @@
    if(row.conflict)continue;
    const matches=hints.filter(h=>h&&String(h.code||'')===String(row.sku||'')&&Number.isSafeInteger(h.amount)&&h.amount>0);
    const amounts=[...new Set(matches.map(h=>h.amount))];
-   if(amounts.length>1||(row.rawAmount!=null&&amounts.length===1&&row.rawAmount!==amounts[0])){
+   if(amounts.length>1){
+    // İki odak modu farklı değer okuduysa güvenli bir seçim yapılamaz.
     row.conflict=true;row.rawAmount=null;row.unit='unknown';row.review=true;continue;
    }
-   if(row.rawAmount==null&&amounts.length===1){
-    row.rawAmount=amounts[0];row.unit=matches.find(h=>h.amount===amounts[0])?.unit||'unknown';row.review=true;
+   if(amounts.length===1){
+    const focused=amounts[0];
+    // İki bağımsız odak modu aynı hücrede birleşiyorsa, tek geçişli
+    // belge OCR'ından farklı değer üretmiş olsa bile hücreyi esas al.
+    // Bu 15 -> 5 kaybında düzeltme sağlar; rastgele 1 eklemez.
+    const independent=new Set(matches.filter(h=>h.amount===focused).map(h=>h.source||'belirsiz'));
+    const corroborated=independent.has('satır')&&independent.has('blok');
+    if(row.rawAmount!=null&&row.rawAmount!==focused&&!corroborated){
+     row.conflict=true;row.rawAmount=null;row.unit='unknown';row.review=true;continue;
+    }
+    row.rawAmount=focused;row.unit=matches.find(h=>h.amount===focused)?.unit||row.unit;
+    row.review=true;
    }
   }
   const legacy=Array.isArray(options.depotPalletCandidates)?options.depotPalletCandidates.filter(n=>Number.isSafeInteger(n)&&n>0):[];

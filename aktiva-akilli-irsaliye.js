@@ -1,4 +1,4 @@
-/* AKTİVA - Yeni Sevkiyat Kaydı / Akıllı İrsaliye Okuma V11
+/* AKTİVA - Yeni Sevkiyat Kaydı / Akıllı İrsaliye Okuma V12
  * Fotoğraflar kullanıcı cihazında Tesseract.js ile çözümlenir. Otomatik veritabanı kaydı YOK.
  */
 (()=>{'use strict';
@@ -102,9 +102,21 @@
    else el.querySelector('.akw-pkg-kind').value=code==='other-kasa'?'Kasa / Box':'Palet';
    updatePackagingCount();
   };
+  el.querySelector('.akw-pkg-amount').addEventListener('input',updatePackagingCount);
+  el.querySelector('.akw-pkg-unit').addEventListener('change',updatePackagingCount);
   host.append(el);updatePackagingCount();
  }
- function updatePackagingCount(){const host=byId('akw-packaging-rows'),counter=byId('akw-packaging-count');if(!host)return;const rows=[...host.children];rows.forEach((el,i)=>{const title=el.querySelector('.akw-pkg-title');if(title)title.textContent=(el.querySelector('.akw-pkg-kind')?.value==='Kasa / Box'?'Kasa':'Palet')+(rows.length>1?' '+(i+1):'')});if(counter)counter.textContent='('+rows.length+')'}
+ function updatePackagingCount(){const host=byId('akw-packaging-rows'),counter=byId('akw-packaging-count');if(!host)return;
+  const rows=[...host.children];let palet=0,kasa=0,missing=0;
+  rows.forEach((el,i)=>{
+   const kind=el.querySelector('.akw-pkg-kind')?.value==='Kasa / Box'?'Kasa':'Palet';
+   const title=el.querySelector('.akw-pkg-title');if(title)title.textContent=kind+(rows.length>1?' '+(i+1):'');
+   const raw=el.querySelector('.akw-pkg-amount')?.value.trim()||'';
+   if(!raw||!Number.isSafeInteger(Number(raw))||Number(raw)<=0){missing++;return}
+   if(kind==='Palet')palet+=Number(raw);else kasa+=Number(raw);
+  });
+  if(counter)counter.textContent='('+rows.length+' satır'+(palet?' • '+palet+' palet':'')+(kasa?' • '+kasa+' kasa':'')+(missing?' • '+missing+' miktar kontrol edilecek':'')+')';
+ }
  function updateCount(){const t=byId('akw-count');if(t)t.textContent='('+byId('akw-rows').children.length+')'}
  function showParse(result){parsed=result;byId('akw-review').hidden=false;
   const proofs=byId('akw-proof-images');if(proofs){proofs.innerHTML='';objectUrls.forEach((url,i)=>{const img=document.createElement('img');img.src=url;img.alt='İrsaliye sayfa '+(i+1);img.loading='lazy';proofs.append(img)})}
@@ -209,7 +221,20 @@
   const plateCanvas=enhance(fullCanvas,plateTop,fullCanvas.height,Math.min(3000,Math.round(fullCanvas.width*1.75)));
   const plateImage=await canvasBlob(plateCanvas);
   // Yedek tam görüntü yalnızca yeterli bilgi bulunamazsa okutulur.
-  return {primary,table,tableWidth:tableCanvas?.width||0,tableHeight:tableCanvas?.height||0,plateImage,full:bounds?await canvasBlob(enhance(fullCanvas)):null,focused:!!bounds,width:focused.width,height:focused.height};
+  return {primary,table,tableCanvas,tableWidth:tableCanvas?.width||0,tableHeight:tableCanvas?.height||0,plateImage,full:bounds?await canvasBlob(enhance(fullCanvas)):null,focused:!!bounds,width:focused.width,height:focused.height};
+ }
+ // Sayı hücresini tek başına büyük kenar payıyla büyütür: 15'in başındaki ince '1' kaybolmasın.
+ function magnifyQuantityCell(source,rect,binary=false){
+  const scale=2.8,pad=28;
+  const out=document.createElement('canvas');out.width=Math.round(rect.width*scale+pad*2);out.height=Math.round(rect.height*scale+pad*2);
+  const ctx=out.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,out.width,out.height);
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(source,rect.left,rect.top,rect.width,rect.height,pad,pad,rect.width*scale,rect.height*scale);
+  if(binary){const img=ctx.getImageData(0,0,out.width,out.height);for(let i=0;i<img.data.length;i+=4){
+   const g=.299*img.data[i]+.587*img.data[i+1]+.114*img.data[i+2];
+   const v=g>172?255:0;img.data[i]=img.data[i+1]=img.data[i+2]=v;
+  }ctx.putImageData(img,0,0)}
+  return out;
  }
  async function readImages(){if(busy)return;if(!files.length){status('Önce irsaliye fotoğrafı ekleyin.','warn');return}
   busy=true;byId('akw-read').disabled=true;byId('akw-close').disabled=true;status('Türkçe ve İngilizce belge okuma hazırlanıyor. İlk kullanımda internet gerekir.');
@@ -250,6 +275,7 @@
       const packagingFocus=parser?.findPackagingCells?.(productData.tsv,picture.tableWidth,picture.tableHeight)||[];
       const depotFocus=!packagingFocus.length&&tableResult?.depotPallets==null?parser?.findDepotCell(productData.tsv,picture.tableWidth,picture.tableHeight):null;
       for(const item of packagingFocus.slice(0,10)){
+       if(item.tsvAmount!=null&&item.tsvConfidence>=40)packagingQuantityHints.push({code:item.code,amount:item.tsvAmount,unit:'unknown',source:'tablo-hücre'});
        try{
         status('Palet/kasa kodu '+item.code+' için miktar hücresi yakından okunuyor...');
         // İnce '1' rakamı tablo çizgisine karışırsa 15 yerine 5 okunabiliyor.
@@ -267,7 +293,20 @@
         await worker.setParameters({tessedit_char_whitelist:''});
         const number=onlyDigits.match(/^(\d{1,4})$/)?.[1];
         if(number&&Number(number)>0)packagingQuantityHints.push({code:item.code,amount:Number(number),unit:'unknown',source:'sayı'});
+        // Orijinal sayı kırpımını iki ayrı görüntü işleme yöntemiyle yeniden tara.
+        // Aynı sayı iki yöntemde doğrulanırsa zayıf tek okumayı geçersiz sayabiliriz.
+        if(picture.tableCanvas){
+         for(const [source,binary,mode] of [['sayı-büyütülmüş',false,tess.PSM?.SINGLE_WORD||'8'],['sayı-ikili',true,tess.PSM?.SINGLE_LINE||'7']]){
+          const magnified=magnifyQuantityCell(picture.tableCanvas,item.amountRectangle,binary);
+          await worker.setParameters({tessedit_pageseg_mode:mode,tessedit_char_whitelist:'0123456789'});
+          const rawDigits=(await worker.recognize(magnified)).data.text?.trim()||'';
+          const m=rawDigits.match(/^\s*(\d{1,4})\s*$/);
+          if(m&&Number(m[1])>0)packagingQuantityHints.push({code:item.code,amount:Number(m[1]),unit:'unknown',source});
+         }
+         await worker.setParameters({tessedit_char_whitelist:''});
+        }
        }catch(err){console.warn('AKTİVA: ambalaj miktarı odak okuması atlandı',err)}
+       finally{await worker.setParameters({tessedit_char_whitelist:'',tessedit_pageseg_mode:tess.PSM?.AUTO||'3'}).catch(()=>{})}
       }
       if(depotFocus){
        status('Palet satırının miktar hücresi yakından okunuyor...');

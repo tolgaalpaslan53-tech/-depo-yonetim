@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V11.
+/* AKTIVA / İrsaliye ayrıştırıcı V12.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -307,31 +307,53 @@
   const words=[];
   for(const line of String(tsv).split(/\r?\n/).slice(1)){
    const c=line.split('\t');if(c.length<12||Number(c[0])!==5)continue;
-   const value=clean(c.slice(11).join(' ')),x=Number(c[6]),y=Number(c[7]),w=Number(c[8]),h=Number(c[9]);
-   if(value&&Number.isFinite(x)&&Number.isFinite(y)&&w>0&&h>0)words.push({value,x,y,w,h,mid:y+h/2});
+   const value=clean(c.slice(11).join(' ')),x=Number(c[6]),y=Number(c[7]),w=Number(c[8]),h=Number(c[9]),conf=Number(c[10]);
+   if(value&&[x,y,w,h].every(Number.isFinite)&&w>0&&h>0)words.push({value,x,y,w,h,conf,mid:y+h/2});
   }
-  const unitWords=words.filter(v=>/^(?:KOL[Iİ]?|OLI|ADET|ADE|AD|PALET|PAKET)$/i.test(fold(v.value))&&v.x>width*.34&&v.x<width*.84);
-  const headerWords=words.filter(v=>/^MIKTAR$/i.test(fold(v.value))&&v.x>width*.26&&v.x<width*.72);
   const byCode=new Map();
+  const numeric=w=>{const str=fold(w.value).replace(/[.,]/g,'');return /^\d{1,4}$/.test(str)&&Number(str)>0?Number(str):null};
+  const unitRx=/^(?:KOLI|KOL|ADET|ADE|AD|PALET|PAKET|PALLET|PLT)$/;
+  const headers=words.filter(w=>/^(?:MIKTAR|MIKTARI|ADET|QTY)$/.test(fold(w.value))&&w.y<height*.68);
   for(const word of words){
    const code=knownCodeIn(word.value);if(!code||byCode.has(code))continue;
-   const same=words.filter(v=>Math.abs(v.mid-word.mid)<Math.max(25,word.h*1.8));
-   const nearby=fold(same.map(v=>v.value).join(' '));
-   if(!/(?:PALET|PALLET|PLT|KASA|KASASI|BOX|TURPAL|IFCO)/.test(nearby))continue;
-   // Miktar genellikle birim sütununun hemen solunda. Başlıktaki "Miktar"
-   // doğrulanmışsa ilkini kullan; stok kodu (sağ kolon) hiçbir zaman anchor değil.
-   let unitX=unitWords.slice().sort((a,b)=>Math.abs(a.mid-word.mid)-Math.abs(b.mid-word.mid))[0]?.x;
-   const closestHeader=headerWords.slice().sort((a,b)=>Math.abs(a.x-width*.52)-Math.abs(b.x-width*.52))[0];
-   const quantityX=closestHeader?.x??(unitX!=null?unitX-width*.065:width*.55);
-   const left=Math.max(0,Math.floor(quantityX-Math.max(100,width*.085)));
-   const right=Math.min(width,Math.ceil((unitX!=null?Math.max(quantityX+width*.12,unitX+width*.05):quantityX+width*.15)));
-   const top=Math.max(0,Math.floor(word.mid-Math.max(23,word.h*1.6)));
-   const bottom=Math.min(height,Math.ceil(word.mid+Math.max(25,word.h*1.75)));
-   if(right-left<80||bottom-top<25)continue;
-   const amountRight=unitX!=null?Math.min(right,unitX+Math.max(10,width*.01)):Math.min(right,quantityX+width*.12);
-   // Sayısal alternatif okuma: '15' değeri '5' diye okunursa sol kenarı geniş.
-   const amountRectangle={left,top,width:Math.max(50,Math.ceil(amountRight-left)),height:bottom-top};
-   byCode.set(code,{code,rectangle:{left,top,width:right-left,height:bottom-top},amountRectangle});
+   // Kodun bulunduğu yatay SATIR esas alınır. Kod sağ sütunda da olabilir.
+   const tolerance=Math.max(20,word.h*1.35);
+   const same=words.filter(w=>Math.abs(w.mid-word.mid)<=tolerance);
+   const units=same.filter(w=>unitRx.test(fold(w.value))&&w!==word&&w.x>width*.2);
+   const relevantHeaders=headers.filter(h=>h.mid<word.mid&&word.mid-h.mid<height*.42);
+   const header=relevantHeaders.sort((a,b)=>Math.abs(a.x-width*.55)-Math.abs(b.x-width*.55))[0];
+   const unit=units.sort((a,b)=>Math.abs(a.x-width*.73)-Math.abs(b.x-width*.73))[0];
+   // Tek başına kod yetiyor: palet adı görüntüde okunamamış olabilir.
+   // Kodun sağındaki 990... numarasını veya soldaki sıra numarasını MİKTAR sanma.
+   const candidates=same.filter(w=>w!==word&&numeric(w)!==null&&w.x>width*.20&&w.x<width*.90&&
+     Math.abs(w.x-word.x)>Math.max(10,word.w*.15));
+   const scored=candidates.map(w=>{
+    let score=Math.min(3,Math.max(0,w.conf)/30);
+    if(unit&&w.x<unit.x&&unit.x-(w.x+w.w)<width*.21)score+=6;
+    if(header&&Math.abs(w.x-header.x)<width*.085)score+=5;
+    if(word.x>width*.67&&w.x<word.x)score+=2;
+    if(w.x<width*.28)score-=4;
+    if(unit&&w.x>unit.x+unit.w)score-=4;
+    return {w,score};
+   }).sort((a,b)=>b.score-a.score);
+   const chosen=scored[0]?.score>=5?scored[0].w:null;
+   // Mevcut rakam 5 görünse de asıl 15'in ince '1' başlangıcını kesmemek
+   // için miktar kırpımı SOLA fazladan açılıyor.
+   let x=chosen?.x??header?.x??(unit?unit.x-width*.07:null);
+   if(x==null)continue;
+   x=Math.max(width*.22,Math.min(width*.88,x));
+   const left=Math.max(0,Math.floor(x-Math.max(85,width*.065)));
+   const amountRight=chosen?chosen.x+chosen.w+Math.max(35,width*.025):x+Math.max(90,width*.075);
+   let right=Math.min(width,Math.ceil(Math.max(amountRight,unit?unit.x+unit.w+15:amountRight)));
+   if(word.x>right&&word.x-right<width*.08)right=Math.min(right,word.x-8);
+   const top=Math.max(0,Math.floor(word.mid-Math.max(28,word.h*1.45)));
+   const bottom=Math.min(height,Math.ceil(word.mid+Math.max(29,word.h*1.55)));
+   const digitRight=Math.min(right,Math.ceil(amountRight));
+   if(right-left<65||digitRight-left<45||bottom-top<25)continue;
+   const make=(l,r)=>({left:l,top,width:Math.max(1,r-l),height:bottom-top});
+   byCode.set(code,{code,rectangle:make(left,right),amountRectangle:make(left,digitRight),
+     // Konuma göre ön okuma; yakınlaştırılmış ikinci OCR ile karşılaştırılacak.
+     tsvAmount:chosen?numeric(chosen):null,tsvConfidence:chosen?chosen.conf:0});
   }
   return [...byCode.values()].slice(0,20);
  }
@@ -501,6 +523,11 @@
    const kind=packagingKind(row);
    if(kind)packagingCandidates.push({...row,sku:kind.code||row.sku||'',name:kind.name,kind:kind.type,knownPackaging:kind.known});
   }
+  for(const h of (Array.isArray(options.packagingQuantityHints)?options.packagingQuantityHints:[])){
+   const ref=packagingReference(h?.code);if(ref&&!packagingCandidates.some(r=>String(r.sku)===String(h.code)))
+    packagingCandidates.push({name:ref.name,sku:String(h.code),kind:ref.type,knownPackaging:true,
+      rawAmount:null,unit:'unknown',cartons:null,pallets:0,review:true,source:'kod-konumu'});
+  }
   for(const line of lines){
    const code=knownCodeIn(line),ref=packagingReference(code);
    if(!ref)continue;
@@ -525,26 +552,31 @@
   const packagingRows=[...packagingMap.values()];
   const hints=Array.isArray(options.packagingQuantityHints)?options.packagingQuantityHints:[];
   for(const row of packagingRows){
-   if(row.conflict)continue;
-   const matches=hints.filter(h=>h&&String(h.code||'')===String(row.sku||'')&&Number.isSafeInteger(h.amount)&&h.amount>0);
-   const amounts=[...new Set(matches.map(h=>h.amount))];
-   if(amounts.length>1){
-    // İki odak modu farklı değer okuduysa güvenli bir seçim yapılamaz.
+   const matches=hints.filter(h=>h&&String(h.code||'')===String(row.sku||'')&&Number.isSafeInteger(h.amount)&&h.amount>0&&h.amount<=999999);
+   if(!matches.length)continue;
+   // V11 her OCR uyuşmazlığında miktarı boşaltıyordu. Önce aynı hücrenin
+   // birbirinden bağımsız okumalarını kanıt ağırlığıyla karşılaştır.
+   const weight={'satır':3,'blok':3,'sayı':1,'tablo-hücre':2,'sayı-büyütülmüş':4,'sayı-ikili':3};
+   const tally=new Map();
+   for(const h of matches){
+    const source=h.source||'bilinmeyen';const group=tally.get(h.amount)||{amount:h.amount,score:0,sources:new Set(),unit:'unknown'};
+    if(!group.sources.has(source)){group.sources.add(source);group.score+=weight[source]||1}
+    if(h.unit&&h.unit!=='unknown')group.unit=h.unit;
+    tally.set(h.amount,group);
+   }
+   const ordered=[...tally.values()].sort((a,b)=>b.score-a.score||b.sources.size-a.sources.size);
+   const best=ordered[0],runner=ordered[1];
+   const verified=(best.sources.has('satır')&&best.sources.has('blok'))||
+     (best.sources.has('sayı-büyütülmüş')&&best.sources.has('sayı-ikili'))||
+     (best.sources.size>=2&&best.score>=5);
+   const clear=(!runner||best.score-runner.score>=3)&&(!row.conflict||verified);
+   if(!clear){row.conflict=true;row.rawAmount=null;row.unit='unknown';row.review=true;continue}
+   // Tek zayıf tarama, güçlü bir tam satır okumasını tek başına ezmesin.
+   if(row.rawAmount!=null&&row.rawAmount!==best.amount&&!verified&&best.score<5){
     row.conflict=true;row.rawAmount=null;row.unit='unknown';row.review=true;continue;
    }
-   if(amounts.length===1){
-    const focused=amounts[0];
-    // İki bağımsız odak modu aynı hücrede birleşiyorsa, tek geçişli
-    // belge OCR'ından farklı değer üretmiş olsa bile hücreyi esas al.
-    // Bu 15 -> 5 kaybında düzeltme sağlar; rastgele 1 eklemez.
-    const independent=new Set(matches.filter(h=>h.amount===focused).map(h=>h.source||'belirsiz'));
-    const corroborated=independent.has('satır')&&independent.has('blok');
-    if(row.rawAmount!=null&&row.rawAmount!==focused&&!corroborated){
-     row.conflict=true;row.rawAmount=null;row.unit='unknown';row.review=true;continue;
-    }
-    row.rawAmount=focused;row.unit=matches.find(h=>h.amount===focused)?.unit||row.unit;
-    row.review=true;
-   }
+   row.rawAmount=best.amount;row.unit=best.unit!=='unknown'?best.unit:(row.unit==='unknown'?'adet':row.unit);
+   row.conflict=false;row.review=true;row.quantityEvidence=best.sources.size;
   }
   const legacy=Array.isArray(options.depotPalletCandidates)?options.depotPalletCandidates.filter(n=>Number.isSafeInteger(n)&&n>0):[];
   if(packagingRows.length===1&&packagingRows[0].kind==='palet'&&packagingRows[0].rawAmount==null&&!packagingRows[0].conflict&&legacy.length===1){

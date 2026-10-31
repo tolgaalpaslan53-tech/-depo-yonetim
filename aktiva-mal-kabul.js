@@ -6,6 +6,49 @@ window.AKTIVA_setShipmentScannedProduct=(p)=>{scannedProduct=p?{name:String(p.na
 let view='home',lines=[],editId=null,opened=null,firmNames=new Set(),productNames=new Set(),msg='',draftName='',draftFirm='',draftPlate='',draftInvoice='',shipmentDate='',shipmentSearch='',productFilter='all',productSearch='',countStarted={},pendingSaves={},asnQuery='',asnRecords=[],asnError='',asnOpened=null,asnBusy=false;
 const searchKey=s=>String(s||'').toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]/g,'');
 const stamp=s=>s?new Date(s).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'}):'-';
+
+// GÜVENLİK 2: Yeni sevkiyat için yanlışlıkla tekrarlı kayıt ve kısmi kayıt koruması.
+// NOT: İki farklı cihazın aynı anda kayıt göndermesine karşı kesin garanti DB UNIQUE/RPC ile sağlanır.
+const akReceivingNormalize=value=>String(value??'').toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]/g,'');
+const akReceivingPendingKey=()=>session?.user?.id?'ak_receiving_pending_v1_'+session.user.id:null;
+let akReceivingPendingMemory=null;
+function akReceivingReadPending(){
+ const key=akReceivingPendingKey();if(!key)return null;
+ try{const raw=sessionStorage.getItem(key);if(raw){const data=JSON.parse(raw);if(data&&data.id&&data.fingerprint&&Array.isArray(data.lines))return data;}}
+ catch(_){ }
+ return akReceivingPendingMemory?.userId===session.user.id?akReceivingPendingMemory.data:null;
+}
+function akReceivingStorePending(value){
+ akReceivingPendingMemory={userId:session.user.id,data:value};
+ try{const key=akReceivingPendingKey();if(key)sessionStorage.setItem(key,JSON.stringify(value))}catch(_){ }
+}
+function akReceivingClearPending(){
+ akReceivingPendingMemory=null;
+ try{const key=akReceivingPendingKey();if(key)sessionStorage.removeItem(key)}catch(_){ }
+}
+function akReceivingSignature(draft){
+ return JSON.stringify({supplier:akReceivingNormalize(draft.supplier),invoice:akReceivingNormalize(draft.invoice),vehicle:akReceivingNormalize(draft.vehicle),lines:draft.lines.map(x=>({name:akReceivingNormalize(x.name),sku:akReceivingNormalize(x.sku),cartons:x.cartons,pallets:x.pallets}))});
+}
+async function akReceivingFindDuplicate(supplier,invoice){
+ if(!akReceivingNormalize(invoice)||invoice==='-')return null;
+ // Gözle görülen 200 araç yerine veritabanında irsaliye numarasıyla sorgula.
+ const qs='/rest/v1/deliveries?select=id,invoice,supplier,vehicle,arrived_at&invoice=ilike.'+encodeURIComponent(invoice.trim())+'&limit=200';
+ const result=await req(qs);
+ if(!Array.isArray(result))throw Error('İrsaliye tekrar sorgusu tamamlanamadı.');
+ if(result.length>=200)throw Error('İrsaliye sorgusunda çok fazla kayıt var. Kayıt oluşturmadan kontrol edin.');
+ return result.find(r=>akReceivingNormalize(r.invoice)===akReceivingNormalize(invoice)&&akReceivingNormalize(r.supplier)===akReceivingNormalize(supplier))||null;
+}
+async function akReceivingExistingProducts(deliveryId){
+ const result=await req('/rest/v1/products?select=id,name,sku,expected,pallet_count&delivery_id=eq.'+encodeURIComponent(deliveryId)+'&limit=1000');
+ if(!Array.isArray(result)||result.length>=1000)throw Error('Kısmi kayıt ürünleri güvenli biçimde kontrol edilemedi.');
+ return result;
+}
+function akReceivingProductsMatch(existing,expected){
+ if(existing.length!==expected.length)return false;
+ const signature=r=>[akReceivingNormalize(r.sku||r.name),akReceivingNormalize(r.name),Number(r.expected),Number(r.pallet_count||0)].join('|');
+ return existing.map(signature).sort().join('~')===expected.map(signature).sort().join('~');
+}
+
 async function loadAsn(){if(!logged())return;try{asnRecords=await req('/rest/v1/aktiva_supplier_shipments?select=*&order=created_at.desc&limit=500');asnError='';}catch(e){asnError='Tedarikçi kayıtları yüklenemedi: '+e.message;asnRecords=[];}render();}
 const today=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
 const displayDate=s=>s?String(s).split('-').reverse().join('/') : '';
@@ -42,6 +85,7 @@ function installStyle(){if($a('ak-professional-style'))return;const style=docume
 #aktivaCountUI .ak-empty{text-align:center;color:#b3bac6;padding:22px 8px}
 `;document.head.appendChild(style)}
 function toast(t){msg=t;render();}
+let akReceivingSaveBusy=false;
 let akSendingDelivery=null;
 async function notifyForkliftAfterCount(delivery, products){
  const base=String(window.MK_CONFIG?.url||localStorage.getItem('mk_supabase_url')||'').replace(/\/$/,'');
@@ -61,7 +105,10 @@ function build(){installStyle();if($a('aktivaCountUI'))return;const el=document.
 window.addEventListener('aktiva:open-create',()=>{if(logged())nav('create')});
 window.addEventListener('aktiva:open-count',e=>{if(!logged())return;shipmentDate='';shipmentSearch='';view='detail';opened=e.detail.id;editId=null;productFilter='all';productSearch='';render();});
 function nav(to){if(to==='list')shipmentDate=today();
-view=to;opened=null;editId=null;msg='';render();}
+let restored=false;
+if(to==='create'&&!lines.length){const pending=akReceivingReadPending();if(pending){lines=pending.lines.map(x=>({...x}));draftFirm=pending.supplier||'';draftPlate=pending.vehicle==='-'?'':pending.vehicle||'';draftInvoice=pending.invoice==='-'?'':pending.invoice||'';restored=true;}}
+view=to;opened=null;editId=null;msg='';render();
+if(restored)toast('Yarım kalan sevkiyat bulundu. Yeniden araç açmadan önce aynı kaydın ürünleri kontrol edilecek.');}
 function options(arr,q){if(!q?.trim())return '';return [...arr].filter(x=>x.toLocaleLowerCase('tr').includes(q.toLocaleLowerCase('tr'))&&x.toLocaleLowerCase('tr')!==q.toLocaleLowerCase('tr')).slice(0,5).map(x=>`<button type="button" class="ak-suggestion" data-suggest="${safe(x)}">${safe(x)}</button>`).join('')}
 function summary(){const day=today(),me=session?.user?.id;const mine=dlist().filter(d=>d.created_by===me&&dateOf(d.arrived_at)===day);const counted=plist().filter(p=>p.counted_by===me&&p.count_completed&&dateOf(p.counted_at)===day);return {shipments:mine.length,products:counted.length,pallets:counted.reduce((a,p)=>a+Number(p.pallet_count||0),0)}}
 function countInfo(p){const expected=Number(p.expected||0),received=Number(p.received||0),damaged=Number(p.damaged||0),missing=Math.max(0,expected-received),excess=Math.max(0,received-expected),sound=Math.max(0,received-damaged);return {expected,received,damaged,missing,excess,sound};}
@@ -134,8 +181,45 @@ el.querySelectorAll('[data-notify-fork]').forEach(b=>b.onclick=async()=>{
 el.querySelector('#ak-invoice')?.addEventListener('input',e=>{draftInvoice=e.target.value});el.querySelector('#ak-plate')?.addEventListener('input',e=>{draftPlate=e.target.value});
 el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{lines.splice(Number(b.dataset.remove),1);render()});
 const fi=el.querySelector('#ak-firm'),pr=el.querySelector('#ak-product');if(fi){fi.oninput=()=>{draftFirm=fi.value;el.querySelector('#ak-firm-suggestions').innerHTML=options(firmNames,fi.value);bindSuggest('firm')};fi.dispatchEvent(new Event('input'))}if(pr){pr.oninput=()=>{if(scannedProduct&&pr.value.trim()!==scannedProduct.name)scannedProduct=null;draftName=pr.value;el.querySelector('#ak-product-suggestions').innerHTML=options(productNames,pr.value);bindSuggest('product')};pr.dispatchEvent(new Event('input'))}
-el.querySelector('#ak-add')?.addEventListener('click',()=>{const n=pr.value.trim(),c=Number(el.querySelector('#ak-cartons').value),p=Number(el.querySelector('#ak-pallets').value);if(!n||!Number.isSafeInteger(c)||c<=0||!Number.isSafeInteger(p)||p<=0){toast('Ürün adı, koli ve palet sayılarını kontrol et.');return}draftFirm=fi.value;draftPlate=el.querySelector('#ak-plate').value;lines.push({name:n,cartons:c,pallets:p,sku:scannedProduct?.name===n?scannedProduct.sku:'',barcode:scannedProduct?.name===n?scannedProduct.barcode:'',units_per_carton:scannedProduct?.name===n?scannedProduct.units_per_carton:null});scannedProduct=null;draftName='';render()});
-el.querySelector('#ak-form')?.addEventListener('submit',async e=>{e.preventDefault();const f=fi.value.trim(),plate=el.querySelector('#ak-plate').value.trim(),invoice=(el.querySelector('#ak-invoice')?.value||'').trim();if(!f||!lines.length){toast('Firma ve en az bir ürün gir.');return}const b=el.querySelector('#ak-save');b.disabled=true;try{const now=new Date().toISOString(),obj={created_by:session.user.id,vehicle:plate||'-',supplier:f,invoice:invoice||'-',arrived_at:now,pallets:lines.reduce((a,p)=>a+p.pallets,0),cartons:lines.reduce((a,p)=>a+p.cartons,0),status:'open'};const ds=await req('/rest/v1/deliveries',{method:'POST',body:obj,headers:{Prefer:'return=representation'}});const id=ds?.[0]?.id;if(!id)throw Error('Sevkiyat kaydı oluşturuldu ancak ürün bağlantısı alınamadı.');const rows=lines.map(p=>({counted_by:session.user.id,delivery_id:id,name:p.name,sku:p.sku||'',expected:p.cartons,received:0,count_completed:false,damaged:0,returned:0,pallet_count:p.pallets}));await req('/rest/v1/products',{method:'POST',body:rows,headers:{Prefer:'return=minimal'}});lines=[];draftName='';draftFirm='';draftPlate='';draftInvoice='';await sync(true);opened=id;view='list';window.dispatchEvent(new CustomEvent('aktiva:shipment-saved',{detail:{id}}));toast('Sevkiyat kaydedildi.')}catch(err){toast('Kayıt hatası: '+err.message)}finally{b.disabled=false}});
+el.querySelector('#ak-add')?.addEventListener('click',()=>{const n=pr.value.trim(),c=Number(el.querySelector('#ak-cartons').value),p=Number(el.querySelector('#ak-pallets').value);if(!n||!Number.isSafeInteger(c)||c<=0||!Number.isSafeInteger(p)||p<=0){toast('Ürün adı, koli ve palet sayılarını kontrol et.');return}if(lines.some(x=>akReceivingNormalize(x.name)===akReceivingNormalize(n))){toast('Bu ürün sevkiyat listesinde zaten var. Yeni satır yerine mevcut miktarı kontrol edin.');return}draftFirm=fi.value;draftPlate=el.querySelector('#ak-plate').value;lines.push({name:n,cartons:c,pallets:p,sku:scannedProduct?.name===n?scannedProduct.sku:'',barcode:scannedProduct?.name===n?scannedProduct.barcode:'',units_per_carton:scannedProduct?.name===n?scannedProduct.units_per_carton:null});scannedProduct=null;draftName='';render()});
+el.querySelector('#ak-form')?.addEventListener('submit',async e=>{
+ e.preventDefault();if(akReceivingSaveBusy)return;
+ const supplier=fi.value.trim(),vehicle=el.querySelector('#ak-plate').value.trim(),invoice=(el.querySelector('#ak-invoice')?.value||'').trim();
+ if(!supplier||!lines.length){toast('Firma ve en az bir ürün gir.');return}
+ const snapshot={supplier,vehicle:vehicle||'-',invoice:invoice||'-',lines:lines.map(x=>({...x}))};
+ const fingerprint=akReceivingSignature(snapshot);
+ const b=el.querySelector('#ak-save');akReceivingSaveBusy=true;b.disabled=true;
+ let id=null;
+ try{
+  const pending=akReceivingReadPending();
+  if(pending&&pending.fingerprint!==fingerprint)throw Error('Önceden yarım kalmış bir sevkiyat var. Yeni kayıt açmadan önce aynı sevkiyatın kaydını tamamlayın veya kontrol ettirin.');
+  id=pending?.id||null;
+  const duplicate=await akReceivingFindDuplicate(supplier,invoice);
+  if(duplicate&&duplicate.id!==id)throw Error('Bu firma ve irsaliye numarası zaten kayıtlı ('+(duplicate.vehicle||'plakasız')+'). Yeni kayıt oluşturulmadı. Önce mevcut kaydı açın.');
+  if(!id){
+   const obj={created_by:session.user.id,vehicle:snapshot.vehicle,supplier,invoice:snapshot.invoice,arrived_at:new Date().toISOString(),pallets:lines.reduce((a,p)=>a+p.pallets,0),cartons:lines.reduce((a,p)=>a+p.cartons,0),status:'open'};
+   const ds=await req('/rest/v1/deliveries',{method:'POST',body:obj,headers:{Prefer:'return=representation'}});
+   id=ds?.[0]?.id;if(!id)throw Error('Araç yanıtı doğrulanamadı. Tekrar kaydetmeden önce kayıtları kontrol edin.');
+   akReceivingStorePending({...snapshot,id,fingerprint});
+  }
+  const rows=snapshot.lines.map(p=>({counted_by:session.user.id,delivery_id:id,name:p.name,sku:p.sku||'',expected:p.cartons,received:0,count_completed:false,damaged:0,returned:0,pallet_count:p.pallets}));
+  if(pending){
+   const existing=await akReceivingExistingProducts(id);
+   if(existing.length&&!akReceivingProductsMatch(existing,rows))throw Error('Araç kaydedilmiş fakat ürünleri taslaktan farklı. Tekrar ürün yazılmadı; bu aracı manuel kontrol edin.');
+   if(!existing.length)await req('/rest/v1/products',{method:'POST',body:rows,headers:{Prefer:'return=minimal'}});
+  }else{
+   await req('/rest/v1/products',{method:'POST',body:rows,headers:{Prefer:'return=minimal'}});
+  }
+  akReceivingClearPending();lines=[];draftName='';draftFirm='';draftPlate='';draftInvoice='';
+  await sync(true);opened=id;view='list';window.dispatchEvent(new CustomEvent('aktiva:shipment-saved',{detail:{id}}));toast('Sevkiyat kaydedildi.');
+ }catch(err){
+  const partial=akReceivingReadPending();
+  if(partial&&partial.fingerprint===fingerprint){
+   if(/taslaktan farklı|manuel kontrol/i.test(err.message))toast('Araç kaydı '+id+' için ürünler farklı görünüyor. Otomatik aktarım durduruldu; kayıtları manuel kontrol ettirin. Hata: '+err.message);
+   else toast('Araç kaydı '+id+' için işlem tamamlanamadı. Tekrar Kaydet derseniz aynı araç kontrol edilip eksik ürünler tamamlanacak. Hata: '+err.message);
+  }else toast('Kayıt engellendi: '+err.message);
+ }finally{akReceivingSaveBusy=false;b.disabled=false}
+});
 }
 // Sadece Mal Kabul yeni sevkiyat taslagina OCR onayli verileri ekler.
 // OCR ozelligi veritabanina yazamaz; nihai kayit mevcut ak-form submit akisi ile olur.

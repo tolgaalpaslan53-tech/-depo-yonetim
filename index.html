@@ -546,9 +546,18 @@ $('ocrSave').onclick=async()=>{
  const rows=[...$('ocrRows').querySelectorAll('tr')].map(tr=>{const a=[...tr.querySelectorAll('input')].map(i=>i.value.trim());return {delivery_id:d.id,name:a[0],sku:a[1],expected:Number(a[2]),received:0,damaged:0,returned:0}});
  if(!rows.length){notice('Aktarılacak ürün satırı yok.');return}
  if(rows.some(r=>!r.name||r.name.length>200||r.sku.length>80||!Number.isSafeInteger(r.expected)||r.expected<0||r.expected>999999)){notice('Ürün adı, kodu ve adetleri kontrol et.');return}
- if(!confirm(rows.length+' ürün satırı bu araca aktarılacak. Aynı ürünler daha önce eklenmişse tekrar kaydolabilir. Devam edilsin mi?'))return;
+ if(!confirm(rows.length+' ürün satırı bu araca aktarılacak. Daha önce eklenmiş aynı ürünler tekrar aktarılmayacak. Devam edilsin mi?'))return;
  $('ocrSave').disabled=true;
- try{await req('/rest/v1/products',{method:'POST',body:rows,headers:{Prefer:'return=minimal'}});$('ocrRows').innerHTML='';$('ocrText').value='';show('ocrPanel',false);await sync(true);notice(rows.length+' ürün irsaliyeden aktarıldı.',true)}catch(e){notice('Aktarım başarısız: '+e.message)}finally{$('ocrSave').disabled=false}
+ try{
+  // Eski OCR yolunda da ürünleri tekrar POST etmeden önce sunucudan oku.
+  const existing=await req('/rest/v1/products?select=id,name,sku,expected&delivery_id=eq.'+encodeURIComponent(d.id)+'&limit=1000');
+  if(!Array.isArray(existing)||existing.length>=1000)throw Error('Mevcut ürünler tamamen kontrol edilemedi. Aktarım durduruldu.');
+  const key=s=>String(s||'').toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]/g,'');
+  const overlaps=rows.filter(r=>existing.some(p=>(r.sku&&p.sku&&key(r.sku)===key(p.sku))||key(r.name)===key(p.name)));
+  if(overlaps.length)throw Error(overlaps.length+' ürün bu sevkiyatta zaten var. Tekrar aktarım yapılmadı. Kayıtları kontrol edin.');
+  await req('/rest/v1/products',{method:'POST',body:rows,headers:{Prefer:'return=minimal'}});
+  $('ocrRows').innerHTML='';$('ocrText').value='';show('ocrPanel',false);await sync(true);notice(rows.length+' ürün irsaliyeden aktarıldı.',true);
+ }catch(e){notice('Aktarım durduruldu: '+e.message)}finally{$('ocrSave').disabled=false}
 };
 $('loginForm').onsubmit=signIn;
 $('aktivaChooseAdmin').onclick=()=>aktivaSelectEntry('admin');
@@ -722,7 +731,7 @@ el('adminCategoryDate').addEventListener('change',()=>{el('adminDate').value=el(
   if (validKey(savedKey)) window.AKTIVA_VAPID_PUBLIC_KEY = savedKey;
   })();
 </script><script src="aktiva-push.js?v=20261022-fork-bell-1"></script><script src="aktiva-mal-kabul-push.js?v=20261028-mal-kabul-notification-1"></script>
-<script src="aktiva-mal-kabul.js?v=20261030-waybill-ocr-v5"></script><link rel="stylesheet" href="aktiva-akilli-irsaliye.css?v=20261030-ocr-v12"><script src="aktiva-irsaliye-parser.js?v=20261030-ocr-v12"></script><script src="aktiva-akilli-irsaliye.js?v=20261030-ocr-v12"></script><script src="aktiva-7-ozellik.js?v=20261017-20"></script><script id="aktivaStartupController">
+<script src="aktiva-mal-kabul.js?v=20261031-safe-save-v1"></script><link rel="stylesheet" href="aktiva-akilli-irsaliye.css?v=20261030-ocr-v12"><script src="aktiva-irsaliye-parser.js?v=20261030-ocr-v12"></script><script src="aktiva-akilli-irsaliye.js?v=20261030-ocr-v12"></script><script src="aktiva-7-ozellik.js?v=20261017-20"></script><script id="aktivaStartupController">
 (function(){
   var splash=document.getElementById('aktivaStartup');
   if(!splash)return;

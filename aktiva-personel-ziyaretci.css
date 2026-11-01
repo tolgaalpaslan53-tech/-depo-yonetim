@@ -174,3 +174,12 @@
 #akpv-overlay #akpv-list-section:not([hidden]){margin:12px 0}
 #akpv-overlay .akpv-management button{min-height:36px}
 @media(max-width:420px){#akpv-overlay .akpv-view-tabs button{font-size:12px;padding:11px 5px}#akpv-overlay .akpv-categories button{padding:8px 11px}}
+
+/* Araç kartı mobil işlem menüsü */
+#akpv-overlay .akpv-item-actions{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important;width:100%}
+#akpv-overlay .akpv-item-actions>button[data-action]{flex:1 1 auto!important;width:auto!important;min-width:0!important}
+#akpv-overlay .akpv-item-actions>button.akpv-more{flex:0 0 46px!important;width:46px!important;min-width:46px!important;max-width:46px!important;height:46px!important;min-height:46px!important;padding:0!important;font-size:23px!important;line-height:1!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+#akpv-overlay .akpv-item-actions>.akpv-management[hidden]{display:none!important}
+#akpv-overlay .akpv-item-actions>.akpv-management:not([hidden]){display:flex!important;flex:1 0 100%!important;width:100%!important;gap:8px!important;flex-wrap:wrap!important;position:relative!important;z-index:2!important}
+#akpv-overlay .akpv-management>button{width:auto!important;flex:1 1 90px!important;min-height:42px!important}
+@media(max-width:620px){#akpv-overlay .akpv-item-actions>button[data-action]{flex:1 1 calc(100% - 60px)!important}}

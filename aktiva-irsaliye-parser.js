@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V12.
+/* AKTIVA / İrsaliye ayrıştırıcı V13.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -29,7 +29,8 @@
  // "e-İrsaliye" başlığı veya "İrsaliye Tarihi" numara etiketi DEĞİLDİR.
  function invoiceFrom(lines){
   const label=/(?:^|[\s|])(?:E\s*-?\s*)?(?:SEVK\s+)?IRSALIYE\s*(?:NO(?:SU)?|NUMARASI|NUM|#)\b|\bBELGE\s*(?:NO(?:SU)?|NUMARASI)\b/;
-  const standard=/[A-Z]{3}20[0-9OIS]{2}[0-9OISBL]{9}/g;
+  // Seri / yıl / sıra OCR'da aralıklı gelebilir: ABC 2026 000 001 234.
+  const standard=/[A-Z]{3}[\s.\/-]*20[0-9OIS]{2}(?:[\s.\/-]*[0-9OISBL]){9}/g;
   const ignore=/(?:ETTN|UUID|VKN|TCKN|PLAKA|SAP\s*BELGE|MUSTERI\s+NO|TESLIMAT\s*NO|TELEFON|IBAN)/;
   const opts=[];
   const normalize=v=>v.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^([A-Z]{3})20([0-9OIS]{2})([0-9OISBL]{9})$/,
@@ -41,11 +42,12 @@
    const contexts=[{value:tail,score:33},{value:hasLabel?fold(lines[i+1]||''):'',score:22},{value:u,score:hasLabel?30:8}];
    for(const context of contexts){
     if(!context.value||ignore.test(context.value))continue;
-    const joined=context.value.replace(/\s+(?=[0-9]{4,})/g,'').replace(/([A-Z]{3})\s+(20)/g,'$1$2');
+    // OCR parçalarını birleştirirken komşu alanların rakamlarını uydurma.
+    const joined=context.value;
     standard.lastIndex=0;
     for(const m of joined.matchAll(standard)){
      const before=joined[m.index-1]||'',after=joined[m.index+m[0].length]||'';
-     if(/[A-Z0-9]/.test(before)||/[A-Z0-9]/.test(after))continue;
+     if(/[A-Z0-9]/.test(before)||/[A-Z0-9]/.test(after)||/^\s*[0-9OISBL](?:\b|$)/.test(joined.slice(m.index+m[0].length)))continue;
      const value=normalize(m[0]);
      if(/^[A-Z]{3}20\d{11}$/.test(value))opts.push({value,score:context.score,index:i});
     }
@@ -85,13 +87,15 @@
   const province=t=>t.replace(/[OS]/g,x=>x==='O'?'0':'5').replace(/[IL]/g,'1').replace(/B/g,'8');
   const digits=t=>t.replace(/[OQ]/g,'0').replace(/[ILS]/g,x=>x==='S'?'5':'1').replace(/B/g,'8');
   const letters=t=>t.replace(/0/g,'O').replace(/1/g,'I').replace(/5/g,'S').replace(/8/g,'B');
-  const candidates=/(^|[^A-Z0-9])([0-9OSIBL]{2})[\s.\/-]*([A-Z0158]{1,3})[\s.\/-]*([0-9OQISBL]{2,5})(?![A-Z0-9])/g;
+  const candidates=/(^|[^A-Z0-9])([0-9OSIBL]{2})[\s.\/-]*([A-Z0158]{1,3})[\s.\/-]*([0-9OQISBL]{1,5})(?![A-Z0-9])/g;
   function add(segment,index,label,kind,base){
    const u=fold(segment),isTrailer=kind==='trailer';let m;
    candidates.lastIndex=0;
    while((m=candidates.exec(u))){
     const pr=province(m[2]),letPart=letters(m[3]),num=digits(m[4]);
-    if(!/^\d{2}$/.test(pr)||Number(pr)<1||Number(pr)>81||!/^[A-Z]{1,3}$/.test(letPart)||!/^\d{2,5}$/.test(num))continue;
+    if(!/^\d{2}$/.test(pr)||Number(pr)<1||Number(pr)>81||!/^[A-Z]{1,3}$/.test(letPart)||!/^\d{1,5}$/.test(num))continue;
+    // Tek haneli son grup yalnız açık plaka etiketinin yanında güvenilirdir.
+    if(num.length===1&&!label)continue;
     const repaired=pr!==m[2]||letPart!==m[3]||num!==m[4];
     // Etiketsiz OCR'dan yapılan onarımları güvenilir kabul etme.
     if(repaired&&!label)continue;

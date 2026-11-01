@@ -175,11 +175,57 @@
 #akpv-overlay .akpv-management button{min-height:36px}
 @media(max-width:420px){#akpv-overlay .akpv-view-tabs button{font-size:12px;padding:11px 5px}#akpv-overlay .akpv-categories button{padding:8px 11px}}
 
-/* Araç kartı mobil işlem menüsü */
-#akpv-overlay .akpv-item-actions{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important;width:100%}
-#akpv-overlay .akpv-item-actions>button[data-action]{flex:1 1 auto!important;width:auto!important;min-width:0!important}
-#akpv-overlay .akpv-item-actions>button.akpv-more{flex:0 0 46px!important;width:46px!important;min-width:46px!important;max-width:46px!important;height:46px!important;min-height:46px!important;padding:0!important;font-size:23px!important;line-height:1!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
-#akpv-overlay .akpv-item-actions>.akpv-management[hidden]{display:none!important}
-#akpv-overlay .akpv-item-actions>.akpv-management:not([hidden]){display:flex!important;flex:1 0 100%!important;width:100%!important;gap:8px!important;flex-wrap:wrap!important;position:relative!important;z-index:2!important}
-#akpv-overlay .akpv-management>button{width:auto!important;flex:1 1 90px!important;min-height:42px!important}
-@media(max-width:620px){#akpv-overlay .akpv-item-actions>button[data-action]{flex:1 1 calc(100% - 60px)!important}}
+/* Kayıtlı Araçlar / Hızlı İşlem: native menu, mobile accessible, isolated from global button CSS. */
+#akpv-overlay .akpv-item {position:relative!important;overflow:visible!important}
+#akpv-overlay .akpv-item:has(> .akpv-item-actions > details.akpv-menu[open]) {z-index:3}
+#akpv-overlay .akpv-item-actions {
+ display:grid!important;grid-template-columns:minmax(0,1fr) 48px!important;
+ gap:9px!important;align-items:stretch!important;width:100%!important;
+ min-width:0!important;position:relative!important;
+}
+#akpv-overlay .akpv-shell .akpv-item-actions > button[data-action] {
+ grid-column:1!important;grid-row:1!important;display:flex!important;
+ width:100%!important;min-width:0!important;min-height:48px!important;
+ margin:0!important;align-items:center!important;justify-content:center!important;
+ padding:11px 10px!important;text-align:center!important;
+ font-weight:700!important;line-height:1.25!important;
+}
+#akpv-overlay .akpv-item-actions > details.akpv-menu {
+ position:relative!important;grid-column:2!important;grid-row:1!important;
+ display:block!important;width:48px!important;min-width:48px!important;
+ max-width:48px!important;margin:0!important;padding:0!important;
+ background:transparent!important;border:0!important;
+}
+#akpv-overlay .akpv-item-actions summary.akpv-more {
+ list-style:none!important;display:flex!important;justify-content:center!important;
+ align-items:center!important;box-sizing:border-box!important;
+ width:48px!important;height:48px!important;min-width:48px!important;
+ min-height:48px!important;padding:0!important;margin:0!important;
+ border:1px solid #9aaec4!important;border-radius:12px!important;
+ background:#263d55!important;color:#fff!important;
+ font-size:24px!important;line-height:1!important;font-weight:650!important;
+ cursor:pointer!important;-webkit-tap-highlight-color:transparent;
+}
+#akpv-overlay .akpv-item-actions summary.akpv-more::-webkit-details-marker {display:none!important}
+#akpv-overlay .akpv-item-actions summary.akpv-more::marker {content:''}
+#akpv-overlay .akpv-item-actions details.akpv-menu[open] summary.akpv-more {background:#405c78!important}
+#akpv-overlay .akpv-item-actions details.akpv-menu > .akpv-management {
+ display:none!important;position:absolute!important;top:calc(100% + 7px)!important;
+ right:0!important;z-index:5!important;
+ width:min(260px,calc(100vw - 46px))!important;min-width:210px!important;
+ padding:8px!important;margin:0!important;border-radius:13px!important;
+ border:1px solid #b6c3d4!important;
+ background:#fff!important;box-shadow:0 12px 28px #081a2c30!important;
+ flex-direction:column!important;gap:6px!important;
+}
+#akpv-overlay .akpv-item-actions details.akpv-menu[open] > .akpv-management {display:flex!important}
+#akpv-overlay .akpv-item-actions details.akpv-menu > .akpv-management button {
+ display:block!important;flex:none!important;width:100%!important;
+ min-height:43px!important;margin:0!important;padding:9px 13px!important;
+ text-align:left!important;font-size:13px!important;
+ border:1px solid #d6e0ed!important;border-radius:8px!important;
+ background:#f0f4fa!important;color:#233c59!important;
+}
+#akpv-overlay .akpv-item-actions details.akpv-menu > .akpv-management .akpv-delete {
+ background:#fff0f1!important;color:#9b2034!important;border-color:#f2c6ca!important;
+}

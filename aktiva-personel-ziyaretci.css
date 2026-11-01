@@ -162,3 +162,15 @@
  #akpv-overlay .akpv-actions{grid-template-columns:minmax(0,1fr);gap:9px;}
  #akpv-overlay .akpv-actions #akpv-new{width:100%;}
 }
+
+/* Kayıtlı Araçlar: Danışma'nın mevcut görünümünü bozmayan sekmeli liste */
+#akpv-overlay .akpv-view-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:5px;background:#e9eef5;border-radius:13px;margin:16px 0 10px}
+#akpv-overlay .akpv-view-tabs button{border:0;border-radius:10px;padding:12px 8px;background:transparent;color:#34465d;font-size:13px;font-weight:750;cursor:pointer}
+#akpv-overlay .akpv-view-tabs button.selected{background:#fff;color:#162b45;box-shadow:0 2px 8px #162b451b}
+#akpv-overlay .akpv-categories{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 12px}
+#akpv-overlay .akpv-categories[hidden]{display:none!important}
+#akpv-overlay .akpv-categories button{border:1px solid #cbd5e1;background:#f7f9fc;color:#334155;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:750;cursor:pointer}
+#akpv-overlay .akpv-categories button.selected{background:#213c5e;color:white;border-color:#213c5e}
+#akpv-overlay #akpv-list-section:not([hidden]){margin:12px 0}
+#akpv-overlay .akpv-management button{min-height:36px}
+@media(max-width:420px){#akpv-overlay .akpv-view-tabs button{font-size:12px;padding:11px 5px}#akpv-overlay .akpv-categories button{padding:8px 11px}}

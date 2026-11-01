@@ -3,7 +3,7 @@
 const $a=id=>document.getElementById(id), safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let scannedProduct=null;
 window.AKTIVA_setShipmentScannedProduct=(p)=>{scannedProduct=p?{name:String(p.name||''),sku:String(p.code||''),barcode:String(p.barcode||''),units_per_carton:Number(p.pack)||null}:null;};
-let view='home',lines=[],editId=null,opened=null,firmNames=new Set(),productNames=new Set(),msg='',draftName='',draftFirm='',draftPlate='',draftInvoice='',shipmentDate='',shipmentSearch='',productFilter='all',productSearch='',countStarted={},pendingSaves={},asnQuery='',asnRecords=[],asnError='',asnOpened=null,asnBusy=false;
+let view='home',lines=[],packagingLines=[],editId=null,opened=null,firmNames=new Set(),productNames=new Set(),msg='',draftName='',draftFirm='',draftPlate='',draftInvoice='',shipmentDate='',shipmentSearch='',productFilter='all',productSearch='',countStarted={},pendingSaves={},asnQuery='',asnRecords=[],asnError='',asnOpened=null,asnBusy=false;
 const searchKey=s=>String(s||'').toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]/g,'');
 const stamp=s=>s?new Date(s).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'}):'-';
 
@@ -27,7 +27,7 @@ function akReceivingClearPending(){
  try{const key=akReceivingPendingKey();if(key)sessionStorage.removeItem(key)}catch(_){ }
 }
 function akReceivingSignature(draft){
- return JSON.stringify({supplier:akReceivingNormalize(draft.supplier),invoice:akReceivingNormalize(draft.invoice),vehicle:akReceivingNormalize(draft.vehicle),lines:draft.lines.map(x=>({name:akReceivingNormalize(x.name),sku:akReceivingNormalize(x.sku),cartons:x.cartons,pallets:x.pallets}))});
+ return JSON.stringify({supplier:akReceivingNormalize(draft.supplier),invoice:akReceivingNormalize(draft.invoice),vehicle:akReceivingNormalize(draft.vehicle),lines:draft.lines.map(x=>({name:akReceivingNormalize(x.name),sku:akReceivingNormalize(x.sku),cartons:x.cartons,pallets:x.pallets})),packaging:(draft.packaging||[]).map(x=>({code:akReceivingNormalize(x.code),name:akReceivingNormalize(x.name),kind:x.kind,quantity:x.quantity}))});
 }
 async function akReceivingFindDuplicate(supplier,invoice){
  if(!akReceivingNormalize(invoice)||invoice==='-')return null;
@@ -42,6 +42,21 @@ async function akReceivingExistingProducts(deliveryId){
  const result=await req('/rest/v1/products?select=id,name,sku,expected,pallet_count&delivery_id=eq.'+encodeURIComponent(deliveryId)+'&limit=1000');
  if(!Array.isArray(result)||result.length>=1000)throw Error('Kısmi kayıt ürünleri güvenli biçimde kontrol edilemedi.');
  return result;
+}
+// İrsaliyedeki ambalaj kodları ticari ürün değildir. Tür başına tek kayda dönüşür.
+function akReceivingPackaging(rows){
+ const ref=window.AKTIVA_WAYBILL_PARSE?.PACKAGING_REFERENCE||{};
+ const out=new Map();
+ for(const row of rows||[]){
+  const code=String(row.code||'').trim().slice(0,32),name=String(row.name||'').trim().slice(0,200),kind=row.kind==='kasa'?'kasa':'palet',quantity=Number(row.quantity);
+  if(!name||!Number.isSafeInteger(quantity)||quantity<1||quantity>999999)throw Error('Palet/kasa adı ve miktarını kontrol edin.');
+  if(code&&ref[code]&&ref[code].type!==kind)throw Error(code+' kodunun palet/kasa türü farklı; kontrol edin.');
+  const key=kind+'|'+(code||akReceivingNormalize(name));
+  const old=out.get(key);
+  if(old){if(old.name!==name&&code&&ref[code])old.name=ref[code].name;old.quantity+=quantity; if(old.quantity>999999)throw Error('Bir türün toplamı sınırı aşıyor.');}
+  else out.set(key,{code,name,kind,quantity});
+ }
+ return [...out.values()].sort((a,b)=>(a.kind+'|'+a.code+'|'+a.name).localeCompare(b.kind+'|'+b.code+'|'+b.name,'tr'));
 }
 function akReceivingProductsMatch(existing,expected){
  if(existing.length!==expected.length)return false;
@@ -75,7 +90,7 @@ function installStyle(){if($a('ak-professional-style'))return;const style=docume
 #aktivaCountUI .ak-date-wrap:focus-within{outline:2px solid #dc3049;outline-offset:1px}
 #aktivaCountUI .ak-filter-card input:focus{outline:2px solid #dc3049;outline-offset:1px}
 #aktivaCountUI .ak-filter-card input::placeholder{color:#9da5b3}
-#aktivaCountUI .ak-list-count{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:13px 0;color:#fff;font-size:15px}
+#aktivaCountUI .ak-ambalaj-draft{margin:15px 0;padding:14px;border-radius:13px;border:1px solid #466077;background:#19283a}#aktivaCountUI .ak-ambalaj-draft h3{margin:0 0 8px;color:#fff}#aktivaCountUI .ak-ambalaj-draft p{font-size:12px;color:#c3d0df;line-height:1.55;margin:0 0 13px}#aktivaCountUI .ak-ambalaj-draft .ak-line{border-bottom:1px solid #3d5167}#aktivaCountUI .ak-list-count{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:13px 0;color:#fff;font-size:15px}
 #aktivaCountUI .ak-list-count span{background:#2a303c;color:#e3e6ed;border-radius:18px;padding:5px 10px;font-size:12px;white-space:nowrap}
 #aktivaCountUI .ak-shipment-pro{background:#181e2a;border:1px solid #303743;border-radius:14px;overflow:hidden;margin:9px 0;padding:0;min-width:0}
 #aktivaCountUI .ak-shipment-pro .ak-shipment-head{width:100%;max-width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;gap:9px;text-align:left;padding:14px;background:transparent;border:0;color:#fff}
@@ -106,7 +121,7 @@ window.addEventListener('aktiva:open-create',()=>{if(logged())nav('create')});
 window.addEventListener('aktiva:open-count',e=>{if(!logged())return;shipmentDate='';shipmentSearch='';view='detail';opened=e.detail.id;editId=null;productFilter='all';productSearch='';render();});
 function nav(to){if(to==='list')shipmentDate=today();
 let restored=false;
-if(to==='create'&&!lines.length){const pending=akReceivingReadPending();if(pending){lines=pending.lines.map(x=>({...x}));draftFirm=pending.supplier||'';draftPlate=pending.vehicle==='-'?'':pending.vehicle||'';draftInvoice=pending.invoice==='-'?'':pending.invoice||'';restored=true;}}
+if(to==='create'&&!lines.length){const pending=akReceivingReadPending();if(pending){lines=pending.lines.map(x=>({...x}));packagingLines=akReceivingPackaging(pending.packaging||[]);draftFirm=pending.supplier||'';draftPlate=pending.vehicle==='-'?'':pending.vehicle||'';draftInvoice=pending.invoice==='-'?'':pending.invoice||'';restored=true;}}
 view=to;opened=null;editId=null;msg='';render();
 if(restored)toast('Yarım kalan sevkiyat bulundu. Yeniden araç açmadan önce aynı kaydın ürünleri kontrol edilecek.');}
 function options(arr,q){if(!q?.trim())return '';return [...arr].filter(x=>x.toLocaleLowerCase('tr').includes(q.toLocaleLowerCase('tr'))&&x.toLocaleLowerCase('tr')!==q.toLocaleLowerCase('tr')).slice(0,5).map(x=>`<button type="button" class="ak-suggestion" data-suggest="${safe(x)}">${safe(x)}</button>`).join('')}
@@ -129,7 +144,7 @@ if(view==='asn'){
  }
  if(asnQuery.trim()&&!results.length&&!asnError)html+='<p class="ak-empty">Eşleşen sevkiyat bulunamadı. Firma adı veya irsaliye numarasıyla da arayabilirsiniz.</p>';
 }
-if(view==='create')html+=`<div class="ak-heading"><h2>Yeni Sevkiyat</h2><button class="ak-back" id="ak-back">Geri</button></div><form id="ak-form"><label>Gönderen firma *<input id="ak-firm" autocomplete="off" required maxlength="150" placeholder="Firma adı" value="${safe(draftFirm)}"></label><div id="ak-firm-suggestions" class="ak-suggestions"></div><label>Plaka (isteğe bağlı)<input id="ak-plate" maxlength="80" placeholder="48 ABC 123" value="${safe(draftPlate)}"></label><label>İrsaliye numarası (isteğe bağlı)<input id="ak-invoice" maxlength="100" autocomplete="off" placeholder="Örn. ABC2026000001234" value="${safe(draftInvoice)}"></label><h3>Ürün Listesi</h3><div id="ak-lines">${lines.map((p,i)=>`<div class="ak-line"><div><strong>${safe(p.name)}</strong><small>${p.cartons} koli · ${p.pallets} palet${p.sku?' · Kod: '+safe(p.sku):''}${p.units_per_carton?' · Koli içi: '+p.units_per_carton+' adet':''}</small></div><button type="button" class="ak-remove" data-remove="${i}">Sil</button></div>`).join('')}</div><label>Ürün adı<input id="ak-product" autocomplete="off" maxlength="200" placeholder="Ürün adı" value="${safe(draftName)}"></label><div id="ak-product-suggestions" class="ak-suggestions"></div><div class="ak-two"><label>Kaç koli?<input id="ak-cartons" type="number" min="1" step="1" placeholder="120"></label><label>Kaç palet?<input id="ak-pallets" type="number" min="1" step="1" placeholder="3"></label></div><button type="button" class="ak-outline" id="ak-add">+ Listeye Ürün Ekle</button><button type="submit" class="ak-submit" id="ak-save">Sevkiyatı Kaydet</button></form>`;
+if(view==='create')html+=`<div class="ak-heading"><h2>Yeni Sevkiyat</h2><button class="ak-back" id="ak-back">Geri</button></div><form id="ak-form"><label>Gönderen firma *<input id="ak-firm" autocomplete="off" required maxlength="150" placeholder="Firma adı" value="${safe(draftFirm)}"></label><div id="ak-firm-suggestions" class="ak-suggestions"></div><label>Plaka (isteğe bağlı)<input id="ak-plate" maxlength="80" placeholder="48 ABC 123" value="${safe(draftPlate)}"></label><label>İrsaliye numarası (isteğe bağlı)<input id="ak-invoice" maxlength="100" autocomplete="off" placeholder="Örn. ABC2026000001234" value="${safe(draftInvoice)}"></label><h3>Ürün Listesi</h3><div id="ak-lines">${lines.map((p,i)=>`<div class="ak-line"><div><strong>${safe(p.name)}</strong><small>${p.cartons} koli · ${p.pallets} palet${p.sku?' · Kod: '+safe(p.sku):''}${p.units_per_carton?' · Koli içi: '+p.units_per_carton+' adet':''}</small></div><button type="button" class="ak-remove" data-remove="${i}">Sil</button></div>`).join('')}</div><label>Ürün adı<input id="ak-product" autocomplete="off" maxlength="200" placeholder="Ürün adı" value="${safe(draftName)}"></label><div id="ak-product-suggestions" class="ak-suggestions"></div><div class="ak-two"><label>Kaç koli?<input id="ak-cartons" type="number" min="1" step="1" placeholder="120"></label><label>Kaç palet?<input id="ak-pallets" type="number" min="1" step="1" placeholder="3"></label></div><button type="button" class="ak-outline" id="ak-add">+ Listeye Ürün Ekle</button>${packagingLines.length?`<section class="ak-ambalaj-draft"><h3>İrsaliyeden Gelen Palet / Kasa</h3><p>Bu kodlar ürün değil, ayrı ambalaj kaydıdır. Sevkiyat kaydedildiğinde depodaki palet listesine eklenecek.</p>${packagingLines.map((x,i)=>`<div class="ak-line"><div><strong>${safe(x.name)}</strong><small>${safe(x.code||'Diğer')} · ${x.kind==='palet'?'Palet':'Kasa / Box'} · <b>${x.quantity} adet</b></small></div><button type="button" class="ak-remove" data-remove-packaging="${i}">Sil</button></div>`).join('')}</section>`:''}<button type="submit" class="ak-submit" id="ak-save">Sevkiyatı Kaydet</button></form>`;
 if(view==='list'||view==='detail'){
  if(view==='list')html+=`<div class="ak-heading"><h2>Kaydedilen Sevkiyatlar</h2><button class="ak-back" id="ak-back">Geri</button></div><div class="ak-filter-card"><label for="ak-date-filter">Sevkiyat tarihi</label><div class="ak-date-wrap"><span class="ak-date-display"><span id="ak-date-text">${safe(displayDate(shipmentDate))}</span><span aria-hidden="true">▦</span></span><input type="date" id="ak-date-filter" aria-label="Sevkiyat tarihi seç" value="${safe(shipmentDate)}"></div><button type="button" class="ak-outline" id="ak-all-dates">Tüm Tarihler</button><label for="ak-shipment-search">Sevkiyat ara</label><input type="search" id="ak-shipment-search" autocomplete="off" placeholder="Plaka, firma, irsaliye veya kayıt no" value="${safe(shipmentSearch)}"></div>`;
  const filtered=dlist().filter(d=>view==='detail'?d.id===opened:(!shipmentDate||dateOf(d.arrived_at)===shipmentDate)&&[d.supplier,d.vehicle,d.invoice,d.id].some(v=>searchKey(v).includes(searchKey(shipmentSearch)))).sort((a,b)=>new Date(b.arrived_at)-new Date(a.arrived_at));
@@ -179,14 +194,15 @@ el.querySelectorAll('[data-notify-fork]').forEach(b=>b.onclick=async()=>{
  try{await notifyForkliftAfterCount(delivery,products);toast('Forkliftçiye bildirim isteği gönderildi. Telefon teslimini kontrol edin.')}catch(err){toast('Bildirim gönderilemedi: '+err.message)}finally{akSendingDelivery=null}
 });
 el.querySelector('#ak-invoice')?.addEventListener('input',e=>{draftInvoice=e.target.value});el.querySelector('#ak-plate')?.addEventListener('input',e=>{draftPlate=e.target.value});
-el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{lines.splice(Number(b.dataset.remove),1);render()});
+el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{lines.splice(Number(b.dataset.remove),1);render()});el.querySelectorAll('[data-remove-packaging]').forEach(b=>b.onclick=()=>{packagingLines.splice(Number(b.dataset.removePackaging),1);render()});
 const fi=el.querySelector('#ak-firm'),pr=el.querySelector('#ak-product');if(fi){fi.oninput=()=>{draftFirm=fi.value;el.querySelector('#ak-firm-suggestions').innerHTML=options(firmNames,fi.value);bindSuggest('firm')};fi.dispatchEvent(new Event('input'))}if(pr){pr.oninput=()=>{if(scannedProduct&&pr.value.trim()!==scannedProduct.name)scannedProduct=null;draftName=pr.value;el.querySelector('#ak-product-suggestions').innerHTML=options(productNames,pr.value);bindSuggest('product')};pr.dispatchEvent(new Event('input'))}
 el.querySelector('#ak-add')?.addEventListener('click',()=>{const n=pr.value.trim(),c=Number(el.querySelector('#ak-cartons').value),p=Number(el.querySelector('#ak-pallets').value);if(!n||!Number.isSafeInteger(c)||c<=0||!Number.isSafeInteger(p)||p<=0){toast('Ürün adı, koli ve palet sayılarını kontrol et.');return}if(lines.some(x=>akReceivingNormalize(x.name)===akReceivingNormalize(n))){toast('Bu ürün sevkiyat listesinde zaten var. Yeni satır yerine mevcut miktarı kontrol edin.');return}draftFirm=fi.value;draftPlate=el.querySelector('#ak-plate').value;lines.push({name:n,cartons:c,pallets:p,sku:scannedProduct?.name===n?scannedProduct.sku:'',barcode:scannedProduct?.name===n?scannedProduct.barcode:'',units_per_carton:scannedProduct?.name===n?scannedProduct.units_per_carton:null});scannedProduct=null;draftName='';render()});
 el.querySelector('#ak-form')?.addEventListener('submit',async e=>{
  e.preventDefault();if(akReceivingSaveBusy)return;
  const supplier=fi.value.trim(),vehicle=el.querySelector('#ak-plate').value.trim(),invoice=(el.querySelector('#ak-invoice')?.value||'').trim();
  if(!supplier||!lines.length){toast('Firma ve en az bir ürün gir.');return}
- const snapshot={supplier,vehicle:vehicle||'-',invoice:invoice||'-',lines:lines.map(x=>({...x}))};
+ let normalizedPackaging;try{normalizedPackaging=akReceivingPackaging(packagingLines)}catch(err){toast(err.message);return}
+ const snapshot={supplier,vehicle:vehicle||'-',invoice:invoice||'-',lines:lines.map(x=>({...x})),packaging:normalizedPackaging};
  const fingerprint=akReceivingSignature(snapshot);
  const b=el.querySelector('#ak-save');akReceivingSaveBusy=true;b.disabled=true;
  let id=null;
@@ -210,7 +226,12 @@ el.querySelector('#ak-form')?.addEventListener('submit',async e=>{
   }else{
    await req('/rest/v1/products',{method:'POST',body:rows,headers:{Prefer:'return=minimal'}});
   }
-  akReceivingClearPending();lines=[];draftName='';draftFirm='';draftPlate='';draftInvoice='';
+  // Palet/kasa kayıtları sevkiyata BİR KEZ bağlanır; ürün kaydı kısmen
+  // tamamlanıp tekrar denenirse aynı delivery_id ikinci kez sayılamaz.
+  if(snapshot.packaging.length){
+   await req('/rest/v1/rpc/ak_depo_ambalaj_irsaliye_kaydet',{method:'POST',body:{p_delivery_id:id,p_satirlar:snapshot.packaging}});
+  }
+  akReceivingClearPending();lines=[];packagingLines=[];draftName='';draftFirm='';draftPlate='';draftInvoice='';
   await sync(true);opened=id;view='list';window.dispatchEvent(new CustomEvent('aktiva:shipment-saved',{detail:{id}}));toast('Sevkiyat kaydedildi.');
  }catch(err){
   const partial=akReceivingReadPending();
@@ -230,13 +251,24 @@ window.AKTIVA_applyWaybillResult=function(payload){
  draftFirm=payload.supplier!==undefined?String(payload.supplier||'').slice(0,150):fi.value;
  draftInvoice=payload.invoice!==undefined?String(payload.invoice||'').slice(0,100):inv.value;
  draftPlate=payload.plate!==undefined?String(payload.plate||'').slice(0,80):(plate?.value||'');
- const incoming=Array.isArray(payload.products)?payload.products:[];
+  const newPackaging=akReceivingPackaging(Array.isArray(payload.packaging)?payload.packaging:[]);
+  const incoming=Array.isArray(payload.products)?payload.products:[];
  if(incoming.length>150)throw Error('Tek seferde en fazla 150 ürün aktarılabilir.');
  for(const p of incoming){
   const name=String(p.name||'').trim(),cartons=Number(p.cartons),pallets=Number(p.pallets);
   if(!name||name.length>200||!Number.isSafeInteger(cartons)||cartons<1||cartons>999999||!Number.isSafeInteger(pallets)||pallets<0||pallets>999999)throw Error('Ürün adı, koli veya palet miktarlarını kontrol edin.');
  }
  let added=0,skipped=0;
+ // Yeniden OCR aktarımı aynı palet/kasa türünü iki kez eklemez.
+ for(const pkg of newPackaging){
+  const i=packagingLines.findIndex(x=>x.kind===pkg.kind&&(pkg.code?x.code===pkg.code:!x.code&&akReceivingNormalize(x.name)===akReceivingNormalize(pkg.name)));
+  if(i<0)packagingLines.push(pkg);
+  else if(packagingLines[i].quantity!==pkg.quantity){
+   if(!confirm(pkg.name+' daha önce '+packagingLines[i].quantity+' adet girildi. Yeni okunan miktar '+pkg.quantity+' ile değiştirilsin mi?'))continue;
+   packagingLines[i]=pkg;
+  }
+ }
+ packagingLines=akReceivingPackaging(packagingLines);
  for(const p of incoming){
   const key=searchKey(p.sku||p.name),exists=lines.some(x=>searchKey(x.sku||x.name)===key);
   if(exists){skipped++;continue}
@@ -244,7 +276,7 @@ window.AKTIVA_applyWaybillResult=function(payload){
  }
  if(fi)fi.value=draftFirm;if(inv)inv.value=draftInvoice;if(plate)plate.value=draftPlate;
  render();
- toast(added+' ürün sevkiyat listesine eklendi.'+(skipped?' '+skipped+' olası tekrar atlandı.':'')+' Kaydetmeden önce listeyi kontrol edin.');
+ toast(added+' ürün ve '+newPackaging.length+' palet/kasa türü sevkiyat taslağına aktarıldı.'+(skipped?' '+skipped+' ürün tekrarı atlandı.':'')+' Kaydetmeden önce listeyi kontrol edin.');
  return {added,skipped};
 };
 function bindSuggest(type){const root=container(),id=type==='firm'?'ak-firm':'ak-product';root.querySelectorAll(`#ak-${type}-suggestions [data-suggest]`).forEach(b=>b.onclick=()=>{root.querySelector('#'+id).value=b.dataset.suggest;if(type==='firm')draftFirm=b.dataset.suggest;else draftName=b.dataset.suggest;root.querySelector(`#ak-${type}-suggestions`).innerHTML=''})}

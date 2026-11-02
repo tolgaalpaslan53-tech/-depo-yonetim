@@ -13,39 +13,98 @@
   const current = () => {try {return {user:session?.user,role:profile?.role,token:session?.access_token,url:cfg?.url,apikey:cfg?.key};}catch{return {}}};
   const isSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol==='https:';
   const publicKey = () => (window.AKTIVA_VAPID_PUBLIC_KEY || localStorage.getItem(keyName) || '').trim();
-  async function register(){
-    const s=current();
-    if(!s.user || s.role!=='fork' || !s.token)throw Error('Forkliftçi hesabıyla giriş yapın.');
-    if(!isSupported())throw Error('Bu tarayıcıda Web Push desteklenmiyor. iPhone için Ana Ekrana Ekle ile açın.');
-    const key=publicKey();if(!/^[A-Za-z0-9_-]{87,88}$/.test(key))throw Error('Bildirim sunucusunun VAPID açık anahtarı henüz ayarlanmamış.');
-    const permission=await Notification.requestPermission();
-    if(permission!=='granted')throw Error('Bildirim izni verilmedi. Telefon ayarlarından izin vermeniz gerekiyor.');
-    await navigator.serviceWorker.register('./sw.js',{scope:'./'});
-    const ready=await navigator.serviceWorker.ready;
-    let sub=await ready.pushManager.getSubscription();
-    if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(key)});
-    const res=await fetch(s.url+'/rest/v1/dx_push_subscriptions?on_conflict=user_id,endpoint',{
-      method:'POST',headers:{apikey:s.apikey,Authorization:'Bearer '+s.token,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
-      body:JSON.stringify({user_id:s.user.id,subscription:sub.toJSON()})
+  const validKey = key => /^[A-Za-z0-9_-]{87,88}$/.test(key);
+  // Anahtar Supabase sunucusundan okunur. Eski/degismis localStorage anahtarlari
+  // yeni bildirim aboneliginin yanlis anahtarla acilmasina neden olmaz.
+  async function serverPublicKey(s) {
+    try {
+      const r = await fetch(s.url + '/functions/v1/send-push', {
+        method: 'GET', cache: 'no-store',
+        headers: { apikey: s.apikey, Authorization: 'Bearer ' + s.token },
+      });
+      if (!r.ok) throw Error('VAPID anahtari yaniti (' + r.status + ')');
+      const data = await r.json();
+      const key = String(data.publicKey || '').trim();
+      if (!validKey(key)) throw Error('Sunucudaki bildirim anahtari gecersiz');
+      window.AKTIVA_VAPID_PUBLIC_KEY = key;
+      localStorage.setItem(keyName, key);
+      return key;
+    } catch (e) {
+      // Eski sunucu surumu veya gecici baglanti hatasinda calisan aboneligi bozma.
+      const fallback = publicKey();
+      if (validKey(fallback)) return fallback;
+      throw Error('Bildirim sunucusunun acik anahtari alinamadi: ' + (e.message || e));
+    }
+  }
+  function sameSubscriptionKey(sub, key) {
+    const raw = sub?.options?.applicationServerKey;
+    // Bazi tarayicilar bu alani gostermiyor; yanlis tahminden kaynakli
+    // abonelik degistirmeye kalkisma. Butondan zorunlu yenileme mumkundur.
+    if (!raw) return true;
+    const bytes = raw instanceof ArrayBuffer ? new Uint8Array(raw) :
+      ArrayBuffer.isView(raw) ? new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength) : null;
+    if (!bytes) return true;
+    const expected = b64(key);
+    return bytes.length === expected.length && bytes.every((v, i) => v === expected[i]);
+  }
+  async function storeSubscription(s, sub) {
+    const res = await fetch(s.url + '/rest/v1/dx_push_subscriptions?on_conflict=user_id,endpoint', {
+      method: 'POST',
+      headers: { apikey: s.apikey, Authorization: 'Bearer ' + s.token,
+        'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({user_id: s.user.id, subscription: sub.toJSON()}),
     });
-    if(!res.ok)throw Error('Cihaz kaydedilemedi ('+res.status+'): '+(await res.text()).slice(0,160));
-    localStorage.setItem(marker,s.user.id);
-    status={userId:s.user.id,active:true};lastChecked=Date.now();
+    if (!res.ok) throw Error('Cihaz kaydedilemedi (' + res.status + '): ' + (await res.text()).slice(0, 160));
+  }
+  async function removeOldSubscription(s, endpoint) {
+    try {
+      const url = s.url + '/rest/v1/dx_push_subscriptions?user_id=eq.' +
+        encodeURIComponent(s.user.id) + '&endpoint=eq.' + encodeURIComponent(endpoint);
+      const res = await fetch(url, {method: 'DELETE',
+        headers: {apikey: s.apikey, Authorization: 'Bearer ' + s.token, Prefer: 'return=minimal'}});
+      if (!res.ok) console.warn('Eski AKTIVA bildirim kaydi temizlenemedi:', res.status);
+    } catch (e) { console.warn('Eski AKTIVA bildirim kaydi temizlenemedi:', e.message || e); }
+  }
+  async function renewSubscription(s, reg, oldSub, key) {
+    if (oldSub && !await oldSub.unsubscribe()) throw Error('Eski bildirim aboneligi kapatilamadi. Bildirimleri Yenile secenegini tekrar deneyin.');
+    const sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64(key)});
+    await storeSubscription(s, sub);
+    if (oldSub) await removeOldSubscription(s, oldSub.endpoint);
+    return sub;
+  }
+  async function register(){
+    const s = current();
+    if (!s.user || s.role !== 'fork' || !s.token) throw Error('Forkliftci hesabiyla giris yapin.');
+    if (!isSupported()) throw Error('Bu tarayicida Web Push desteklenmiyor. iPhone icin Ana Ekrana Ekle ile acin.');
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') throw Error('Bildirim izni verilmedi. Telefon ayarlarindan izin vermeniz gerekiyor.');
+    const key = await serverPublicKey(s);
+    if (!validKey(key)) throw Error('Bildirim sunucusunun VAPID acik anahtari ayarlanmamis.');
+    await navigator.serviceWorker.register('./sw.js', {scope: './'});
+    const reg = await navigator.serviceWorker.ready;
+    const oldSub = await reg.pushManager.getSubscription();
+    // Kullanici Yenile dugmesine bastiginda mevcut abonelik olsa da gercekten yenile.
+    // Yalnizca bu cihaz ve bu kullanicinin kaydi degisir.
+    if (oldSub) await renewSubscription(s, reg, oldSub, key);
+    else await storeSubscription(s, await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64(key)}));
+    localStorage.setItem(marker, s.user.id);
+    status = {userId:s.user.id, active:true}; lastChecked = Date.now();
     return true;
   }
   async function checkSubscription(s){
-    if(!isSupported() || Notification.permission!=='granted')return false;
-    const registration=await navigator.serviceWorker.getRegistration('./');
-    const sub=await registration?.pushManager.getSubscription();
-    if(!sub)return false;
-    // An existing device subscription may be missing on the server. Refresh its
-    // server registration, without requesting permission or changing the endpoint.
-    const res=await fetch(s.url+'/rest/v1/dx_push_subscriptions?on_conflict=user_id,endpoint',{
-      method:'POST',headers:{apikey:s.apikey,Authorization:'Bearer '+s.token,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
-      body:JSON.stringify({user_id:s.user.id,subscription:sub.toJSON()})
-    });
-    if(!res.ok)throw Error('Cihaz kaydı doğrulanamadı ('+res.status+'): '+(await res.text()).slice(0,130));
-    localStorage.setItem(marker,s.user.id);
+    if (!isSupported() || Notification.permission !== 'granted') return false;
+    const reg = await navigator.serviceWorker.getRegistration('./');
+    if (!reg) return false;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return false;
+    const key = await serverPublicKey(s);
+    if (!sameSubscriptionKey(sub, key)) {
+      // Telefonun eski anahtarla kayitli oldugu kesin: otomatik onar.
+      await renewSubscription(s, reg, sub, key);
+    } else {
+      await storeSubscription(s, sub);
+    }
+    localStorage.setItem(marker, s.user.id);
     return true;
   }
   async function disable(){

@@ -224,7 +224,7 @@
   const plateCanvas=enhance(fullCanvas,plateTop,fullCanvas.height,Math.min(3000,Math.round(fullCanvas.width*1.75)));
   const plateImage=await canvasBlob(plateCanvas);
   // Yedek tam görüntü yalnızca yeterli bilgi bulunamazsa okutulur.
-  return {primary,table,tableCanvas,tableWidth:tableCanvas?.width||0,tableHeight:tableCanvas?.height||0,plateImage,full:bounds?await canvasBlob(enhance(fullCanvas)):null,focused:!!bounds,width:focused.width,height:focused.height};
+  return {primary,primaryCanvas:focused,table,tableCanvas,tableWidth:tableCanvas?.width||0,tableHeight:tableCanvas?.height||0,plateImage,full:bounds?await canvasBlob(enhance(fullCanvas)):null,focused:!!bounds,width:focused.width,height:focused.height};
  }
  // Sayı hücresini tek başına büyük kenar payıyla büyütür: 15'in başındaki ince '1' kaybolmasın.
  function magnifyQuantityCell(source,rect,binary=false){
@@ -245,6 +245,42 @@
    const tess=await ensureTesseract(),all=[],tables=[],depotPalletCandidates=[],packagingQuantityHints=[];
    worker=await tess.createWorker('tur+eng',1,{logger:m=>{if(m.status==='recognizing text')status('Belge okunuyor: %'+Math.round((m.progress||0)*100))}});
    await worker.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:tess.PSM?.AUTO||'3',user_defined_dpi:'300'});
+   // Çizgili veya çizgisiz belgelerde aynı palet/kasa miktar okuması.
+   // Bilinen stok kodunun satırındaki sayıyı 3 bağımsız OCR kipinde kontrol eder.
+   async function scanPackaging(tsv,image,canvas,w,h){
+    const parser=window.AKTIVA_WAYBILL_PARSE;
+    const focus=parser?.findPackagingCells?.(tsv,w,h)||[];
+    for(const item of focus.slice(0,10)){
+     if(item.tsvAmount!=null&&item.tsvConfidence>=40)
+      packagingQuantityHints.push({code:item.code,amount:item.tsvAmount,unit:'unknown',source:'tablo-hücre'});
+     try{
+      status('Palet/kasa '+item.code+' miktarı yakından okunuyor...');
+      for(const [source,mode] of [['satır',tess.PSM?.SINGLE_LINE||'7'],['blok',tess.PSM?.SINGLE_BLOCK||'6']]){
+       await worker.setParameters({tessedit_pageseg_mode:mode});
+       const near=(await worker.recognize(image,{rectangle:item.rectangle})).data.text||'';
+       const found=parser.readFocusedPackagingQuantity(near);
+       if(found)packagingQuantityHints.push({code:item.code,...found,source});
+      }
+      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SINGLE_WORD||'8',tessedit_char_whitelist:'0123456789'});
+      const raw=(await worker.recognize(image,{rectangle:item.amountRectangle})).data.text?.trim()||'';
+      const digits=raw.match(/^\s*(\d{1,4})\s*$/);
+      if(digits&&Number(digits[1])>0)
+       packagingQuantityHints.push({code:item.code,amount:Number(digits[1]),unit:'unknown',source:'sayı'});
+      if(canvas){
+       for(const [source,binary,mode] of [['sayı-büyütülmüş',false,tess.PSM?.SINGLE_WORD||'8'],['sayı-ikili',true,tess.PSM?.SINGLE_LINE||'7']]){
+        const magnified=magnifyQuantityCell(canvas,item.amountRectangle,binary);
+        await worker.setParameters({tessedit_pageseg_mode:mode,tessedit_char_whitelist:'0123456789'});
+        const raw=(await worker.recognize(magnified)).data.text?.trim()||'';
+        const digits=raw.match(/^\s*(\d{1,4})\s*$/);
+        if(digits&&Number(digits[1])>0)
+         packagingQuantityHints.push({code:item.code,amount:Number(digits[1]),unit:'unknown',source});
+       }
+      }
+     }catch(err){console.warn('AKTİVA: palet/kasa miktarı yakın okuması atlandı',err)}
+     finally{await worker.setParameters({tessedit_char_whitelist:'',tessedit_pageseg_mode:tess.PSM?.AUTO||'3'}).catch(()=>{})}
+    }
+    return focus.length;
+   }
    for(let i=0;i<files.length;i++){
     status('Fotoğraf '+(i+1)+'/'+files.length+' için metin alanı aranıyor...');
     const picture=await loadPhoto(files[i],rotation);
@@ -275,42 +311,8 @@
      if(productData.tsv){
       const parser=window.AKTIVA_WAYBILL_PARSE;
       const tableResult=parser?.parse(productText,{tables:[productData.tsv]});
-      const packagingFocus=parser?.findPackagingCells?.(productData.tsv,picture.tableWidth,picture.tableHeight)||[];
-      const depotFocus=!packagingFocus.length&&tableResult?.depotPallets==null?parser?.findDepotCell(productData.tsv,picture.tableWidth,picture.tableHeight):null;
-      for(const item of packagingFocus.slice(0,10)){
-       if(item.tsvAmount!=null&&item.tsvConfidence>=40)packagingQuantityHints.push({code:item.code,amount:item.tsvAmount,unit:'unknown',source:'tablo-hücre'});
-       try{
-        status('Palet/kasa kodu '+item.code+' için miktar hücresi yakından okunuyor...');
-        // İnce '1' rakamı tablo çizgisine karışırsa 15 yerine 5 okunabiliyor.
-        // Aynı kırpımı hem tek satır hem blok modunda bağımsız kontrol et.
-        for(const [label,mode] of [['satır',tess.PSM?.SINGLE_LINE||'7'],['blok',tess.PSM?.SINGLE_BLOCK||'6']]){
-         await worker.setParameters({tessedit_pageseg_mode:mode});
-         const near=(await worker.recognize(picture.table,{rectangle:item.rectangle})).data.text||'';
-         const focused=parser.readFocusedPackagingQuantity(near);
-         if(focused)packagingQuantityHints.push({code:item.code,...focused,source:label});
-        }
-        // Birim silinmiş / tablo çizgisi kesmişse yalnız sayı alanını
-        // tekrar tara. Birimle birleştirilen okumaya ters düşerse otomatik seçme.
-        await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.SINGLE_WORD||'8',tessedit_char_whitelist:'0123456789'});
-        const onlyDigits=(await worker.recognize(picture.table,{rectangle:item.amountRectangle})).data.text?.trim()||'';
-        await worker.setParameters({tessedit_char_whitelist:''});
-        const number=onlyDigits.match(/^(\d{1,4})$/)?.[1];
-        if(number&&Number(number)>0)packagingQuantityHints.push({code:item.code,amount:Number(number),unit:'unknown',source:'sayı'});
-        // Orijinal sayı kırpımını iki ayrı görüntü işleme yöntemiyle yeniden tara.
-        // Aynı sayı iki yöntemde doğrulanırsa zayıf tek okumayı geçersiz sayabiliriz.
-        if(picture.tableCanvas){
-         for(const [source,binary,mode] of [['sayı-büyütülmüş',false,tess.PSM?.SINGLE_WORD||'8'],['sayı-ikili',true,tess.PSM?.SINGLE_LINE||'7']]){
-          const magnified=magnifyQuantityCell(picture.tableCanvas,item.amountRectangle,binary);
-          await worker.setParameters({tessedit_pageseg_mode:mode,tessedit_char_whitelist:'0123456789'});
-          const rawDigits=(await worker.recognize(magnified)).data.text?.trim()||'';
-          const m=rawDigits.match(/^\s*(\d{1,4})\s*$/);
-          if(m&&Number(m[1])>0)packagingQuantityHints.push({code:item.code,amount:Number(m[1]),unit:'unknown',source});
-         }
-         await worker.setParameters({tessedit_char_whitelist:''});
-        }
-       }catch(err){console.warn('AKTİVA: ambalaj miktarı odak okuması atlandı',err)}
-       finally{await worker.setParameters({tessedit_char_whitelist:'',tessedit_pageseg_mode:tess.PSM?.AUTO||'3'}).catch(()=>{})}
-      }
+      const packagingFocus=await scanPackaging(productData.tsv,picture.table,picture.tableCanvas,picture.tableWidth,picture.tableHeight);
+      const depotFocus=!packagingFocus&&tableResult?.depotPallets==null?parser?.findDepotCell(productData.tsv,picture.tableWidth,picture.tableHeight):null;
       if(depotFocus){
        status('Palet satırının miktar hücresi yakından okunuyor...');
        try{
@@ -324,7 +326,13 @@
      await worker.setParameters({tessedit_pageseg_mode:tess.PSM?.AUTO||'3'});
      if(productText.trim())words+='\n'+productText;
     }
-    if(!picture.table&&baseData.tsv)tables.push(baseData.tsv);
+    // Çizgisiz belgelerde ana fotoğrafı kullan. Tablonun kırpımı ambalaj
+    // satırını dışarıda bıraktıysa da yalnız o zaman tam sayfadan tekrar dene.
+    if(baseData.tsv){
+     if(!picture.table)tables.push(baseData.tsv);
+     if(!picture.table||!packagingQuantityHints.length)
+      await scanPackaging(baseData.tsv,picture.primary,picture.primaryCanvas,picture.width,picture.height);
+    }
     let first=window.AKTIVA_WAYBILL_PARSE?.parse(words,{tables,depotPalletCandidates,packagingQuantityHints});
     if(picture.plateImage&&(!first?.plate||first.confidence?.plate!=='yüksek'||!first.trailerPlate)){
      status('Fotoğraf '+(i+1)+' çekici/dorse plakası için alt bölge yakın okunuyor...');

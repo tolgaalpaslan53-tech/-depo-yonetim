@@ -1,4 +1,4 @@
-/* AKTIVA / İrsaliye ayrıştırıcı V13.
+/* AKTIVA / İrsaliye ayrıştırıcı V14.
  * Konum, firma/alıcı ayrımı, birimler ve tablo satırlarında güvenli tahmin.
  * Metin kullanıcı onayı olmadan hiçbir zaman doğrudan kaydedilmez.
  */
@@ -315,7 +315,8 @@
    if(value&&[x,y,w,h].every(Number.isFinite)&&w>0&&h>0)words.push({value,x,y,w,h,conf,mid:y+h/2});
   }
   const byCode=new Map();
-  const numeric=w=>{const str=fold(w.value).replace(/[.,]/g,'');return /^\d{1,4}$/.test(str)&&Number(str)>0?Number(str):null};
+  // İrsaliye 15,00 yazarsa 1500 palet olarak okumamak için qty() kullan.
+  const numeric=w=>{const n=qty(w.value);return n!==null&&n>0&&n<=9999?n:null};
   const unitRx=/^(?:KOLI|KOL|ADET|ADE|AD|PALET|PAKET|PALLET|PLT)$/;
   const headers=words.filter(w=>/^(?:MIKTAR|MIKTARI|ADET|QTY)$/.test(fold(w.value))&&w.y<height*.68);
   for(const word of words){
@@ -323,7 +324,8 @@
    // Kodun bulunduğu yatay SATIR esas alınır. Kod sağ sütunda da olabilir.
    const tolerance=Math.max(20,word.h*1.35);
    const same=words.filter(w=>Math.abs(w.mid-word.mid)<=tolerance);
-   const units=same.filter(w=>unitRx.test(fold(w.value))&&w!==word&&w.x>width*.2);
+   // "PALET" ürün adının bir parçasıysa onu sağdaki miktar birimi sanma.
+   const units=same.filter(w=>unitRx.test(fold(w.value))&&w!==word&&w.x>width*.55);
    const relevantHeaders=headers.filter(h=>h.mid<word.mid&&word.mid-h.mid<height*.42);
    const header=relevantHeaders.sort((a,b)=>Math.abs(a.x-width*.55)-Math.abs(b.x-width*.55))[0];
    const unit=units.sort((a,b)=>Math.abs(a.x-width*.73)-Math.abs(b.x-width*.73))[0];
@@ -340,7 +342,16 @@
     if(unit&&w.x>unit.x+unit.w)score-=4;
     return {w,score};
    }).sort((a,b)=>b.score-a.score);
-   const chosen=scored[0]?.score>=5?scored[0].w:null;
+   // Bazı irsaliyelerde miktar hücresi yalnız "15" gibi bir sayı içerir;
+   // yanında ADET yazmaz ve OCR tablo başlığını da kaçırabilir.
+   // Bu durumda yalnız bilinen ambalaj koduyla AYNI satırdaki, miktar
+   // sütunu bölgesindeki tek adayı yakın okumaya gönder. Adayı tek başına
+   // stok miktarı kabul etmiyoruz: farklı OCR okumaları doğrulayacak.
+   const bareNumbers=candidates.filter(w=>w.conf>=25&&w.x>=width*.37&&w.x<width*.86&&
+     !(w.x>=word.x-10&&w.x<=word.x+word.w+10));
+   const bareCandidate=!unit&&!header&&bareNumbers.length===1?bareNumbers[0]:null;
+   const chosen=scored[0]?.score>=5?scored[0].w:bareCandidate;
+   const hasStrongColumn=!!unit||!!header;
    // Mevcut rakam 5 görünse de asıl 15'in ince '1' başlangıcını kesmemek
    // için miktar kırpımı SOLA fazladan açılıyor.
    let x=chosen?.x??header?.x??(unit?unit.x-width*.07:null);
@@ -357,7 +368,9 @@
    const make=(l,r)=>({left:l,top,width:Math.max(1,r-l),height:bottom-top});
    byCode.set(code,{code,rectangle:make(left,right),amountRectangle:make(left,digitRight),
      // Konuma göre ön okuma; yakınlaştırılmış ikinci OCR ile karşılaştırılacak.
-     tsvAmount:chosen?numeric(chosen):null,tsvConfidence:chosen?chosen.conf:0});
+     // Tek başına duran, konumu tahmini sayı otomatik stok miktarı olmasın.
+     tsvAmount:chosen&&hasStrongColumn?numeric(chosen):null,
+     tsvConfidence:chosen&&hasStrongColumn?chosen.conf:0});
   }
   return [...byCode.values()].slice(0,20);
  }

@@ -152,21 +152,11 @@ if(view==='list'||view==='detail'){
  for(const d of filtered){
   const ps=plist().filter(p=>p.delivery_id===d.id);
   html+=view==='detail'?`<div class="ak-shipment ak-shipment-pro akd-single-detail"><div class="ak-shipment-head"><span class="ak-ship-title">🚚 &nbsp;${safe(d.supplier)}</span><span class="ak-ship-meta"><span>${safe(d.vehicle||'Plakasız')}</span><span>◷ ${safe(timeOf(d.arrived_at))}</span></span><span class="ak-ship-detail">${ps.length} ürün · ${safe(displayDate(dateOf(d.arrived_at)))}</span></div>`:`<div class="ak-shipment ak-shipment-pro"><button class="ak-shipment-head" data-open="${safe(d.id)}"><span class="ak-ship-title">🚚 &nbsp;${safe(d.supplier)}</span><span class="ak-ship-meta"><span>${safe(d.vehicle||'Plakasız')}</span><span>◷ ${safe(timeOf(d.arrived_at))}</span></span><span class="ak-ship-detail">${ps.length} ürün · ${safe(displayDate(dateOf(d.arrived_at)))}</span></button>`;
-  if(ps.length&&ps.every(p=>p.count_completed===true||p.count_completed===1||p.count_completed==='true')){
-   html+=`<div class="ak-count-summary"><strong>✓ ${safe(d.supplier)} — Tüm ürünler sayıldı</strong><p>Forkliftçi sevkiyatı görüntüleyebilir. Telefon bildirimi isteğe bağlıdır.</p><button type="button" class="ak-submit" data-notify-fork="${safe(d.id)}" ${akSendingDelivery===d.id?'disabled':''}>🔔 Forkliftçiye Bildirim Gönder</button></div>`;
-  }
   if(opened===d.id){
-   html+=window.AKTIVA_HIZLI_SAYIM?.renderShipment(d,ps)||'';
-   if(!window.AKTIVA_HIZLI_SAYIM?.isEnabled(d.id)){
-   const done=ps.filter(p=>p.count_completed).length;
-   const totals=ps.reduce((a,p)=>{const x=countInfo(p);a.expected+=x.expected;if(p.count_completed){a.received+=x.received;a.missing+=x.missing;a.excess+=x.excess;a.damaged+=x.damaged;}return a;},{expected:0,received:0,missing:0,excess:0,damaged:0});
-   html+=`<div class="ak-count-summary"><strong>İrsaliye / Sayım Karşılaştırması</strong><div class="ak-count-grid"><span>Beklenen <b>${totals.expected}</b></span><span>Sayılan <b>${totals.received}</b></span><span>Eksik <b>${totals.missing}</b></span><span>Fazla <b>${totals.excess}</b></span><span>Hasarlı <b>${totals.damaged}</b></span></div><small>${done}/${ps.length} ürün sayıldı</small><div class="ak-progress"><i style="width:${ps.length?Math.round(done*100/ps.length):0}%"></i></div><label>Ürün ara<input type="search" id="ak-product-filter" placeholder="Ürün adı" value="${safe(productSearch)}"></label><div class="ak-filter-actions"><button type="button" data-filter="all">Tümü</button><button type="button" data-filter="pending">Sayılmayan</button><button type="button" data-filter="done">Sayılan</button></div></div>`;
-   for(const p of ps.filter(p=>(productFilter==='all'||(productFilter==='done'?p.count_completed:!p.count_completed))&&searchKey(p.name).includes(searchKey(productSearch)))){ 
-    html+=`<div class="ak-product"><strong>${safe(p.name)}</strong><small>İrsaliye: ${Number(p.expected||0)} koli · Sayılan: ${p.count_completed?Number(p.received||0):'—'} koli · ${Number(p.pallet_count||0)} palet</small>${p.count_completed?`<small class="ak-diff">Eksik: ${countInfo(p).missing} · Fazla: ${countInfo(p).excess} · Hasarlı: ${countInfo(p).damaged} · Sağlam: ${countInfo(p).sound}</small>`:''}<div class="ak-complete"><span>${p.count_completed?'✓ Sayımı Tamamlandı':'Bekliyor'}</span><button type="button" data-edit="${safe(p.id)}">${p.count_completed?'Düzenle':'Sayımı Tamamla'}</button></div>`;
-    if(editId===p.id)html+=`<form class="ak-edit-form" data-editform="${safe(p.id)}"><label>Gerçek gelen koli<input name="actual" type="number" min="0" step="1" value="${p.count_completed?Number(p.received||0):Number(p.expected||0)}" required></label><label>Hasarlı koli<input name="damaged" type="number" min="0" step="1" value="${Number(p.damaged||0)}" required></label><label>Sayım notu<input name="count_note" maxlength="500" placeholder="Açıklama (isteğe bağlı)" value="${safe(p.count_note||'')}"></label><label>Gerçek palet sayısı<input name="pallets" type="number" min="0" step="1" value="${Number(p.pallet_count||0)}" required></label><div class="ak-two"><button type="button" class="ak-outline" id="ak-cancel">İptal</button><button type="submit" class="ak-submit">Kaydet</button></div></form>`;
-    html+='</div>';
+   html+=window.AKTIVA_HIZLI_SAYIM?.renderShipment(d,ps)||'<p class="ak-message">Sayım paneli yüklenemedi. Sayfayı yenileyin.</p>';
+   if(ps.length&&ps.every(p=>p.count_completed===true||p.count_completed===1||p.count_completed==='true')){
+    html+=`<div class="aks-notify"><small>✓ Tüm ürünlerin sayımı tamamlandı. Forkliftçi sevkiyatı görüntüleyebilir; telefon bildirimi isteğe bağlıdır.</small><button type="button" class="ak-submit" data-notify-fork="${safe(d.id)}" ${akSendingDelivery===d.id?'disabled':''}>🔔 Forkliftçiye Bildirim Gönder</button></div>`;
    }
-   } // Klasik sayım yalnızca hızlı sayım kapalıyken gösterilir.
   }
   html+='</div>';
  }

@@ -9,3 +9,19 @@
 .block.compact-block small{font-size:10px;line-height:1.1}
 .block[data-type="aisle"] .block-label{writing-mode:vertical-rl;max-height:calc(100% - 24px);white-space:nowrap}
 @media(max-width:420px){.zoom-buttons .btn.small{padding:6px 7px;min-height:32px;font-size:11px}}
+
+/* V1.1 · Bir koridorda yüzlerce ürün: harita blokları sabit, liste aranabilir ve sayfalı. */
+.location-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 0 5px;color:#edf6ff;font-size:13px}
+.location-count{color:#9ebdd3;font-size:12px;margin:10px 0}
+.compact-products{padding:0;list-style:none;max-height:340px;overflow:auto;border:1px solid #304961;border-radius:10px}
+.compact-products li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 7px;padding:9px 10px;border-bottom:1px solid #2b4058;line-height:1.35}
+.compact-products li:last-child{border-bottom:0}
+.compact-products .product-name{width:100%;font-weight:700;color:#edf4fc}
+.compact-products small{color:#8fa9bf;font-size:11px}
+.shelf-pill{font-size:11px;border:1px solid #4b647f;border-radius:6px;padding:2px 6px;color:#f5ce78}
+.product-editor{margin:13px 0;padding:11px;background:#162c43;border:1px solid #3a526d;border-radius:10px}
+.product-editor summary{cursor:pointer;color:#f1cf7d;font-size:13px;font-weight:800}
+.product-editor textarea{min-height:150px;max-height:300px;font-family:ui-monospace,monospace;font-size:12px}
+#locationFilter{margin:6px 0;width:100%}
+.block[data-type="aisle"] small{background:#263f59;border:1px solid #4b7998;border-radius:9px;padding:3px;font-size:9px;color:#fff;white-space:nowrap}
+.block[data-type="aisle"] .block-label{max-height:calc(100% - 46px)}

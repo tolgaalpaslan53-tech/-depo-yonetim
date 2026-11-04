@@ -5,7 +5,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const C=52,MAX_BLOCKS=800,MAX_BYTES=600000,DEMO_FLAG='demo';
+const C=52,MAX_BLOCKS=800,MAX_BYTES=600000,MAX_LOCATION_PRODUCTS=1000,PRODUCT_PAGE_SIZE=25;
 const TYPES={select:{label:'Seç'},rack:{label:'Raf',icon:'▥',w:2,h:1},aisle:{label:'Koridor',icon:'⇆',w:1,h:3},wall:{label:'Duvar',icon:'▬',w:3,h:1},door:{label:'Kapı',icon:'↪',w:1,h:1},dock:{label:'Peron',icon:'🚚',w:2,h:2},area:{label:'Alan',icon:'▧',w:3,h:2}};
 const empty=()=>({version:1,cols:22,rows:14,blocks:[]});
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -15,7 +15,7 @@ const norm=x=>text(x).trim().toLocaleLowerCase('tr-TR').normalize('NFD').replace
 const bound=(v,min,max)=>Math.max(min,Math.min(max,v));
 let layout=empty(),session=null,profile=null,admin=false,tool='select',zoom=1,selected=null,matched=new Set();
 let remoteRevision=0,remoteReady=false,remoteUpdated=null,dirty=false,drag=null,writeBusy=false,draftTimer=null;
-let draftKey='';
+let draftKey='',locationFilter='',locationPage=1;
 const config=()=>({url:text(window.MK_CONFIG?.url).replace(/\/+$/,''),key:text(window.MK_CONFIG?.key)});
 const setMessage=(msg,kind='info')=>{$('message').textContent=msg;$('message').dataset.kind=kind};
 const state=msg=>{$('saveState').textContent=msg};
@@ -51,8 +51,8 @@ function validate(input){
   ids.add(x.id);
   const b={id:x.id,type:x.type,x:x.x,y:x.y,w:x.w,h:x.h,label:text(x.label).trim().slice(0,75),note:text(x.note).slice(0,400),products:[]};
   if(b.x<0||b.y<0||b.w<1||b.h<1||b.x+b.w>input.cols||b.y+b.h>input.rows)throw Error('Harita sınırı dışında blok var.');
-  if(!Array.isArray(x.products)||x.products.length>150)throw Error('Bir rafta çok fazla ürün var.');
-  b.products=x.products.map(p=>({code:text(p.code).trim().slice(0,55),name:text(p.name).trim().slice(0,140)})).filter(p=>p.code||p.name);
+  if(!Array.isArray(x.products)||x.products.length>MAX_LOCATION_PRODUCTS)throw Error('Bir konumda en fazla '+MAX_LOCATION_PRODUCTS+' ürün bulunabilir.');
+  b.products=x.products.map(p=>({code:text(p.code).trim().slice(0,55),name:text(p.name).trim().slice(0,140),...(text(p.shelf).trim()?{shelf:text(p.shelf).trim().slice(0,75)}:{})})).filter(p=>p.code||p.name);
   if(b.type==='rack'&&b.label){const key=norm(b.label);if(rackNames.has(key))throw Error('Aynı raf numarası iki kez girilmiş: '+b.label);rackNames.add(key)}
   if(blocks.some(old=>isRectOverlap(old,b)))throw Error('Bloklar çakışıyor.');
   blocks.push(b);
@@ -69,39 +69,64 @@ function dirtyNow(){if(!isEditable())return;dirty=true;clearTimeout(draftTimer);
 function afterSave(){dirty=false;clearTimeout(draftTimer);localStorage.removeItem(draftKey);$('draftBanner').classList.add('is-hidden');$('saveState').classList.remove('dirty-tag');state('Bulutta güncel')}
 function updateTool(){document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));$('modeTip').textContent=tool==='select'?'Bir bloğu seç veya sürükleyerek taşı.':TYPES[tool].label+' eklemek için haritada boş alana dokun.';renderCanvas()}
 function updateZoom(next){zoom=bound(Math.round(next*10)/10,.35,1.6);$('zoomLabel').textContent=Math.round(zoom*100)+'%';renderCanvas()}
-function renderStats(){const n=layout.blocks.filter(b=>b.type==='rack').length;const m=layout.blocks.reduce((a,b)=>a+(b.type==='rack'?b.products.length:0),0);$('rackCount').textContent=n+' raf';$('productCount').textContent=m+' ürün konumu'}
+function renderStats(){const n=layout.blocks.filter(b=>b.type==='rack').length;const m=layout.blocks.reduce((a,b)=>a+(['rack','aisle'].includes(b.type)?b.products.length:0),0);const aisles=layout.blocks.filter(b=>b.type==='aisle').length;$('rackCount').textContent=n+' raf · '+aisles+' koridor';$('productCount').textContent=m+' ürün konumu'}
 function renderCanvas(){
  const inner=$('mapCanvas'),stage=$('mapStage');inner.style.width=(layout.cols*C)+'px';inner.style.height=(layout.rows*C)+'px';inner.style.transform=`scale(${zoom})`;stage.style.width=(layout.cols*C*zoom)+'px';stage.style.height=(layout.rows*C*zoom)+'px';
  inner.classList.toggle('edit-mode',isEditable());
  inner.innerHTML=layout.blocks.map(b=>{
   const ic=TYPES[b.type].icon;
-  const tooltip=esc(b.type==='rack'?`${b.label} · ${b.products.length} ürün`:b.label);
-  return `<div class="block${b.h===1?' compact-block':''}${selected===b.id?' selected':''}${matched.has(b.id)?' matched':''}" role="button" tabindex="0" aria-label="${tooltip}" data-id="${esc(b.id)}" data-type="${b.type}" style="left:${b.x*C+3}px;top:${b.y*C+3}px;width:${b.w*C-6}px;height:${b.h*C-6}px"><span class="block-icon">${ic}</span><span class="block-label">${esc(b.label)}</span>${b.type==='rack'&&b.products.length?`<small>${b.products.length} ürün</small>`:''}</div>`
+  const hasProducts=['rack','aisle'].includes(b.type);const tooltip=esc(hasProducts?`${b.label} · ${b.products.length} ürün`:b.label);
+  return `<div class="block${b.h===1?' compact-block':''}${selected===b.id?' selected':''}${matched.has(b.id)?' matched':''}" role="button" tabindex="0" aria-label="${tooltip}" data-id="${esc(b.id)}" data-type="${b.type}" style="left:${b.x*C+3}px;top:${b.y*C+3}px;width:${b.w*C-6}px;height:${b.h*C-6}px"><span class="block-icon">${ic}</span><span class="block-label">${esc(b.label)}</span>${hasProducts&&b.products.length?`<small>${b.products.length} ürün</small>`:''}</div>`
  }).join('');
  renderStats();
 }
 function scrollToSelected(){const node=[...$('mapCanvas').querySelectorAll('.block')].find(el=>el.dataset.id===selected);if(node){const sc=$('mapScroll');const x=node.offsetLeft*zoom;const y=node.offsetTop*zoom;sc.scrollTo({left:Math.max(0,x-sc.clientWidth/2+80),top:Math.max(0,y-sc.clientHeight/2+80),behavior:'smooth'})}}
-function selectBlock(id,{scroll=false}={}){selected=id;tool='select';document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool==='select'));renderCanvas();renderInspector();if(scroll)scrollToSelected()}
-function parseProductLines(value){const out=[],seen=new Set();for(const line of text(value).split(/\r?\n/)){const s=line.trim();if(!s)continue;let code='',name='';const sep=s.indexOf('|');if(sep>=0){code=s.slice(0,sep).trim();name=s.slice(sep+1).trim()}else{name=s}if(!name&&!code)continue;code=code.slice(0,55);name=name.slice(0,140);const key=norm(code+'|'+name);if(!seen.has(key)){seen.add(key);out.push({code,name})}}if(out.length>150)throw Error('Bir rafta en fazla 150 ürün olabilir.');return out}
+function selectBlock(id,{scroll=false,filter=''}={}){selected=id;locationFilter=filter;locationPage=1;tool='select';document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool==='select'));renderCanvas();renderInspector();if(scroll)scrollToSelected()}
+function parseProductLines(value){
+ const out=[],seen=new Set();for(const line of text(value).split(/\r?\n/)){
+  const v=line.trim();if(!v)continue;const parts=v.split('|').map(x=>x.trim());
+  const code=parts.length>=2?parts[0].slice(0,55):'';
+  const name=(parts.length>=2?parts[1]:parts[0]).slice(0,140);
+  const shelf=parts.length>=3?parts.slice(2).join('|').slice(0,75):'';
+  if(!name&&!code)continue;const key=norm(code+'|'+name+'|'+shelf);
+  if(!seen.has(key)){seen.add(key);out.push({code,name,...(shelf?{shelf}:{})})}
+ }
+ if(out.length>MAX_LOCATION_PRODUCTS)throw Error('Bir konuma en fazla '+MAX_LOCATION_PRODUCTS+' ürün eklenebilir.');return out;
+}
+function productSummary(b){return b.products.length+' ürün tanımlı';}
+function renderLocationProducts(b){
+ const box=$('locationProducts');if(!box)return;
+ const q=norm(locationFilter);const found=b.products.filter(p=>!q||norm(p.name).includes(q)||norm(p.code).includes(q)||norm(p.shelf).includes(q));
+ const end=Math.min(found.length,locationPage*PRODUCT_PAGE_SIZE),visible=found.slice(0,end);
+ box.innerHTML=`<p class="location-count">${found.length} ürün gösteriliyor${q?' · '+esc(locationFilter)+' araması':''}</p>`+
+ (found.length?`<ul class="products-list compact-products">${visible.map(p=>`<li><span class="product-name">${esc(p.name||p.code)}</span>${p.code?`<small>${esc(p.code)}</small>`:''}${p.shelf?`<span class="shelf-pill">Raf ${esc(p.shelf)}</span>`:''}</li>`).join('')}</ul>`:'<p class="muted">Bu aramada ürün bulunamadı.</p>')+
+ (end<found.length?`<button class="btn secondary full small" type="button" id="moreLocationProducts">Sonraki ${Math.min(PRODUCT_PAGE_SIZE,found.length-end)} ürünü göster (${end}/${found.length})</button>`:'');
+ $('moreLocationProducts')?.addEventListener('click',()=>{locationPage++;renderLocationProducts(b)});
+}
 function renderInspector(){
  const b=layout.blocks.find(x=>x.id===selected),t=$('inspectorTitle'),h=$('inspectorBody');
- if(!b){t.textContent='Raf bilgileri';h.innerHTML='<p class="muted">Haritada bir rafa dokun. Raf numarası ve ürün bilgileri burada görünecek.</p>';return}
- t.textContent=TYPES[b.type].label+' bilgileri';
+ if(!b){t.textContent='Konum bilgileri';h.innerHTML='<p class="muted">Haritada bir raf veya koridor seç. Ürünleri arayarak listeleyebilirsin.</p>';return}
+ const hasProducts=['rack','aisle'].includes(b.type);t.textContent=TYPES[b.type].label+' bilgileri';
  if(!isEditable()){
-  h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted">${esc(b.note||'')}</p>`+(b.type==='rack'?`<h3>Bu raftaki ürünler <span class="pill">${b.products.length}</span></h3>${b.products.length?`<ul class="products-list">${b.products.map(p=>`<li>${esc(p.name||p.code)}${p.code?` <span class="muted">(${esc(p.code)})</span>`:''}</li>`).join('')}</ul>`:'<p class="muted">Henüz ürün tanımlanmamış.</p>'}`:'');return
+  h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted">${esc(b.note||'')}</p>`+(hasProducts?`<div class="location-header"><strong>${esc(productSummary(b))}</strong><span class="pill">${esc(TYPES[b.type].label)}</span></div><label for="locationFilter">Bu konumda ürün ara</label><input id="locationFilter" type="search" placeholder="Ürün adı, kod veya raf…" autocomplete="off" value="${esc(locationFilter)}"><div id="locationProducts"></div>`:'');
+  if(hasProducts){$('locationFilter').addEventListener('input',e=>{locationFilter=e.target.value;locationPage=1;renderLocationProducts(b)});renderLocationProducts(b)}return;
  }
- h.innerHTML=`<form id="editForm"><label for="editLabel">${b.type==='rack'?'Raf numarası':'Ad / açıklama'}</label><input id="editLabel" name="label" maxlength="75" required value="${esc(b.label)}"><div class="inline-fields"><div><label for="editW">Genişlik (hücre)</label><input id="editW" type="number" min="1" max="15" value="${b.w}"></div><div><label for="editH">Yükseklik (hücre)</label><input id="editH" type="number" min="1" max="15" value="${b.h}"></div></div>${b.type==='rack'?`<label for="editProducts">Raftaki ürünler</label><textarea id="editProducts" placeholder="ÜRÜN-KODU | Ürün adı&#10;ÜRÜN-KODU-2 | Başka ürün">${esc(b.products.map(p=>[p.code,p.name].filter(Boolean).join(' | ')).join('\n'))}</textarea><p class="muted smalltext">Her satıra bir ürün. Kod zorunlu değil. Bir rafa birden fazla ürün eklenebilir.</p>`:''}<label for="editNote">Not (isteğe bağlı)</label><textarea id="editNote" maxlength="400" style="min-height:55px">${esc(b.note)}</textarea><div class="row-actions"><button class="btn primary" type="submit">Uygula</button><button class="btn secondary" type="button" id="removeBlock">Sil</button></div></form>`;
+ h.innerHTML=`<form id="editForm"><label for="editLabel">${b.type==='rack'?'Raf numarası':b.type==='aisle'?'Koridor adı':'Ad / açıklama'}</label><input id="editLabel" name="label" maxlength="75" required value="${esc(b.label)}"><div class="inline-fields"><div><label for="editW">Genişlik (hücre)</label><input id="editW" type="number" min="1" max="15" value="${b.w}"></div><div><label for="editH">Yükseklik (hücre)</label><input id="editH" type="number" min="1" max="15" value="${b.h}"></div></div>${hasProducts?`<details class="product-editor"><summary>Ürünleri düzenle · ${b.products.length} ürün</summary><label for="editProducts">Ürünler (her satıra bir ürün)</label><textarea id="editProducts" spellcheck="false" placeholder="ÜRÜN-KODU | Ürün adı | raf numarası&#10;ÜRÜN-KODU-2 | Başka ürün">${esc(b.products.map(p=>[p.code,p.name,p.shelf||''].join(' | ').replace(/\s*\|\s*$/,'')).join('\n'))}</textarea><p class="muted smalltext">100+ ürün için sol menüdeki CSV aktarımı daha kolaydır. Her satır: Kod | Ürün | Raf (isteğe bağlı).</p></details>`:''}<label for="editNote">Not (isteğe bağlı)</label><textarea id="editNote" maxlength="400" style="min-height:55px">${esc(b.note)}</textarea><div class="row-actions"><button class="btn primary" type="submit">Uygula</button><button class="btn secondary" type="button" id="removeBlock">Sil</button></div></form>`+
+ (hasProducts?`<div class="location-header"><strong>${esc(productSummary(b))}</strong></div><label for="locationFilter">Bu konumda ürün ara</label><input id="locationFilter" type="search" placeholder="Ürün adı, kod veya raf…" autocomplete="off" value="${esc(locationFilter)}"><div id="locationProducts"></div>`:'');
  $('editForm').addEventListener('submit',e=>{e.preventDefault();try{
   const label=$('editLabel').value.trim();const w=Number($('editW').value),hh=Number($('editH').value);
-  if(!label)throw Error('Ad/raf numarası boş olamaz.');
+  if(!label)throw Error('Ad veya raf numarası boş olamaz.');
   if(!Number.isInteger(w)||!Number.isInteger(hh)||w<1||hh<1||w>15||hh>15)throw Error('Blok boyutu 1–15 hücre olmalı.');
   if(b.type==='rack'&&layout.blocks.some(x=>x.id!==b.id&&x.type==='rack'&&norm(x.label)===norm(label)))throw Error('Bu raf numarası zaten var.');
-  const proposed={...b,w,h:hh};if(!fits(proposed,b.id))throw Error('Blok bu boyutta diğer bloklarla çakışıyor veya harita dışına taşıyor.');
-  b.label=label;b.w=w;b.h=hh;b.note=$('editNote').value.trim().slice(0,400);if(b.type==='rack')b.products=parseProductLines($('editProducts').value);
-  dirtyNow();renderCanvas();renderInspector();setMessage('Blok güncellendi. Buluta kaydetmeyi unutma.','success');
+  const proposed={...b,w,h:hh};if(!fits(proposed,b.id))throw Error('Blok diğer bloklarla çakışıyor veya harita dışına taşıyor.');
+  const products=hasProducts?parseProductLines($('editProducts').value):[];
+  const old=clone(b);b.label=label;b.w=w;b.h=hh;b.note=$('editNote').value.trim().slice(0,400);if(hasProducts)b.products=products;
+  try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('Konum güncellendi. Buluta kaydetmeyi unutma.','success');
  }catch(err){setMessage(err.message,'error')}});
- $('removeBlock').addEventListener('click',()=>{if(!confirm(`“${b.label}” silinsin mi?`))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;dirtyNow();renderCanvas();renderInspector();setMessage('Blok silindi.','success')});
+ $('removeBlock').addEventListener('click',()=>{if(!confirm(`“${b.label}” silinsin mi?`))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;locationFilter='';dirtyNow();renderCanvas();renderInspector();search();setMessage('Blok silindi.','success')});
+ if(hasProducts){$('locationFilter').addEventListener('input',e=>{locationFilter=e.target.value;locationPage=1;renderLocationProducts(b)});renderLocationProducts(b)}
 }
+
 function gridPosition(e){const rect=$('mapCanvas').getBoundingClientRect();return {x:Math.floor((e.clientX-rect.left)/(C*zoom)),y:Math.floor((e.clientY-rect.top)/(C*zoom))}}
 function newAt(e){if(!isEditable()||tool==='select')return;const {x,y}=gridPosition(e);const type=tool,b=createBlock(type,x,y);if(layout.blocks.length>=MAX_BLOCKS){setMessage('Harita öğe sınırına ulaşıldı.','error');return}if(!fits(b)){setMessage('Burada yeterli boş alan yok. Başka bir hücre seç.','error');return}layout.blocks.push(b);selected=b.id;tool='select';dirtyNow();updateTool();renderInspector();$('editLabel')?.focus();}
 function pointerDown(e){const target=e.target.closest('.block');if(!target)return;if(e.button!==0&&e.pointerType==='mouse')return;const id=target.dataset.id;const b=layout.blocks.find(x=>x.id===id);if(!b)return;selected=b.id;renderInspector();$('mapCanvas').querySelectorAll('.block').forEach(n=>n.classList.toggle('selected',n.dataset.id===b.id));if(!isEditable()||tool!=='select')return;drag={id,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,originX:b.x,originY:b.y,moved:false};
@@ -109,21 +134,51 @@ function pointerDown(e){const target=e.target.closest('.block');if(!target)retur
 }
 function pointerMove(e){if(!drag||e.pointerId!==drag.pointerId)return;const target=[...$('mapCanvas').querySelectorAll('.block')].find(x=>x.dataset.id===drag.id);if(!target)return;const dx=(e.clientX-drag.startX)/zoom,dy=(e.clientY-drag.startY)/zoom;if(Math.abs(dx)>5||Math.abs(dy)>5)drag.moved=true;if(!drag.moved)return;target.style.transform=`translate(${dx}px,${dy}px)`;target.style.opacity='.8';}
 function pointerUp(e){if(!drag||e.pointerId!==drag.pointerId)return;const d=drag;drag=null;if(!d.moved)return;const block=layout.blocks.find(x=>x.id===d.id);if(!block)return;const dx=Math.round((e.clientX-d.startX)/(C*zoom)),dy=Math.round((e.clientY-d.startY)/(C*zoom));if(dx||dy){const target={...block,x:d.originX+dx,y:d.originY+dy};if(fits(target,block.id)){block.x=target.x;block.y=target.y;dirtyNow();setMessage('Blok taşındı. Kaydedilmemiş değişiklik var.','success')}else{setMessage('O konum dolu veya harita sınırı dışında.','error')}}renderCanvas();renderInspector();}
-function search(){const q=norm($('searchInput').value),box=$('searchResults');matched.clear();if(!q){box.classList.add('is-hidden');box.innerHTML='';renderCanvas();return}
- const found=layout.blocks.filter(b=>norm(b.label).includes(q)||(b.type==='rack'&&b.products.some(p=>norm(p.code).includes(q)||norm(p.name).includes(q))));for(const b of found)matched.add(b.id);
- box.innerHTML=found.length?found.slice(0,30).map(b=>`<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${b.type==='rack'?esc(b.products.filter(p=>norm(p.code).includes(q)||norm(p.name).includes(q)).map(p=>p.name||p.code).join(' · ')||`${b.products.length} ürün`):esc(TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`).join(''):'<div class="empty-state">Eşleşen raf veya ürün bulunamadı.</div>';
- box.classList.remove('is-hidden');renderCanvas();}
+function search(){
+ const q=norm($('searchInput').value),box=$('searchResults');matched.clear();if(!q){box.classList.add('is-hidden');box.innerHTML='';renderCanvas();return}
+ const found=layout.blocks.filter(b=>norm(b.label).includes(q)||(['rack','aisle'].includes(b.type)&&b.products.some(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q))));
+ found.forEach(b=>matched.add(b.id));
+ box.innerHTML=found.length?found.slice(0,30).map(b=>{
+  const products=['rack','aisle'].includes(b.type)?b.products.filter(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q)):[];
+  return `<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${products.length?esc(products.slice(0,2).map(p=>p.name||p.code).join(' · '))+ (products.length>2?` · +${products.length-2} eşleşme`:''):esc(['rack','aisle'].includes(b.type)?`${b.products.length} ürün`:TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`;
+ }).join('')+(found.length>30?`<p class="muted">İlk 30 konum gösteriliyor. Aramayı daraltabilirsin.</p>`:''):'<div class="empty-state">Eşleşen raf, koridor veya ürün bulunamadı.</div>';
+ box.classList.remove('is-hidden');renderCanvas();
+}
+
 function freeSlot(w=2,h=1){for(let y=0;y<=layout.rows-h;y++)for(let x=0;x<=layout.cols-w;x++){if(fits({x,y,w,h}))return{x,y}}return null}
 function csvRows(raw){const first=raw.replace(/^\uFEFF/,'');const line=first.split(/\r?\n/,1)[0];const delim=[';',',','\t'].sort((a,b)=>line.split(b).length-line.split(a).length)[0];const out=[],row=[];let cur='',quoted=false;for(let i=0;i<first.length;i++){const ch=first[i];if(ch==='"'){if(quoted&&first[i+1]==='"'){cur+='"';i++}else quoted=!quoted}else if(ch===delim&&!quoted){row.push(cur);cur=''}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&first[i+1]==='\n')i++;row.push(cur);if(row.some(x=>x.trim()))out.push([...row]);row.length=0;cur=''}else cur+=ch}row.push(cur);if(row.some(x=>x.trim()))out.push(row);return out}
-async function importCsv(file){if(!file||!isEditable())return;const data=await file.text();if(data.length>2e6)throw Error('CSV en fazla 2 MB olabilir.');const lines=csvRows(data);if(!lines.length)throw Error('CSV boş.');const first=lines[0].map(norm);const hasHeader=first.some(x=>x.includes('raf')||x.includes('shelf'));const cols=hasHeader?first:[];
+async function importCsv(file){
+ if(!file||!isEditable())return;const data=await file.text();if(data.length>2e6)throw Error('CSV en fazla 2 MB olabilir.');
+ const lines=csvRows(data);if(!lines.length)throw Error('CSV boş.');
+ const first=lines[0].map(norm),hasHeader=first.some(x=>/^(raf(_no)?|raf no|raf numarasi|shelf|koridor(_adi)?|koridor adi|konum|lokasyon|urun_kodu|urun_adi|urun adi|urun kodu|product|malzeme)$/.test(x));
+ const cols=hasHeader?first:[];
  const idx=(names,fallback)=>{const j=cols.findIndex(x=>names.some(n=>x===n||x.includes(n)));return j>=0?j:fallback};
- const ridx=idx(['raf','shelf','lokasyon'],0),cidx=idx(['kod','code','barkod'],1),nidx=idx(['urun adi','urun adı','urun_adi','product','malzeme'],2);
- const items=lines.slice(hasHeader?1:0),temp=clone(layout);let added=0,created=0,skipped=0;let current=layout;
- try{for(const row of items){const shelf=text(row[ridx]).trim().slice(0,75);const name=text(row[nidx]).trim().slice(0,140);const code=text(row[cidx]).trim().slice(0,55);if(!shelf||!name){skipped++;continue}let rack=current.blocks.find(b=>b.type==='rack'&&norm(b.label)===norm(shelf));if(!rack){const slot=freeSlot(2,1);if(!slot){skipped++;continue}rack=createBlock('rack',slot.x,slot.y,2,1,shelf);current.blocks.push(rack);created++}
- if(rack.products.length>=150){skipped++;continue}if(!rack.products.some(p=>norm(p.name)===norm(name)&&norm(p.code)===norm(code))){rack.products.push({code,name});added++}}
-  validate(current);dirtyNow();renderCanvas();renderInspector();setMessage(`CSV işlendi: ${created} raf oluşturuldu, ${added} ürün eklendi, ${skipped} satır atlandı.`, 'success');
- }catch(e){layout=temp;renderCanvas();renderInspector();throw e}
+ const corridorIdx=cols.findIndex(x=>x==='koridor'||x==='koridor_adi'||x==='koridor adi');
+ const locIdx=idx(['konum','lokasyon','raf_no','raf no','shelf','raf'],0);
+ const codeIdx=idx(['urun_kodu','urun kodu','barkod','kod','code'],1),nameIdx=idx(['urun_adi','urun adi','product','malzeme'],2);
+ const shelfIdx=cols.findIndex((x,i)=>i!==locIdx&&['raf_no','raf no','raf','shelf'].includes(x));
+ const typeIdx=cols.findIndex(x=>['tur','tip','konum_tipi'].includes(x));
+ const temp=clone(layout);let added=0,created=0,skipped=0;
+ try{
+  for(const row of lines.slice(hasHeader?1:0)){
+   const rawCorridor=corridorIdx>=0?text(row[corridorIdx]).trim():'';
+   const rawLoc=rawCorridor||text(row[locIdx]).trim(),name=text(row[nameIdx]).trim().slice(0,140),code=text(row[codeIdx]).trim().slice(0,55);
+   if(!rawLoc||!name){skipped++;continue}
+   const typeRaw=typeIdx>=0?norm(row[typeIdx]):'';
+   const isCorridor=!!rawCorridor||typeRaw.includes('koridor')||(!typeRaw&&norm(rawLoc).startsWith('koridor'));
+   const type=isCorridor?'aisle':'rack';
+   const label=(isCorridor&&!norm(rawLoc).startsWith('koridor')?'Koridor ':'')+rawLoc.slice(0,75);
+   const shelf=(shelfIdx>=0?text(row[shelfIdx]).trim():rawCorridor?text(row[locIdx]).trim():'').slice(0,75);
+   let target=layout.blocks.find(b=>b.type===type&&norm(b.label)===norm(label));
+   if(!target){const w=type==='aisle'?1:2,h=type==='aisle'?3:1,slot=freeSlot(w,h);if(!slot){skipped++;continue}target=createBlock(type,slot.x,slot.y,w,h,label);layout.blocks.push(target);created++}
+   if(target.products.length>=MAX_LOCATION_PRODUCTS){skipped++;continue}
+   const product={code,name,...(shelf?{shelf}:{})};
+   if(!target.products.some(p=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&norm(p.shelf)===norm(shelf))){target.products.push(product);added++}
+  }
+  validate(layout);dirtyNow();renderCanvas();renderInspector();search();setMessage(`CSV işlendi: ${created} konum oluşturuldu, ${added} ürün eklendi, ${skipped} satır atlandı.`, 'success');
+ }catch(e){layout=temp;renderCanvas();renderInspector();search();throw e}
 }
+
 function downloadBackup(){const data=JSON.stringify(serialize(),null,2);const blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='aktiva-depo-haritasi-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000)}
 function showRemote(){state(!remoteReady?'SQL kurulumu gerekli':dirty?'Kaydedilmemiş değişiklikler':remoteRevision?'Bulutta güncel':'Yeni harita');$('lastSaved').textContent=remoteRevision?'Sunucu kayıt zamanı: '+prettyDate(remoteUpdated):remoteReady?'Henüz paylaşılan harita yok':'Sunucuda tablo bulunamadı — SQL kurulumunu yap.';$('saveMap').disabled=!remoteReady||writeBusy}
 function findDraft(){try{const raw=localStorage.getItem(draftKey);if(!raw)return null;const d=JSON.parse(raw);return {layout:validate(d.layout),revision:d.revision,updatedAt:d.updatedAt}}catch{return null}}
@@ -170,7 +225,7 @@ function bind(){
  $('mapCanvas').addEventListener('click',e=>{const b=e.target.closest('.block');if(b){selectBlock(b.dataset.id);return}newAt(e)});
  $('mapCanvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('block')){e.preventDefault();selectBlock(e.target.dataset.id)}});
  $('mapCanvas').addEventListener('pointerdown',pointerDown);$('mapCanvas').addEventListener('pointermove',pointerMove);$('mapCanvas').addEventListener('pointerup',pointerUp);$('mapCanvas').addEventListener('pointercancel',pointerUp);
- $('searchInput').addEventListener('input',search);$('clearSearch').addEventListener('click',()=>{$('searchInput').value='';search();$('searchInput').focus()});$('searchResults').addEventListener('click',e=>{const b=e.target.closest('[data-result]');if(!b)return;selectBlock(b.dataset.result,{scroll:true})});
+ $('searchInput').addEventListener('input',search);$('clearSearch').addEventListener('click',()=>{$('searchInput').value='';search();$('searchInput').focus()});$('searchResults').addEventListener('click',e=>{const b=e.target.closest('[data-result]');if(!b)return;selectBlock(b.dataset.result,{scroll:true,filter:$('searchInput').value})});
  $('zoomOut').addEventListener('click',()=>updateZoom(zoom-.1));$('zoomIn').addEventListener('click',()=>updateZoom(zoom+.1));$('zoomFit').addEventListener('click',()=>{const sc=$('mapScroll');updateZoom(Math.min((sc.clientWidth-34)/(layout.cols*C),(sc.clientHeight-34)/(layout.rows*C),1));sc.scrollTo({top:0,left:0,behavior:'smooth'})});
  $('resizeMap').addEventListener('click',()=>{if(!isEditable())return;const cols=Number($('gridCols').value),rows=Number($('gridRows').value);if(!Number.isInteger(cols)||cols<10||cols>60||!Number.isInteger(rows)||rows<8||rows>40){setMessage('Harita en az 10×8, en çok 60×40 hücre olmalı.','error');return}if(layout.blocks.some(b=>b.x+b.w>cols||b.y+b.h>rows)){setMessage('Bazı bloklar yeni ölçülerin dışında kalıyor. Önce blokları taşı.','error');return}layout.cols=cols;layout.rows=rows;dirtyNow();renderCanvas();setMessage('Harita ölçüsü değiştirildi.','success')});
  $('demoMap').addEventListener('click',createDemo);

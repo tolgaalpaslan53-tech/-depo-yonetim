@@ -16,6 +16,8 @@ const bound=(v,min,max)=>Math.max(min,Math.min(max,v));
 let layout=empty(),session=null,profile=null,admin=false,tool='select',zoom=1,selected=null,matched=new Set();
 let remoteRevision=0,remoteReady=false,remoteUpdated=null,dirty=false,drag=null,writeBusy=false,draftTimer=null;
 let draftKey='',locationFilter='',locationPage=1;
+let corridorId=null,corridorSlot=null,corridorQuery='',pendingMove=null,suppressClickUntil=0;
+const SIDES={left:'Sol',right:'Sağ'};
 const config=()=>({url:text(window.MK_CONFIG?.url).replace(/\/+$/,''),key:text(window.MK_CONFIG?.key)});
 const setMessage=(msg,kind='info')=>{$('message').textContent=msg;$('message').dataset.kind=kind};
 const state=msg=>{$('saveState').textContent=msg};
@@ -50,9 +52,10 @@ function validate(input){
   if(!x||!TYPES[x.type]||x.type==='select'||!Number.isInteger(x.x)||!Number.isInteger(x.y)||!Number.isInteger(x.w)||!Number.isInteger(x.h)||typeof x.id!=='string'||x.id.length>70||!x.id||ids.has(x.id))throw Error('Bozuk veya tekrarlanan blok bilgisi var.');
   ids.add(x.id);
   const b={id:x.id,type:x.type,x:x.x,y:x.y,w:x.w,h:x.h,label:text(x.label).trim().slice(0,75),note:text(x.note).slice(0,400),products:[]};
+  if(b.type==='aisle')b.sections=Number.isInteger(x.sections)?bound(x.sections,2,60):12;
   if(b.x<0||b.y<0||b.w<1||b.h<1||b.x+b.w>input.cols||b.y+b.h>input.rows)throw Error('Harita sınırı dışında blok var.');
   if(!Array.isArray(x.products)||x.products.length>MAX_LOCATION_PRODUCTS)throw Error('Bir konumda en fazla '+MAX_LOCATION_PRODUCTS+' ürün bulunabilir.');
-  b.products=x.products.map(p=>({code:text(p.code).trim().slice(0,55),name:text(p.name).trim().slice(0,140),...(text(p.shelf).trim()?{shelf:text(p.shelf).trim().slice(0,75)}:{})})).filter(p=>p.code||p.name);
+  b.products=x.products.map(p=>({code:text(p.code).trim().slice(0,55),name:text(p.name).trim().slice(0,140),...(text(p.shelf).trim()?{shelf:text(p.shelf).trim().slice(0,75)}:{}),...(['left','right'].includes(p.side)&&Number.isInteger(p.section)&&p.section>=1&&p.section<=60?{side:p.side,section:p.section}:{})})).filter(p=>p.code||p.name);
   if(b.type==='rack'&&b.label){const key=norm(b.label);if(rackNames.has(key))throw Error('Aynı raf numarası iki kez girilmiş: '+b.label);rackNames.add(key)}
   if(blocks.some(old=>isRectOverlap(old,b)))throw Error('Bloklar çakışıyor.');
   blocks.push(b);
@@ -61,7 +64,7 @@ function validate(input){
 }
 function createBlock(type,x,y,w=TYPES[type].w,h=TYPES[type].h,label=''){
  const id='b_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);
- return {id,type,x,y,w,h,label:label||{rack:'Yeni Raf',aisle:'Koridor',wall:'Duvar',door:'Kapı',dock:'Peron',area:'Alan'}[type],note:'',products:[]};
+ return {id,type,x,y,w,h,...(type==='aisle'?{sections:12}:{}),label:label||{rack:'Yeni Raf',aisle:'Koridor',wall:'Duvar',door:'Kapı',dock:'Peron',area:'Alan'}[type],note:'',products:[]};
 }
 function serialize(){return {version:1,cols:layout.cols,rows:layout.rows,blocks:layout.blocks.map(b=>clone(b)),...(layout.demo?{demo:true}:{})}}
 function localSave(){if(!isEditable())return;try{localStorage.setItem(draftKey,JSON.stringify({layout:serialize(),revision:remoteRevision,updatedAt:Date.now()}))}catch{setMessage('Cihazda yerel taslak saklanamadı. JSON yedeğini indir.','error')}}
@@ -78,8 +81,9 @@ function renderCanvas(){
   const hasProducts=['rack','aisle'].includes(b.type);const tooltip=esc(hasProducts?`${b.label} · ${b.products.length} ürün`:b.label);
   return `<div class="block${b.h===1?' compact-block':''}${selected===b.id?' selected':''}${matched.has(b.id)?' matched':''}" role="button" tabindex="0" aria-label="${tooltip}" data-id="${esc(b.id)}" data-type="${b.type}" style="left:${b.x*C+3}px;top:${b.y*C+3}px;width:${b.w*C-6}px;height:${b.h*C-6}px"><span class="block-icon">${ic}</span><span class="block-label">${esc(b.label)}</span>${hasProducts&&b.products.length?`<small>${b.products.length} ürün</small>`:''}</div>`
  }).join('');
- renderStats();
+ renderStats();renderQuickCorridors();
 }
+function renderQuickCorridors(){const box=$('quickCorridors');if(!box)return;const corridors=layout.blocks.filter(b=>b.type==='aisle');box.innerHTML=corridors.length?`<span class="quick-label">Koridor aç:</span>`+corridors.map(b=>`<button class="quick-corridor" type="button" data-corridor-id="${esc(b.id)}">${esc(b.label)} <small>›</small></button>`).join(''):''}
 function scrollToSelected(){const node=[...$('mapCanvas').querySelectorAll('.block')].find(el=>el.dataset.id===selected);if(node){const sc=$('mapScroll');const x=node.offsetLeft*zoom;const y=node.offsetTop*zoom;sc.scrollTo({left:Math.max(0,x-sc.clientWidth/2+80),top:Math.max(0,y-sc.clientHeight/2+80),behavior:'smooth'})}}
 function selectBlock(id,{scroll=false,filter=''}={}){selected=id;locationFilter=filter;locationPage=1;tool='select';document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool==='select'));renderCanvas();renderInspector();if(scroll)scrollToSelected()}
 function parseProductLines(value){
@@ -99,7 +103,7 @@ function renderLocationProducts(b){
  const q=norm(locationFilter);const found=b.products.filter(p=>!q||norm(p.name).includes(q)||norm(p.code).includes(q)||norm(p.shelf).includes(q));
  const end=Math.min(found.length,locationPage*PRODUCT_PAGE_SIZE),visible=found.slice(0,end);
  box.innerHTML=`<p class="location-count">${found.length} ürün gösteriliyor${q?' · '+esc(locationFilter)+' araması':''}</p>`+
- (found.length?`<ul class="products-list compact-products">${visible.map(p=>`<li><span class="product-name">${esc(p.name||p.code)}</span>${p.code?`<small>${esc(p.code)}</small>`:''}${p.shelf?`<span class="shelf-pill">Raf ${esc(p.shelf)}</span>`:''}</li>`).join('')}</ul>`:'<p class="muted">Bu aramada ürün bulunamadı.</p>')+
+ (found.length?`<ul class="products-list compact-products">${visible.map(p=>`<li><span class="product-name">${esc(p.name||p.code)}</span>${p.code?`<small>${esc(p.code)}</small>`:''}${p.side&&p.section?`<span class="shelf-pill">${p.side==='left'?'Sol':'Sağ'} · ${String(p.section).padStart(2,'0')}. bölüm</span>`:''}${p.shelf?`<span class="shelf-pill">Raf ${esc(p.shelf)}</span>`:''}</li>`).join('')}</ul>`:'<p class="muted">Bu aramada ürün bulunamadı.</p>')+
  (end<found.length?`<button class="btn secondary full small" type="button" id="moreLocationProducts">Sonraki ${Math.min(PRODUCT_PAGE_SIZE,found.length-end)} ürünü göster (${end}/${found.length})</button>`:'');
  $('moreLocationProducts')?.addEventListener('click',()=>{locationPage++;renderLocationProducts(b)});
 }
@@ -120,11 +124,94 @@ function renderInspector(){
   if(b.type==='rack'&&layout.blocks.some(x=>x.id!==b.id&&x.type==='rack'&&norm(x.label)===norm(label)))throw Error('Bu raf numarası zaten var.');
   const proposed={...b,w,h:hh};if(!fits(proposed,b.id))throw Error('Blok diğer bloklarla çakışıyor veya harita dışına taşıyor.');
   const products=hasProducts?parseProductLines($('editProducts').value):[];
+  if(hasProducts)for(const p of products){const oldPosition=b.products.find(old=>(p.code&&norm(old.code)===norm(p.code))||(norm(old.name)===norm(p.name)&&norm(old.shelf)===norm(p.shelf)));if(oldPosition?.side&&oldPosition?.section){p.side=oldPosition.side;p.section=oldPosition.section}}
   const old=clone(b);b.label=label;b.w=w;b.h=hh;b.note=$('editNote').value.trim().slice(0,400);if(hasProducts)b.products=products;
   try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('Konum güncellendi. Buluta kaydetmeyi unutma.','success');
  }catch(err){setMessage(err.message,'error')}});
  $('removeBlock').addEventListener('click',()=>{if(!confirm(`“${b.label}” silinsin mi?`))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;locationFilter='';dirtyNow();renderCanvas();renderInspector();search();setMessage('Blok silindi.','success')});
  if(hasProducts){$('locationFilter').addEventListener('input',e=>{locationFilter=e.target.value;locationPage=1;renderLocationProducts(b)});renderLocationProducts(b)}
+}
+
+
+// Koridor yerleşimi: her ürün fiziksel olarak Sol/Sağ ve bölüm numarası ile ilişkilendirilir.
+// Eski kayıtların shelf alanı değiştirilmez; henüz yerleştirilmemiş ürünler ayrı görünür.
+function corridorBlock(){return layout.blocks.find(b=>b.id===corridorId&&b.type==='aisle')}
+function positionText(p){return p.side&&p.section?`${SIDES[p.side]} taraf · ${String(p.section).padStart(2,'0')}. bölüm`:'Konum henüz belirlenmedi'}
+function productMatches(p,q){return !q||norm(p.name).includes(q)||norm(p.code).includes(q)||norm(p.shelf).includes(q)}
+function openCorridor(id,q=''){
+ const b=layout.blocks.find(x=>x.id===id&&x.type==='aisle');if(!b)return;
+ corridorId=id;corridorSlot=null;pendingMove=null;corridorQuery=q;$('corridorSearch').value=q;
+ $('corridorOverlay').classList.remove('is-hidden');document.body.classList.add('corridor-open');
+ $('corridorSections').value=b.sections||12;
+ $('corridorTitle').textContent=b.label;renderCorridor();
+ if(q){const first=b.products.find(p=>p.side&&p.section&&productMatches(p,norm(q)));if(first)corridorSlot={side:first.side,section:first.section};renderCorridor();focusCorridorSlot()}
+}
+function closeCorridor(){corridorId=null;corridorSlot=null;pendingMove=null;$('corridorOverlay').classList.add('is-hidden');document.body.classList.remove('corridor-open');}
+function setCorridorSlot(side,section){
+ const b=corridorBlock();if(!b)return;
+ if(isEditable()&&pendingMove!==null){
+  const p=b.products[pendingMove];if(p){p.side=side;p.section=section;dirtyNow();setMessage(`${p.name||p.code} → ${SIDES[side]} ${section}. bölüm`, 'success')}
+  pendingMove=null;
+ }
+ corridorSlot={side,section};renderCorridor();focusCorridorSlot();
+}
+function corridorProductItem(p,index,{unplaced=false}={}){
+ const name=esc(p.name||p.code),place=positionText(p);
+ return `<div class="corridor-product" data-product-index="${index}"><div><strong>${name}</strong>${p.code?`<small>${esc(p.code)}</small>`:''}${p.shelf?`<small>Raf: ${esc(p.shelf)}</small>`:''}${unplaced?`<small class="awaiting">${esc(place)}</small>`:''}</div>${isEditable()?`<div class="product-actions">${unplaced?`<button class="btn small secondary" type="button" data-assign="${index}">Buraya koy</button>`:`<button class="btn small quiet" type="button" data-move="${index}" title="Başka bölüme taşı">Taşı</button><button class="btn small quiet remove" type="button" data-unplace="${index}" title="Konumu kaldır">Konumu kaldır</button>`}</div>`:''}</div>`;
+}
+function renderCorridor(){
+ const b=corridorBlock();if(!b)return;const q=norm(corridorQuery),cnt=b.sections||12;
+ $('corridorTitle').textContent=b.label;$('corridorSubtitle').textContent=`${b.products.length} ürün · ${cnt} karşılıklı bölüm · Girişten itibaren numaralı`;
+ const rows=[];for(let i=cnt;i>=1;i--){
+  const slots=['left','right'].map(side=>{
+   const items=b.products.filter(p=>p.side===side&&p.section===i),matching=items.filter(p=>productMatches(p,q));
+   const active=corridorSlot?.side===side&&corridorSlot.section===i;
+   const dim=q&&matching.length===0;const priority=q&&matching.length?[...matching,...items.filter(p=>!productMatches(p,q))]:items;const names=priority.slice(0,2).map(p=>esc(p.name||p.code));
+   return `<button type="button" class="lane-slot ${active?'active':''} ${dim?'dim':''} ${q&&matching.length?'hit':''}" data-slot-side="${side}" data-slot-section="${i}" aria-label="${SIDES[side]} ${i}. bölüm, ${items.length} ürün"><span class="slot-heading"><b>${SIDES[side]} ${String(i).padStart(2,'0')}</b><small>${items.length} ürün</small></span><span class="slot-products">${names.length?names.map(n=>`<span>${n}</span>`).join(''):'<i>Ürün ekle / görüntüle</i>'}${items.length>2?`<small>+${items.length-2} ürün daha</small>`:''}</span></button>`;
+  });
+  rows.push(`<div class="lane-row">${slots[0]}<div class="lane-center"><span>${String(i).padStart(2,'0')}</span></div>${slots[1]}</div>`);
+ }
+ $('corridorRows').innerHTML=rows.join('');
+ const matches=b.products.map((p,i)=>({p,i})).filter(({p})=>q&&productMatches(p,q));
+ const sb=$('corridorSearchMatches');sb.classList.toggle('is-hidden',!q);
+ sb.innerHTML=q?(matches.length?`<div class="match-label">${matches.length} ürün bulundu · Ürüne dokunarak yerini göster</div>`+matches.slice(0,30).map(({p,i})=>`<button type="button" data-match-index="${i}"><strong>${esc(p.name||p.code)}</strong><span>${esc(positionText(p))}</span></button>`).join('')+(matches.length>30?'<small>İlk 30 sonuç listelendi.</small>':''):'<p>Aradığın ürün bulunamadı.</p>'):'';
+ renderCorridorDetail();renderUnplaced();
+}
+function focusCorridorSlot(){
+ const box=$('corridorRows');if(!corridorSlot)return;const slot=[...box.querySelectorAll('.lane-slot')].find(x=>x.dataset.slotSide===corridorSlot.side&&Number(x.dataset.slotSection)===corridorSlot.section);if(!slot)return;const row=slot.closest('.lane-row');const top=row.getBoundingClientRect().top-box.getBoundingClientRect().top+box.scrollTop;box.scrollTop=Math.max(0,top-box.clientHeight/2+row.clientHeight/2);
+}
+function renderCorridorDetail(){
+ const b=corridorBlock(),box=$('corridorDetail');if(!b)return;
+ if(!corridorSlot){box.innerHTML=`<div class="detail-placeholder"><span class="placeholder-icon">☞</span><h3>Rafı seç</h3><p>Sol veya sağdaki bir raf bölümüne dokun. Ürünlerini hemen gör.</p><p class="muted">Yöneticiysen bu bölümden ürün de ekleyebilirsin.</p></div>`;return}
+ const {side,section}=corridorSlot,items=b.products.map((p,i)=>({p,i})).filter(({p})=>p.side===side&&p.section===section),q=norm(corridorQuery);
+ box.innerHTML=`<div class="detail-heading"><div><span class="eyebrow">SEÇİLEN KONUM</span><h3>${SIDES[side]} taraf · ${String(section).padStart(2,'0')}. bölüm</h3><p>${items.length} ürün</p></div></div>`+
+ (pendingMove!==null?'<p class="move-hint">Ürünü taşımak için haritadaki hedef raf bölümüne dokun.</p>':'')+
+ `<div class="corridor-products">${items.length?items.map(({p,i})=>corridorProductItem(p,i)).join(''):'<p class="muted">Bu bölümde henüz ürün tanımlanmamış.</p>'}</div>`+
+ (isEditable()?`<form id="corridorAddProduct" class="corridor-add"><h4>Bu bölüme ürün ekle</h4><label for="corridorProductName">Ürün adı</label><input id="corridorProductName" maxlength="140" placeholder="Örn. Ayçiçek Yağı 5 L" required><label for="corridorProductCode">Ürün kodu (isteğe bağlı)</label><input id="corridorProductCode" maxlength="55" placeholder="Ürün kodu"><button type="submit" class="btn primary full">+ Ürünü bu rafa ekle</button></form>`:'');
+ if(isEditable())$('corridorAddProduct').addEventListener('submit',e=>{
+  e.preventDefault();const name=$('corridorProductName').value.trim(),code=$('corridorProductCode').value.trim();if(!name)return;
+  if(b.products.length>=MAX_LOCATION_PRODUCTS){setMessage('Koridor ürün sınırına ulaşıldı.','error');return}
+  if(b.products.some(p=>p.side===side&&p.section===section&&norm(p.name)===norm(name)&&norm(p.code)===norm(code))){setMessage('Bu ürün zaten bu bölümde kayıtlı.','error');return}
+  b.products.push({name:name.slice(0,140),code:code.slice(0,55),side,section});dirtyNow();renderCanvas();search();renderCorridor();setMessage('Ürün rafa yerleştirildi. Buluta kaydetmeyi unutma.','success');
+ });
+}
+function renderUnplaced(){const b=corridorBlock(),box=$('corridorUnassigned');if(!b)return;
+ const q=norm(corridorQuery),unplaced=b.products.map((p,i)=>({p,i})).filter(({p})=>!p.side||!p.section).filter(({p})=>productMatches(p,q));
+ box.innerHTML=`<details ${q&&unplaced.length?'open':''}><summary>Konumu henüz belirtilmemiş ürünler <span>${unplaced.length}</span></summary><div class="unplaced-content">${unplaced.length?`<p class="muted">Eski kayıtlar korunuyor. Ürünü seçili raf bölümüne tek dokunuşla yerleştirebilirsin.</p>${unplaced.slice(0,40).map(({p,i})=>corridorProductItem(p,i,{unplaced:true})).join('')}${unplaced.length>40?`<p class="muted">İlk 40 ürün gösteriliyor. Aramayı kullanarak diğerlerini bul.</p>`:''}`:'<p class="muted">Konumsuz ürün bulunmuyor.</p>'}</div></details>`;
+}
+function bindCorridorEvents(){
+ $('closeCorridor').addEventListener('click',closeCorridor);
+ $('corridorOverlay').addEventListener('click',e=>{if(e.target.id==='corridorOverlay')closeCorridor()});
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'&&corridorId)closeCorridor()});
+ $('corridorSearch').addEventListener('input',e=>{corridorQuery=e.target.value;renderCorridor()});
+ $('corridorRows').addEventListener('click',e=>{const x=e.target.closest('[data-slot-side]');if(x)setCorridorSlot(x.dataset.slotSide,Number(x.dataset.slotSection))});
+ $('corridorSearchMatches').addEventListener('click',e=>{const x=e.target.closest('[data-match-index]');if(!x)return;const p=corridorBlock()?.products[Number(x.dataset.matchIndex)];if(p?.side&&p.section){corridorSlot={side:p.side,section:p.section};renderCorridor();focusCorridorSlot()}else{$('corridorUnassigned').querySelector('details')?.setAttribute('open','');$('corridorUnassigned').scrollIntoView({behavior:'smooth',block:'start'})}});
+ $('corridorDetail').addEventListener('click',e=>{const move=e.target.closest('[data-move]'),unplace=e.target.closest('[data-unplace]');const b=corridorBlock();if(!b||!isEditable())return;
+  if(move){pendingMove=Number(move.dataset.move);setMessage('Ürünün taşınacağı yeni raf bölümüne dokun.','info');renderCorridorDetail()}
+  if(unplace){const i=Number(unplace.dataset.unplace),p=b.products[i];if(!p||!confirm('Bu ürünün sol/sağ konumu kaldırılsın mı? Ürün kaydı silinmeyecek.'))return;delete p.side;delete p.section;dirtyNow();renderCanvas();search();renderCorridor()}
+ });
+ $('corridorUnassigned').addEventListener('click',e=>{const btn=e.target.closest('[data-assign]');if(!btn||!isEditable())return;if(!corridorSlot){setMessage('Önce sol veya sağ tarafta bir raf bölümü seç.','error');return}const b=corridorBlock(),p=b?.products[Number(btn.dataset.assign)];if(!p)return;p.side=corridorSlot.side;p.section=corridorSlot.section;dirtyNow();renderCanvas();search();renderCorridor();setMessage('Ürün seçilen bölüme yerleştirildi.','success')});
+ $('applyCorridorSections').addEventListener('click',()=>{const b=corridorBlock();if(!b||!isEditable())return;const n=Number($('corridorSections').value);if(!Number.isInteger(n)||n<2||n>60){setMessage('Bölüm sayısı 2 ile 60 arasında olmalı.','error');return}if(b.products.some(p=>p.section>n)){setMessage('Önce azaltacağın bölümdeki ürünleri başka yere taşı.','error');return}b.sections=n;dirtyNow();renderCorridor();setMessage('Koridor bölüm sayısı güncellendi.','success')});
 }
 
 function gridPosition(e){const rect=$('mapCanvas').getBoundingClientRect();return {x:Math.floor((e.clientX-rect.left)/(C*zoom)),y:Math.floor((e.clientY-rect.top)/(C*zoom))}}
@@ -133,14 +220,14 @@ function pointerDown(e){const target=e.target.closest('.block');if(!target)retur
  target.setPointerCapture?.(e.pointerId)
 }
 function pointerMove(e){if(!drag||e.pointerId!==drag.pointerId)return;const target=[...$('mapCanvas').querySelectorAll('.block')].find(x=>x.dataset.id===drag.id);if(!target)return;const dx=(e.clientX-drag.startX)/zoom,dy=(e.clientY-drag.startY)/zoom;if(Math.abs(dx)>5||Math.abs(dy)>5)drag.moved=true;if(!drag.moved)return;target.style.transform=`translate(${dx}px,${dy}px)`;target.style.opacity='.8';}
-function pointerUp(e){if(!drag||e.pointerId!==drag.pointerId)return;const d=drag;drag=null;if(!d.moved)return;const block=layout.blocks.find(x=>x.id===d.id);if(!block)return;const dx=Math.round((e.clientX-d.startX)/(C*zoom)),dy=Math.round((e.clientY-d.startY)/(C*zoom));if(dx||dy){const target={...block,x:d.originX+dx,y:d.originY+dy};if(fits(target,block.id)){block.x=target.x;block.y=target.y;dirtyNow();setMessage('Blok taşındı. Kaydedilmemiş değişiklik var.','success')}else{setMessage('O konum dolu veya harita sınırı dışında.','error')}}renderCanvas();renderInspector();}
+function pointerUp(e){if(!drag||e.pointerId!==drag.pointerId)return;const d=drag;drag=null;if(!d.moved)return;suppressClickUntil=Date.now()+350;const block=layout.blocks.find(x=>x.id===d.id);if(!block)return;const dx=Math.round((e.clientX-d.startX)/(C*zoom)),dy=Math.round((e.clientY-d.startY)/(C*zoom));if(dx||dy){const target={...block,x:d.originX+dx,y:d.originY+dy};if(fits(target,block.id)){block.x=target.x;block.y=target.y;dirtyNow();setMessage('Blok taşındı. Kaydedilmemiş değişiklik var.','success')}else{setMessage('O konum dolu veya harita sınırı dışında.','error')}}renderCanvas();renderInspector();}
 function search(){
  const q=norm($('searchInput').value),box=$('searchResults');matched.clear();if(!q){box.classList.add('is-hidden');box.innerHTML='';renderCanvas();return}
  const found=layout.blocks.filter(b=>norm(b.label).includes(q)||(['rack','aisle'].includes(b.type)&&b.products.some(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q))));
  found.forEach(b=>matched.add(b.id));
  box.innerHTML=found.length?found.slice(0,30).map(b=>{
   const products=['rack','aisle'].includes(b.type)?b.products.filter(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q)):[];
-  return `<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${products.length?esc(products.slice(0,2).map(p=>p.name||p.code).join(' · '))+ (products.length>2?` · +${products.length-2} eşleşme`:''):esc(['rack','aisle'].includes(b.type)?`${b.products.length} ürün`:TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`;
+  return `<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${products.length?esc(products.slice(0,2).map(p=>(p.name||p.code)+(p.side&&p.section?' · '+SIDES[p.side]+' '+String(p.section).padStart(2,'0'):'')).join(' · '))+ (products.length>2?` · +${products.length-2} eşleşme`:''):esc(['rack','aisle'].includes(b.type)?`${b.products.length} ürün`:TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`;
  }).join('')+(found.length>30?`<p class="muted">İlk 30 konum gösteriliyor. Aramayı daraltabilirsin.</p>`:''):'<div class="empty-state">Eşleşen raf, koridor veya ürün bulunamadı.</div>';
  box.classList.remove('is-hidden');renderCanvas();
 }
@@ -158,7 +245,9 @@ async function importCsv(file){
  const codeIdx=idx(['urun_kodu','urun kodu','barkod','kod','code'],1),nameIdx=idx(['urun_adi','urun adi','product','malzeme'],2);
  const shelfIdx=cols.findIndex((x,i)=>i!==locIdx&&['raf_no','raf no','raf','shelf'].includes(x));
  const typeIdx=cols.findIndex(x=>['tur','tip','konum_tipi'].includes(x));
- const temp=clone(layout);let added=0,created=0,skipped=0;
+   const sideIdx=cols.findIndex(x=>['taraf','sag_sol','sag sol','side'].includes(x));
+   const sectionIdx=cols.findIndex(x=>['bolum','bolum_no','bolum no','sira','section'].includes(x));
+ const temp=clone(layout);let added=0,created=0,skipped=0,located=0;
  try{
   for(const row of lines.slice(hasHeader?1:0)){
    const rawCorridor=corridorIdx>=0?text(row[corridorIdx]).trim():'';
@@ -172,10 +261,20 @@ async function importCsv(file){
    let target=layout.blocks.find(b=>b.type===type&&norm(b.label)===norm(label));
    if(!target){const w=type==='aisle'?1:2,h=type==='aisle'?3:1,slot=freeSlot(w,h);if(!slot){skipped++;continue}target=createBlock(type,slot.x,slot.y,w,h,label);layout.blocks.push(target);created++}
    if(target.products.length>=MAX_LOCATION_PRODUCTS){skipped++;continue}
-   const product={code,name,...(shelf?{shelf}:{})};
-   if(!target.products.some(p=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&norm(p.shelf)===norm(shelf))){target.products.push(product);added++}
+   const sideText=sideIdx>=0?norm(row[sideIdx]):'';const side=['sol','left','l'].includes(sideText)?'left':['sag','right','r'].includes(sideText)?'right':null;
+   const section=sectionIdx>=0?Number(text(row[sectionIdx]).trim()):NaN;
+   const product={code,name,...(shelf?{shelf}:{}),...(type==='aisle'&&side&&Number.isInteger(section)&&section>=1&&section<=60?{side,section}:{})};
+   if(product.section&&target.sections<product.section)target.sections=product.section;
+   const same=(p)=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&norm(p.shelf)===norm(shelf);
+   const already=target.products.some(p=>same(p)&&p.side===product.side&&p.section===product.section);
+   if(already){skipped++;continue}
+   const waitingExact=product.side?target.products.find(p=>same(p)&&(!p.side||!p.section)):null;
+   const candidates=product.side?target.products.filter(p=>!p.side&&norm(p.name)===norm(name)&&norm(p.code)===norm(code)):[];
+   const waiting=waitingExact||(candidates.length===1?candidates[0]:null);
+   if(waiting){waiting.side=product.side;waiting.section=product.section;located++}
+   else{target.products.push(product);added++}
   }
-  validate(layout);dirtyNow();renderCanvas();renderInspector();search();setMessage(`CSV işlendi: ${created} konum oluşturuldu, ${added} ürün eklendi, ${skipped} satır atlandı.`, 'success');
+  validate(layout);dirtyNow();renderCanvas();renderInspector();search();setMessage(`CSV işlendi: ${created} konum oluşturuldu, ${added} ürün eklendi, ${located} ürün rafa yerleştirildi, ${skipped} satır atlandı.`, 'success');
  }catch(e){layout=temp;renderCanvas();renderInspector();search();throw e}
 }
 
@@ -205,7 +304,7 @@ async function saveRemote(){if(!isEditable())return;if(!remoteReady){setMessage(
  const savingSnapshot=JSON.stringify(payload);writeBusy=true;showRemote();try{
   const rows=await api('/rest/v1/rpc/ak_depo_haritasi_kaydet',{method:'POST',body:{p_data:payload,p_expected_revision:remoteRevision}});
   const row=Array.isArray(rows)?rows[0]:rows;if(!row||typeof row.revision!=='number')throw Error('Sunucu kayıt onayı gelmedi.');
-  remoteRevision=row.revision;remoteUpdated=row.updated_at;if(JSON.stringify(serialize())===savingSnapshot){afterSave();setMessage('Depo haritası kaydedildi. Toplamacılar güncel haritayı açabilir.','success')}else{dirty=true;localSave();setMessage('Kayıt tamamlandı ancak kaydetme sırasında yeni düzenleme yapıldı. Bu değişiklikleri tekrar kaydet.','info')}showRemote();
+  remoteRevision=row.revision;remoteUpdated=row.updated_at;if(JSON.stringify(validate(serialize()))===savingSnapshot){afterSave();setMessage('Depo haritası kaydedildi. Toplamacılar güncel haritayı açabilir.','success')}else{dirty=true;localSave();setMessage('Kayıt tamamlandı ancak kaydetme sırasında yeni düzenleme yapıldı. Bu değişiklikleri tekrar kaydet.','info')}showRemote();
  }catch(e){setMessage('Harita kaydedilemedi: '+e.message+'. Yerel taslak korunuyor. Gerekirse JSON yedeği indir.','error');localSave()}finally{writeBusy=false;showRemote()}
 }
 function createDemo(){if(!isEditable())return;if(layout.blocks.length&&!confirm('Mevcut ekrandaki çizim örnek krokisiyle değiştirilsin mi? Kaydedilmemiş çizimi önce JSON olarak indir.'))return;
@@ -221,11 +320,13 @@ function createDemo(){if(!isEditable())return;if(layout.blocks.length&&!confirm(
  layout.demo=true;selected=null;dirtyNow();renderCanvas();renderInspector();setMessage('Örnek kroki açıldı. Bu temsili çizim buluta kaydedilemez; gerçek rafları çizmek için “Boş krokiyle başla”yı kullan.','success');
 }
 function bind(){
+ bindCorridorEvents();
+ $('quickCorridors').addEventListener('click',e=>{const btn=e.target.closest('[data-corridor-id]');if(btn){selectBlock(btn.dataset.corridorId);openCorridor(btn.dataset.corridorId)}});
  $('toolList').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(!b||!isEditable())return;tool=b.dataset.tool;updateTool()});
- $('mapCanvas').addEventListener('click',e=>{const b=e.target.closest('.block');if(b){selectBlock(b.dataset.id);return}newAt(e)});
+ $('mapCanvas').addEventListener('click',e=>{const b=e.target.closest('.block');if(b){if(Date.now()<suppressClickUntil)return;selectBlock(b.dataset.id);const block=layout.blocks.find(x=>x.id===b.dataset.id);if(block?.type==='aisle')openCorridor(block.id);return}newAt(e)});
  $('mapCanvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('block')){e.preventDefault();selectBlock(e.target.dataset.id)}});
  $('mapCanvas').addEventListener('pointerdown',pointerDown);$('mapCanvas').addEventListener('pointermove',pointerMove);$('mapCanvas').addEventListener('pointerup',pointerUp);$('mapCanvas').addEventListener('pointercancel',pointerUp);
- $('searchInput').addEventListener('input',search);$('clearSearch').addEventListener('click',()=>{$('searchInput').value='';search();$('searchInput').focus()});$('searchResults').addEventListener('click',e=>{const b=e.target.closest('[data-result]');if(!b)return;selectBlock(b.dataset.result,{scroll:true,filter:$('searchInput').value})});
+ $('searchInput').addEventListener('input',search);$('clearSearch').addEventListener('click',()=>{$('searchInput').value='';search();$('searchInput').focus()});$('searchResults').addEventListener('click',e=>{const b=e.target.closest('[data-result]');if(!b)return;selectBlock(b.dataset.result,{scroll:true,filter:$('searchInput').value});const block=layout.blocks.find(x=>x.id===b.dataset.result);if(block?.type==='aisle')openCorridor(block.id,$('searchInput').value)});
  $('zoomOut').addEventListener('click',()=>updateZoom(zoom-.1));$('zoomIn').addEventListener('click',()=>updateZoom(zoom+.1));$('zoomFit').addEventListener('click',()=>{const sc=$('mapScroll');updateZoom(Math.min((sc.clientWidth-34)/(layout.cols*C),(sc.clientHeight-34)/(layout.rows*C),1));sc.scrollTo({top:0,left:0,behavior:'smooth'})});
  $('resizeMap').addEventListener('click',()=>{if(!isEditable())return;const cols=Number($('gridCols').value),rows=Number($('gridRows').value);if(!Number.isInteger(cols)||cols<10||cols>60||!Number.isInteger(rows)||rows<8||rows>40){setMessage('Harita en az 10×8, en çok 60×40 hücre olmalı.','error');return}if(layout.blocks.some(b=>b.x+b.w>cols||b.y+b.h>rows)){setMessage('Bazı bloklar yeni ölçülerin dışında kalıyor. Önce blokları taşı.','error');return}layout.cols=cols;layout.rows=rows;dirtyNow();renderCanvas();setMessage('Harita ölçüsü değiştirildi.','success')});
  $('demoMap').addEventListener('click',createDemo);

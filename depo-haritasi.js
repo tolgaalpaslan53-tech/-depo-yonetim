@@ -6,7 +6,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const C=52,MAX_BLOCKS=800,MAX_BYTES=600000,MAX_LOCATION_PRODUCTS=1000,PRODUCT_PAGE_SIZE=25;
-const TYPES={select:{label:'Seç'},rack:{label:'Raf',icon:'▥',w:2,h:1},aisle:{label:'Koridor',icon:'⇆',w:1,h:3},wall:{label:'Duvar',icon:'▬',w:3,h:1},door:{label:'Kapı',icon:'↪',w:1,h:1},dock:{label:'Peron',icon:'🚚',w:2,h:2},area:{label:'Alan',icon:'▧',w:3,h:2}};
+const TYPES={select:{label:'Seç'},rack:{label:'Raf',icon:'▥',w:2,h:1},lrack:{label:'L Duvar Rafı',icon:'└',w:4,h:6},aisle:{label:'Koridor',icon:'⇆',w:1,h:3},wall:{label:'Duvar',icon:'▬',w:3,h:1},door:{label:'Kapı',icon:'↪',w:1,h:1},dock:{label:'Peron',icon:'🚚',w:2,h:2},area:{label:'Alan',icon:'▧',w:3,h:2}};
 const empty=()=>({version:1,cols:22,rows:14,blocks:[]});
 const clone=x=>JSON.parse(JSON.stringify(x));
 const text=x=>String(x??'');
@@ -18,6 +18,9 @@ let remoteRevision=0,remoteReady=false,remoteUpdated=null,dirty=false,drag=null,
 let draftKey='',locationFilter='',locationPage=1;
 let corridorId=null,corridorSlot=null,corridorQuery='',pendingMove=null,suppressClickUntil=0;
 const SIDES={left:'Sol',right:'Sağ'};
+const L_ARMS={vertical:'Dikey kol',horizontal:'Yatay kol'};
+const L_LEVELS={lower:'Alt',upper:'Üst'};
+const L_ORIENTATIONS={'bottom-right':'┘ Alt köşe sağ','bottom-left':'└ Alt köşe sol','top-right':'┐ Üst köşe sağ','top-left':'┌ Üst köşe sol'};
 const config=()=>({url:text(window.MK_CONFIG?.url).replace(/\/+$/,''),key:text(window.MK_CONFIG?.key)});
 const setMessage=(msg,kind='info')=>{$('message').textContent=msg;$('message').dataset.kind=kind};
 const state=msg=>{$('saveState').textContent=msg};
@@ -53,9 +56,10 @@ function validate(input){
   ids.add(x.id);
   const b={id:x.id,type:x.type,x:x.x,y:x.y,w:x.w,h:x.h,label:text(x.label).trim().slice(0,75),note:text(x.note).slice(0,400),products:[]};
   if(b.type==='aisle')b.sections=Number.isInteger(x.sections)?bound(x.sections,2,60):12;
+  if(b.type==='lrack')b.orientation=L_ORIENTATIONS[x.orientation]?x.orientation:'bottom-right';
   if(b.x<0||b.y<0||b.w<1||b.h<1||b.x+b.w>input.cols||b.y+b.h>input.rows)throw Error('Harita sınırı dışında blok var.');
   if(!Array.isArray(x.products)||x.products.length>MAX_LOCATION_PRODUCTS)throw Error('Bir konumda en fazla '+MAX_LOCATION_PRODUCTS+' ürün bulunabilir.');
-  b.products=x.products.map(p=>({code:text(p.code).trim().slice(0,55),name:text(p.name).trim().slice(0,140),...(text(p.shelf).trim()?{shelf:text(p.shelf).trim().slice(0,75)}:{}),...(['left','right'].includes(p.side)&&Number.isInteger(p.section)&&p.section>=1&&p.section<=60?{side:p.side,section:p.section}:{})})).filter(p=>p.code||p.name);
+  b.products=x.products.map(p=>({code:text(p.code).trim().slice(0,55),name:text(p.name).trim().slice(0,140),...(text(p.shelf).trim()?{shelf:text(p.shelf).trim().slice(0,75)}:{}),...(['left','right'].includes(p.side)&&Number.isInteger(p.section)&&p.section>=1&&p.section<=60?{side:p.side,section:p.section}:{}),...(['vertical','horizontal'].includes(p.arm)?{arm:p.arm}:{}),...(['upper','lower'].includes(p.level)?{level:p.level}:{})})).filter(p=>p.code||p.name);
   if(b.type==='rack'&&b.label){const key=norm(b.label);if(rackNames.has(key))throw Error('Aynı raf numarası iki kez girilmiş: '+b.label);rackNames.add(key)}
   if(blocks.some(old=>isRectOverlap(old,b)))throw Error('Bloklar çakışıyor.');
   blocks.push(b);
@@ -64,22 +68,30 @@ function validate(input){
 }
 function createBlock(type,x,y,w=TYPES[type].w,h=TYPES[type].h,label=''){
  const id='b_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);
- return {id,type,x,y,w,h,...(type==='aisle'?{sections:12}:{}),label:label||{rack:'Yeni Raf',aisle:'Koridor',wall:'Duvar',door:'Kapı',dock:'Peron',area:'Alan'}[type],note:'',products:[]};
+ return {id,type,x,y,w,h,...(type==='aisle'?{sections:12}:{}),...(type==='lrack'?{orientation:'bottom-right'}:{}),label:label||{rack:'Yeni Raf',lrack:'L Duvar Rafı',aisle:'Koridor',wall:'Duvar',door:'Kapı',dock:'Peron',area:'Alan'}[type],note:'',products:[]};
 }
 function serialize(){return {version:1,cols:layout.cols,rows:layout.rows,blocks:layout.blocks.map(b=>clone(b)),...(layout.demo?{demo:true}:{})}}
 function localSave(){if(!isEditable())return;try{localStorage.setItem(draftKey,JSON.stringify({layout:serialize(),revision:remoteRevision,updatedAt:Date.now()}))}catch{setMessage('Cihazda yerel taslak saklanamadı. JSON yedeğini indir.','error')}}
 function dirtyNow(){if(!isEditable())return;dirty=true;clearTimeout(draftTimer);draftTimer=setTimeout(localSave,300);state('Kaydedilmemiş değişiklikler');$('saveState').classList.add('dirty-tag');renderStats()}
 function afterSave(){dirty=false;clearTimeout(draftTimer);localStorage.removeItem(draftKey);$('draftBanner').classList.add('is-hidden');$('saveState').classList.remove('dirty-tag');state('Bulutta güncel')}
 function updateTool(){document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));$('modeTip').textContent=tool==='select'?'Bir bloğu seç veya sürükleyerek taşı.':TYPES[tool].label+' eklemek için haritada boş alana dokun.';renderCanvas()}
-function updateZoom(next){zoom=bound(Math.round(next*10)/10,.35,1.6);$('zoomLabel').textContent=Math.round(zoom*100)+'%';renderCanvas()}
-function renderStats(){const n=layout.blocks.filter(b=>b.type==='rack').length;const m=layout.blocks.reduce((a,b)=>a+(['rack','aisle'].includes(b.type)?b.products.length:0),0);const aisles=layout.blocks.filter(b=>b.type==='aisle').length;$('rackCount').textContent=n+' raf · '+aisles+' koridor';$('productCount').textContent=m+' ürün konumu'}
+function updateZoom(next){zoom=bound(Math.round(next*100)/100,.23,1.6);$('zoomLabel').textContent=Math.round(zoom*100)+'%';renderCanvas()}
+function fitMap(){const sc=$('mapScroll');if(!sc||!sc.clientWidth)return;const next=Math.min((sc.clientWidth-40)/(layout.cols*C),(sc.clientHeight-40)/(layout.rows*C),1);updateZoom(next);sc.scrollTo({top:0,left:0})}
+function renderStats(){const n=layout.blocks.filter(b=>b.type==='rack'||b.type==='lrack').length;const m=layout.blocks.reduce((a,b)=>a+(['rack','aisle','lrack'].includes(b.type)?b.products.length:0),0);const aisles=layout.blocks.filter(b=>b.type==='aisle').length;$('rackCount').textContent=n+' raf · '+aisles+' koridor';$('productCount').textContent=m+' ürün konumu'}
+// L rafı tek blok olarak saklıyoruz; iç boşluğa hayali ürün yerleştirmiyoruz.
+function lRackShape(b){
+ const orientation=L_ORIENTATIONS[b.orientation]?b.orientation:'bottom-right';
+ const right=orientation.endsWith('right'),top=orientation.startsWith('top');
+ const x=right?85:15,y=top?15:85,otherX=right?15:85,otherY=top?85:15;
+ return `<svg class="l-rack-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M${x} ${otherY} V${y} H${otherX}" fill="none" stroke="#9cd7ed" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M${x} ${otherY} V${y} H${otherX}" fill="none" stroke="#235d7c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="l-rack-label">${esc(b.label)}</span><span class="l-rack-sub">L RAF · ALT / ÜST</span>`;
+}
 function renderCanvas(){
  const inner=$('mapCanvas'),stage=$('mapStage');inner.style.width=(layout.cols*C)+'px';inner.style.height=(layout.rows*C)+'px';inner.style.transform=`scale(${zoom})`;stage.style.width=(layout.cols*C*zoom)+'px';stage.style.height=(layout.rows*C*zoom)+'px';
  inner.classList.toggle('edit-mode',isEditable());
  inner.innerHTML=layout.blocks.map(b=>{
   const ic=TYPES[b.type].icon;
-  const hasProducts=['rack','aisle'].includes(b.type);const tooltip=esc(hasProducts?`${b.label} · ${b.products.length} ürün`:b.label);
-  return `<div class="block${b.h===1?' compact-block':''}${selected===b.id?' selected':''}${matched.has(b.id)?' matched':''}" role="button" tabindex="0" aria-label="${tooltip}" data-id="${esc(b.id)}" data-type="${b.type}" style="left:${b.x*C+3}px;top:${b.y*C+3}px;width:${b.w*C-6}px;height:${b.h*C-6}px"><span class="block-icon">${ic}</span><span class="block-label">${esc(b.label)}</span>${hasProducts&&b.products.length?`<small>${b.products.length} ürün</small>`:''}</div>`
+  const hasProducts=['rack','aisle','lrack'].includes(b.type);const tooltip=esc(hasProducts?`${b.label} · ${b.products.length} ürün`:b.label);
+  return `<div class="block${b.h===1?' compact-block':''}${b.type==='lrack'?' l-rack':''}${b.type==='aisle'&&b.w>b.h?' wide-aisle':''}${b.type==='area'&&norm(b.label)==='ana koridor'?' main-aisle':''}${selected===b.id?' selected':''}${matched.has(b.id)?' matched':''}" role="button" tabindex="0" aria-label="${tooltip}" data-id="${esc(b.id)}" data-type="${b.type}" style="left:${b.x*C+3}px;top:${b.y*C+3}px;width:${b.w*C-6}px;height:${b.h*C-6}px">${b.type==='lrack'?lRackShape(b):`<span class="block-icon">${ic}</span><span class="block-label">${esc(b.label)}</span>`}${hasProducts&&b.products.length?`<small>${b.products.length} ürün</small>`:''}</div>`
  }).join('');
  renderStats();renderQuickCorridors();
 }
@@ -107,10 +119,29 @@ function renderLocationProducts(b){
  (end<found.length?`<button class="btn secondary full small" type="button" id="moreLocationProducts">Sonraki ${Math.min(PRODUCT_PAGE_SIZE,found.length-end)} ürünü göster (${end}/${found.length})</button>`:'');
  $('moreLocationProducts')?.addEventListener('click',()=>{locationPage++;renderLocationProducts(b)});
 }
+function renderLRackInspector(b){
+ const t=$('inspectorTitle'),h=$('inspectorBody'),editable=isEditable();
+ t.textContent='L duvar rafı';
+ const products=b.products.filter(p=>!locationFilter||[p.name,p.code,p.shelf,p.arm&&L_ARMS[p.arm],p.level&&L_LEVELS[p.level]].some(x=>norm(x).includes(norm(locationFilter))));
+ const list=products.slice(0,locationPage*PRODUCT_PAGE_SIZE);
+ h.innerHTML=`<div class="l-inspector-title"><strong>${esc(b.label)}</strong><span class="pill">L biçimli raf</span></div><p class="muted smalltext">Dikey ve yatay kolların ürünleri ayrı tutulur. Alt/üst raf bilgisi aramada görünür.</p>`+
+ (editable?`<form id="lRackSettings" class="l-rack-form"><label for="lRackName">Raf alanının adı</label><input id="lRackName" maxlength="75" required value="${esc(b.label)}"><label for="lRackOrientation">L yönü</label><select id="lRackOrientation">${Object.entries(L_ORIENTATIONS).map(([value,label])=>`<option value="${value}" ${b.orientation===value?'selected':''}>${label}</option>`).join('')}</select><div class="inline-fields"><div><label for="lRackW">Genişlik</label><input type="number" id="lRackW" value="${b.w}" min="3" max="15"></div><div><label for="lRackH">Yükseklik</label><input type="number" id="lRackH" value="${b.h}" min="3" max="15"></div></div><div class="row-actions"><button class="btn primary" type="submit">Rafı Güncelle</button><button id="removeLRack" class="btn secondary" type="button">Rafı Sil</button></div></form>`:'')+
+ `<label for="locationFilter">Bu rafta ürün ara</label><input type="search" id="locationFilter" placeholder="Ürün adı, kod veya raf…" value="${esc(locationFilter)}"><p class="location-count">${products.length} ürün · ${b.products.length} toplam</p><ul class="l-products">${list.length?list.map(p=>`<li><strong>${esc(p.name||p.code)}</strong><small>${esc(p.code)} ${p.shelf?' · Raf '+esc(p.shelf):''}</small><span class="shelf-pill">${esc(L_ARMS[p.arm]||'Kol belirtilmedi')} · ${esc(L_LEVELS[p.level]||'Kat belirtilmedi')}</span>${editable?`<button type="button" class="btn small quiet" data-lremove="${b.products.indexOf(p)}">Sil</button>`:''}</li>`).join(''):'<li class="muted">Kayıt yok.</li>'}</ul>`+
+ (products.length>list.length?`<button class="btn secondary full small" id="moreLProducts">Diğer ürünleri göster (${list.length}/${products.length})</button>`:'')+
+ (editable?`<form id="lAddProduct" class="l-rack-form"><h3>Rafa ürün ekle</h3><label for="lProductName">Ürün adı</label><input id="lProductName" required maxlength="140" placeholder="Ürün adı"><label for="lProductCode">Ürün kodu (isteğe bağlı)</label><input id="lProductCode" maxlength="55" placeholder="Kod"><label for="lProductShelf">Raf numarası (isteğe bağlı)</label><input id="lProductShelf" maxlength="75" placeholder="Örn. 1019"><div class="inline-fields"><div><label for="lProductArm">Raf kolu</label><select id="lProductArm"><option value="vertical">Dikey kol</option><option value="horizontal">Yatay kol</option></select></div><div><label for="lProductLevel">Kat</label><select id="lProductLevel"><option value="lower">Alt</option><option value="upper">Üst</option></select></div></div><button type="submit" class="btn primary full">+ Ürünü Rafa Ekle</button></form>`:'');
+ $('locationFilter').addEventListener('input',e=>{locationFilter=e.target.value;locationPage=1;renderLRackInspector(b)});
+ $('moreLProducts')?.addEventListener('click',()=>{locationPage++;renderLRackInspector(b)});
+ if(!editable)return;
+ $('lRackSettings').addEventListener('submit',e=>{e.preventDefault();try{const name=$('lRackName').value.trim(),w=Number($('lRackW').value),hh=Number($('lRackH').value),orientation=$('lRackOrientation').value;if(!name||!L_ORIENTATIONS[orientation]||!Number.isInteger(w)||!Number.isInteger(hh)||w<3||hh<3||w>15||hh>15)throw Error('L raf için ad, yön ve 3–15 hücre arası ölçüler gerekli.');const candidate={...b,w,h:hh};if(!fits(candidate,b.id))throw Error('Yeni L raf boyutu diğer bloklarla çakışıyor veya dışarı taşıyor.');const old=clone(b);Object.assign(b,{label:name,w,h:hh,orientation});try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('L raf güncellendi. Buluta kaydetmeyi unutma.','success')}catch(err){setMessage(err.message,'error')}});
+ $('removeLRack').addEventListener('click',()=>{if(!confirm('Bu L raf ve ona bağlı '+b.products.length+' ürün konumu silinsin mi? Önce JSON yedeği önerilir.'))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;locationFilter='';dirtyNow();renderCanvas();renderInspector();search();setMessage('L raf silindi. Henüz buluta kaydedilmedi.','success')});
+ $('lAddProduct').addEventListener('submit',e=>{e.preventDefault();const name=$('lProductName').value.trim(),code=$('lProductCode').value.trim(),shelf=$('lProductShelf').value.trim(),arm=$('lProductArm').value,level=$('lProductLevel').value;if(!name||!L_ARMS[arm]||!L_LEVELS[level])return;if(b.products.length>=MAX_LOCATION_PRODUCTS){setMessage('Raf ürün sınırı dolu.','error');return}if(b.products.some(p=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&p.arm===arm&&p.level===level&&norm(p.shelf)===norm(shelf))){setMessage('Bu ürün bu raf konumunda zaten var.','error');return}b.products.push({name,code,...(shelf?{shelf}:{}),arm,level});try{validate(serialize())}catch(err){b.products.pop();setMessage(err.message,'error');return}dirtyNow();renderCanvas();renderInspector();search();setMessage('Ürün L duvar rafına eklendi. Kaydetmeyi unutma.','success')});
+ h.addEventListener('click',e=>{const btn=e.target.closest('[data-lremove]');if(!btn)return;const i=Number(btn.dataset.lremove);if(!b.products[i]||!confirm('Bu ürünün L raf konumu kaldırılsın mı?'))return;b.products.splice(i,1);dirtyNow();renderCanvas();renderInspector();search()});
+}
 function renderInspector(){
  const b=layout.blocks.find(x=>x.id===selected),t=$('inspectorTitle'),h=$('inspectorBody');
  if(!b){t.textContent='Konum bilgileri';h.innerHTML='<p class="muted">Haritada bir raf veya koridor seç. Ürünleri arayarak listeleyebilirsin.</p>';return}
- const hasProducts=['rack','aisle'].includes(b.type);t.textContent=TYPES[b.type].label+' bilgileri';
+ if(b.type==='lrack'){renderLRackInspector(b);return}
+ const hasProducts=['rack','aisle','lrack'].includes(b.type);t.textContent=TYPES[b.type].label+' bilgileri';
  if(!isEditable()){
   h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted">${esc(b.note||'')}</p>`+(hasProducts?`<div class="location-header"><strong>${esc(productSummary(b))}</strong><span class="pill">${esc(TYPES[b.type].label)}</span></div><label for="locationFilter">Bu konumda ürün ara</label><input id="locationFilter" type="search" placeholder="Ürün adı, kod veya raf…" autocomplete="off" value="${esc(locationFilter)}"><div id="locationProducts"></div>`:'');
   if(hasProducts){$('locationFilter').addEventListener('input',e=>{locationFilter=e.target.value;locationPage=1;renderLocationProducts(b)});renderLocationProducts(b)}return;
@@ -223,11 +254,11 @@ function pointerMove(e){if(!drag||e.pointerId!==drag.pointerId)return;const targ
 function pointerUp(e){if(!drag||e.pointerId!==drag.pointerId)return;const d=drag;drag=null;if(!d.moved)return;suppressClickUntil=Date.now()+350;const block=layout.blocks.find(x=>x.id===d.id);if(!block)return;const dx=Math.round((e.clientX-d.startX)/(C*zoom)),dy=Math.round((e.clientY-d.startY)/(C*zoom));if(dx||dy){const target={...block,x:d.originX+dx,y:d.originY+dy};if(fits(target,block.id)){block.x=target.x;block.y=target.y;dirtyNow();setMessage('Blok taşındı. Kaydedilmemiş değişiklik var.','success')}else{setMessage('O konum dolu veya harita sınırı dışında.','error')}}renderCanvas();renderInspector();}
 function search(){
  const q=norm($('searchInput').value),box=$('searchResults');matched.clear();if(!q){box.classList.add('is-hidden');box.innerHTML='';renderCanvas();return}
- const found=layout.blocks.filter(b=>norm(b.label).includes(q)||(['rack','aisle'].includes(b.type)&&b.products.some(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q))));
+ const found=layout.blocks.filter(b=>norm(b.label).includes(q)||(['rack','aisle','lrack'].includes(b.type)&&b.products.some(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q))));
  found.forEach(b=>matched.add(b.id));
  box.innerHTML=found.length?found.slice(0,30).map(b=>{
-  const products=['rack','aisle'].includes(b.type)?b.products.filter(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q)):[];
-  return `<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${products.length?esc(products.slice(0,2).map(p=>(p.name||p.code)+(p.side&&p.section?' · '+SIDES[p.side]+' '+String(p.section).padStart(2,'0'):'')).join(' · '))+ (products.length>2?` · +${products.length-2} eşleşme`:''):esc(['rack','aisle'].includes(b.type)?`${b.products.length} ürün`:TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`;
+  const products=['rack','aisle','lrack'].includes(b.type)?b.products.filter(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q)):[];
+  return `<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${products.length?esc(products.slice(0,2).map(p=>(p.name||p.code)+(p.side&&p.section?' · '+SIDES[p.side]+' '+String(p.section).padStart(2,'0'):'')+(p.arm?' · '+L_ARMS[p.arm]+' '+(L_LEVELS[p.level]||''):'')).join(' · '))+ (products.length>2?` · +${products.length-2} eşleşme`:''):esc(['rack','aisle','lrack'].includes(b.type)?`${b.products.length} ürün`:TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`;
  }).join('')+(found.length>30?`<p class="muted">İlk 30 konum gösteriliyor. Aramayı daraltabilirsin.</p>`:''):'<div class="empty-state">Eşleşen raf, koridor veya ürün bulunamadı.</div>';
  box.classList.remove('is-hidden');renderCanvas();
 }
@@ -245,6 +276,7 @@ async function importCsv(file){
  const codeIdx=idx(['urun_kodu','urun kodu','barkod','kod','code'],1),nameIdx=idx(['urun_adi','urun adi','product','malzeme'],2);
  const shelfIdx=cols.findIndex((x,i)=>i!==locIdx&&['raf_no','raf no','raf','shelf'].includes(x));
  const typeIdx=cols.findIndex(x=>['tur','tip','konum_tipi'].includes(x));
+ const armIdx=cols.findIndex(x=>['kol','raf_kolu','arm'].includes(x));const levelIdx=cols.findIndex(x=>['kat','seviye','level'].includes(x));
    const sideIdx=cols.findIndex(x=>['taraf','sag_sol','sag sol','side'].includes(x));
    const sectionIdx=cols.findIndex(x=>['bolum','bolum_no','bolum no','sira','section'].includes(x));
  const temp=clone(layout);let added=0,created=0,skipped=0,located=0;
@@ -255,21 +287,22 @@ async function importCsv(file){
    if(!rawLoc||!name){skipped++;continue}
    const typeRaw=typeIdx>=0?norm(row[typeIdx]):'';
    const isCorridor=!!rawCorridor||typeRaw.includes('koridor')||(!typeRaw&&norm(rawLoc).startsWith('koridor'));
-   const type=isCorridor?'aisle':'rack';
-   const label=(isCorridor&&!norm(rawLoc).startsWith('koridor')?'Koridor ':'')+rawLoc.slice(0,75);
+   const type=(typeRaw==='lrack'||typeRaw.includes('l raf')||typeRaw.includes('l duvar'))?'lrack':isCorridor?'aisle':'rack';
+   const label=(isCorridor&&type==='aisle'&&!norm(rawLoc).startsWith('koridor')?'Koridor ':'')+rawLoc.slice(0,75);
    const shelf=(shelfIdx>=0?text(row[shelfIdx]).trim():rawCorridor?text(row[locIdx]).trim():'').slice(0,75);
    let target=layout.blocks.find(b=>b.type===type&&norm(b.label)===norm(label));
-   if(!target){const w=type==='aisle'?1:2,h=type==='aisle'?3:1,slot=freeSlot(w,h);if(!slot){skipped++;continue}target=createBlock(type,slot.x,slot.y,w,h,label);layout.blocks.push(target);created++}
+   if(!target){const w=type==='aisle'?1:type==='lrack'?4:2,h=type==='aisle'?3:type==='lrack'?6:1,slot=freeSlot(w,h);if(!slot){skipped++;continue}target=createBlock(type,slot.x,slot.y,w,h,label);layout.blocks.push(target);created++}
    if(target.products.length>=MAX_LOCATION_PRODUCTS){skipped++;continue}
    const sideText=sideIdx>=0?norm(row[sideIdx]):'';const side=['sol','left','l'].includes(sideText)?'left':['sag','right','r'].includes(sideText)?'right':null;
    const section=sectionIdx>=0?Number(text(row[sectionIdx]).trim()):NaN;
-   const product={code,name,...(shelf?{shelf}:{}),...(type==='aisle'&&side&&Number.isInteger(section)&&section>=1&&section<=60?{side,section}:{})};
+   const armRaw=armIdx>=0?norm(row[armIdx]):'';const levelRaw=levelIdx>=0?norm(row[levelIdx]):'';const arm=['dikey','vertical','v'].includes(armRaw)?'vertical':['yatay','horizontal','h'].includes(armRaw)?'horizontal':null;const level=['ust','upper','u'].includes(levelRaw)?'upper':['alt','lower','a'].includes(levelRaw)?'lower':null;
+   const product={code,name,...(shelf?{shelf}:{}),...(type==='lrack'&&arm?{arm}:{}),...(type==='lrack'&&level?{level}:{}),...(type==='aisle'&&side&&Number.isInteger(section)&&section>=1&&section<=60?{side,section}:{})};
    if(product.section&&target.sections<product.section)target.sections=product.section;
    const same=(p)=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&norm(p.shelf)===norm(shelf);
-   const already=target.products.some(p=>same(p)&&p.side===product.side&&p.section===product.section);
+   const already=target.products.some(p=>same(p)&&p.side===product.side&&p.section===product.section&&p.arm===product.arm&&p.level===product.level);
    if(already){skipped++;continue}
-   const waitingExact=product.side?target.products.find(p=>same(p)&&(!p.side||!p.section)):null;
-   const candidates=product.side?target.products.filter(p=>!p.side&&norm(p.name)===norm(name)&&norm(p.code)===norm(code)):[];
+   const waitingExact=type==='aisle'&&product.side?target.products.find(p=>same(p)&&(!p.side||!p.section)):null;
+   const candidates=type==='aisle'&&product.side?target.products.filter(p=>!p.side&&norm(p.name)===norm(name)&&norm(p.code)===norm(code)):[];
    const waiting=waitingExact||(candidates.length===1?candidates[0]:null);
    if(waiting){waiting.side=product.side;waiting.section=product.section;located++}
    else{target.products.push(product);added++}
@@ -289,7 +322,7 @@ async function readRemote({fresh=false}={}){
   layout=rows[0]?validate(rows[0].data):empty();selected=null;dirty=false;
   if(!fresh)draftPrompt();else $('draftBanner').classList.add('is-hidden');
   $('gridCols').value=layout.cols;$('gridRows').value=layout.rows;
-  showRemote();renderCanvas();renderInspector();search();return true;
+  showRemote();renderCanvas();renderInspector();search();requestAnimationFrame(()=>{if(!matchMedia('(max-width:720px)').matches)fitMap()});return true;
  }catch(e){
   if(isInstalledError(e)){
    remoteReady=false;remoteRevision=0;remoteUpdated=null;layout=empty();
@@ -306,6 +339,20 @@ async function saveRemote(){if(!isEditable())return;if(!remoteReady){setMessage(
   const row=Array.isArray(rows)?rows[0]:rows;if(!row||typeof row.revision!=='number')throw Error('Sunucu kayıt onayı gelmedi.');
   remoteRevision=row.revision;remoteUpdated=row.updated_at;if(JSON.stringify(validate(serialize()))===savingSnapshot){afterSave();setMessage('Depo haritası kaydedildi. Toplamacılar güncel haritayı açabilir.','success')}else{dirty=true;localSave();setMessage('Kayıt tamamlandı ancak kaydetme sırasında yeni düzenleme yapıldı. Bu değişiklikleri tekrar kaydet.','info')}showRemote();
  }catch(e){setMessage('Harita kaydedilemedi: '+e.message+'. Yerel taslak korunuyor. Gerekirse JSON yedeği indir.','error');localSave()}finally{writeBusy=false;showRemote()}
+}
+// Kullanıcının krokisine göre başlangıç yerleşimi. Yalnızca açık onay ile uygulanır.
+function createWarehouseTemplate(){
+ if(!isEditable())return;
+ if(layout.blocks.length&&!confirm('Mevcut ekrandaki krokinin yerine 5 bölgeli boş depo şablonu açılsın mı? Kayıtlı ürünler silinmez, ancak değişiklikleri buluta kaydedersen mevcut haritanın üzerine yazılır. Önce JSON yedeği almanı öneririz.'))return;
+ const t={version:1,cols:26,rows:20,blocks:[]};
+ const put=(type,x,y,w,h,label,extra={})=>{const b=createBlock(type,x,y,w,h,label);Object.assign(b,extra);t.blocks.push(b);return b};
+ put('lrack',0,3,4,10,'Sol Dış L Raf',{orientation:'bottom-right'});
+ put('rack',0,15,4,2,'Sol Dış Raf');
+ for(let k=0;k<4;k++){put('aisle',6,1+k*4,5,2,'Sol '+(k+1)+'. Koridor',{sections:12});put('aisle',15,1+k*4,5,2,'Sağ '+(k+1)+'. Koridor',{sections:12})}
+ put('area',12,1,2,16,'Ana Koridor');
+ for(let k=0;k<4;k++)put('rack',22,1+k*4,2,2,'Sağ Dış Raf '+(k+1));
+ // Her şablon kullanıcı tarafından gerçek raf konumlarına göre doldurulacak.
+ layout=validate(t);selected=null;locationFilter='';dirtyNow();$('gridCols').value=layout.cols;$('gridRows').value=layout.rows;renderCanvas();renderInspector();search();requestAnimationFrame(()=>{if(!matchMedia('(max-width:720px)').matches)fitMap()});setMessage('5 bölgeli boş depo şablonu açıldı. L rafın yönünü ve ürünlerin gerçek konumlarını tanımlayıp buluta kaydet.','success');
 }
 function createDemo(){if(!isEditable())return;if(layout.blocks.length&&!confirm('Mevcut ekrandaki çizim örnek krokisiyle değiştirilsin mi? Kaydedilmemiş çizimi önce JSON olarak indir.'))return;
  layout=empty();layout.blocks=[
@@ -327,8 +374,9 @@ function bind(){
  $('mapCanvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('block')){e.preventDefault();selectBlock(e.target.dataset.id)}});
  $('mapCanvas').addEventListener('pointerdown',pointerDown);$('mapCanvas').addEventListener('pointermove',pointerMove);$('mapCanvas').addEventListener('pointerup',pointerUp);$('mapCanvas').addEventListener('pointercancel',pointerUp);
  $('searchInput').addEventListener('input',search);$('clearSearch').addEventListener('click',()=>{$('searchInput').value='';search();$('searchInput').focus()});$('searchResults').addEventListener('click',e=>{const b=e.target.closest('[data-result]');if(!b)return;selectBlock(b.dataset.result,{scroll:true,filter:$('searchInput').value});const block=layout.blocks.find(x=>x.id===b.dataset.result);if(block?.type==='aisle')openCorridor(block.id,$('searchInput').value)});
- $('zoomOut').addEventListener('click',()=>updateZoom(zoom-.1));$('zoomIn').addEventListener('click',()=>updateZoom(zoom+.1));$('zoomFit').addEventListener('click',()=>{const sc=$('mapScroll');updateZoom(Math.min((sc.clientWidth-34)/(layout.cols*C),(sc.clientHeight-34)/(layout.rows*C),1));sc.scrollTo({top:0,left:0,behavior:'smooth'})});
+ $('zoomOut').addEventListener('click',()=>updateZoom(zoom-.1));$('zoomIn').addEventListener('click',()=>updateZoom(zoom+.1));$('zoomFit').addEventListener('click',fitMap);
  $('resizeMap').addEventListener('click',()=>{if(!isEditable())return;const cols=Number($('gridCols').value),rows=Number($('gridRows').value);if(!Number.isInteger(cols)||cols<10||cols>60||!Number.isInteger(rows)||rows<8||rows>40){setMessage('Harita en az 10×8, en çok 60×40 hücre olmalı.','error');return}if(layout.blocks.some(b=>b.x+b.w>cols||b.y+b.h>rows)){setMessage('Bazı bloklar yeni ölçülerin dışında kalıyor. Önce blokları taşı.','error');return}layout.cols=cols;layout.rows=rows;dirtyNow();renderCanvas();setMessage('Harita ölçüsü değiştirildi.','success')});
+ $('warehouseTemplate').addEventListener('click',createWarehouseTemplate);
  $('demoMap').addEventListener('click',createDemo);
  $('clearMap').addEventListener('click',()=>{if(!confirm('Yeni, boş depo krokisi başlatılsın mı? Mevcut kaydedilmemiş değişiklikleri önce JSON olarak dışa aktar.'))return;layout=empty();selected=null;dirtyNow();renderCanvas();renderInspector();showRemote();setMessage('Boş harita açıldı. Gerçek rafları ekleyebilirsin.','success')});
  $('exportMap').addEventListener('click',downloadBackup);

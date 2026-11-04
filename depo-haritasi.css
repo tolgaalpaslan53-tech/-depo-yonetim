@@ -58,3 +58,44 @@ body.viewer .admin-only{display:none!important}
 
 .extra-tools{grid-column:1/-1;margin-top:4px;padding:7px;border:1px solid #2e485e;border-radius:8px}.extra-tools summary,.map-advanced>summary,.info-panel>summary{cursor:pointer;color:#cbdceb;font-size:13px;font-weight:850;padding:6px 4px}.extra-tools[open] summary{margin-bottom:8px}.extra-tools .tool{width:100%;margin-top:6px}.map-advanced>summary,.info-panel>summary{font-size:14px}.map-advanced[open] .dimensions{margin-top:12px}.info-panel[open] .btn{margin-top:8px}
 @media(max-width:720px){.tool-list .extra-tools{grid-column:1/-1}.extra-tools .tool{display:inline-flex;width:auto;margin-right:5px}.sidebar .panel.map-advanced{grid-column:1/-1}}
+
+/* V3 · Gerçek depo şablonu / L biçimli dış duvar rafı. */
+.tool.l-tool{border-color:#4a7c90;background:#163a4b}
+.block.l-rack{background:transparent;border:1px dashed #3b6380;color:#eff6ff;justify-content:center;overflow:visible;outline-offset:2px}
+.block.l-rack .l-rack-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:drop-shadow(0 2px 3px #010b16)}
+.block.l-rack .l-rack-label{position:relative;z-index:1;background:#102e44ef;padding:5px 8px;max-width:90%;white-space:normal;border-radius:6px;font-size:12px;line-height:1.25;text-wrap:balance}
+.block.l-rack .l-rack-sub{position:relative;z-index:1;background:#102e44ef;padding:3px 5px;border-radius:5px;font-size:9px;color:#bdddef}
+.block.l-rack small{position:relative;z-index:1;background:#133b4fdf;border-radius:4px;padding:2px 5px}
+.block.l-rack.matched .l-rack-svg{filter:drop-shadow(0 0 6px #ffd266)}
+.legend-dot.lrack{background:#82cfe6}
+.l-inspector-title{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-bottom:8px}
+.l-rack-form{margin:10px 0 15px;padding:12px;border:1px solid #385975;background:#122a41;border-radius:12px}
+.l-rack-form h3{margin:0 0 10px;font-size:14px}
+.l-rack-form label{display:block;font-size:12px;margin:10px 0 4px;color:#b9d1e4}
+.l-rack-form select{width:100%;min-height:40px;border-radius:8px;background:#1c334a;color:#eef6fb;border:1px solid #4d6780;padding:7px}
+.l-rack-form .btn{margin-top:12px}
+.l-products{padding:0;list-style:none;max-height:350px;overflow:auto;display:grid;gap:6px}
+.l-products li{display:flex;align-items:flex-start;flex-wrap:wrap;gap:6px;padding:10px;border:1px solid #34516b;border-radius:9px;background:#10263a}
+.l-products li strong{width:100%;font-size:13px}
+.l-products li small{color:#bdd0df}
+.l-products li .shelf-pill{margin-left:auto}
+.l-products li .btn{min-height:27px;padding:4px 8px}
+/* Daha ferah: harita merkezde, ayrıntılar yanında; izleyici yalnız arama ve haritayı kullanır. */
+body.viewer .search-panel{padding:14px}
+body.viewer .map-scroll{height:min(72vh,820px)}
+body.viewer .inspector .panel{max-height:72vh;overflow:auto}
+@media(max-width:720px){
+ .tool.l-tool{grid-column:auto}
+ body.viewer .content{gap:9px}
+ body.viewer .map-scroll{height:57vh;min-height:350px}
+ body.viewer .inspector .panel{max-height:none}
+ .block.l-rack .l-rack-label{font-size:11px}
+}
+
+.block.main-aisle{background:linear-gradient(90deg,#38485b,#566779,#38485b);border:1px dashed #99a7b7;color:#f3f6fa;font-weight:900}
+.block.main-aisle .block-icon{font-size:22px}
+.block.main-aisle .block-label{writing-mode:vertical-rl;font-size:15px;max-height:90%}
+
+.block[data-type="aisle"].wide-aisle .block-label{writing-mode:horizontal-tb;max-height:none;white-space:normal;font-size:12px;padding:0 2px}
+.block[data-type="aisle"].wide-aisle .block-icon{font-size:15px}
+@media(max-width:720px){.block[data-type="aisle"].wide-aisle .block-label{font-size:11px}}

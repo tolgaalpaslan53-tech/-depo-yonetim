@@ -15,6 +15,7 @@ const norm=x=>text(x).trim().toLocaleLowerCase('tr-TR').normalize('NFD').replace
 const bound=(v,min,max)=>Math.max(min,Math.min(max,v));
 let layout=empty(),session=null,profile=null,admin=false,tool='select',zoom=1,selected=null,matched=new Set();
 let remoteRevision=0,remoteReady=false,remoteUpdated=null,dirty=false,drag=null,writeBusy=false,draftTimer=null;
+let quickSaveTimer=null,quickSaveQueued=false; // +/- işlemlerini birleştirerek buluta otomatik kaydet
 let draftKey='',locationFilter='',locationPage=1,rackLevelFilter='all',rackPage=1;
 let corridorId=null,corridorSlot=null,corridorQuery='',corridorDetailPage=1,pendingMove=null,suppressClickUntil=0;
 const SIDES={left:'Sol',right:'Sağ'};
@@ -67,13 +68,13 @@ function resizeAisleQuick(id,dim,delta){
  if(!fits(proposal,b.id)){setMessage('Bu yönde boşluk yok. Koridoru taşı veya haritayı genişlet.','error');return}
  const prior=clone(b);b[dim]=next;b.pivot={cx2:b.x*2+b.w,cy2:b.y*2+b.h};
  try{validate(serialize())}catch(err){Object.assign(b,prior);setMessage(err.message,'error');return}
- dirtyNow();renderCanvas();renderInspector();search();setMessage('Koridor boyutu değişti. Ürün konumları korunuyor.','success');
+ dirtyNow();renderCanvas();renderInspector();search();scheduleQuickSave();setMessage('Koridor ölçüsü uygulandı; otomatik kaydedilecek.','success');
 }
 function applyGridSize(cols,rows){
  if(!isEditable())return false;
  if(!Number.isInteger(cols)||cols<10||cols>60||!Number.isInteger(rows)||rows<8||rows>40){setMessage('Harita en az 10×8, en fazla 60×40 kare olmalı.','error');return false}
  if(layout.blocks.some(b=>b.x+b.w>cols||b.y+b.h>rows)){setMessage('Bu kadar küçültemezsin: Kenarda raf/koridor kalıyor. Önce öğeyi taşı.','error');return false}
- if(layout.cols!==cols||layout.rows!==rows){layout.cols=cols;layout.rows=rows;dirtyNow();renderCanvas();setMessage('Harita alanı ayarlandı. Ürünler korunuyor.','success')}
+ if(layout.cols!==cols||layout.rows!==rows){layout.cols=cols;layout.rows=rows;dirtyNow();renderCanvas();scheduleQuickSave();setMessage('Harita ölçüsü uygulandı; otomatik kaydedilecek.','success')}
  $('gridCols').value=layout.cols;$('gridRows').value=layout.rows;
  return true;
 }
@@ -137,7 +138,26 @@ function createBlock(type,x,y,w=TYPES[type].w,h=TYPES[type].h,label=''){
 }
 function serialize(){return {version:1,cols:layout.cols,rows:layout.rows,blocks:layout.blocks.map(b=>clone(b)),...(layout.demo?{demo:true}:{})}}
 function localSave(){if(!isEditable())return;try{localStorage.setItem(draftKey,JSON.stringify({layout:serialize(),revision:remoteRevision,updatedAt:Date.now()}))}catch{setMessage('Cihazda yerel taslak saklanamadı. JSON yedeğini indir.','error')}}
-function dirtyNow(){if(!isEditable())return;dirty=true;clearTimeout(draftTimer);draftTimer=setTimeout(localSave,300);state('Kaydedilmemiş değişiklikler');$('saveState').classList.add('dirty-tag');renderStats()}
+// Normal düzenlemeler eski gibi manuel kaydedilir. Yalnızca +/- işlemleri otomatik kayıt sırasına alınır.
+function cancelQuickSave(){clearTimeout(quickSaveTimer);quickSaveTimer=null;quickSaveQueued=false}
+function dirtyNow(){if(!isEditable())return;cancelQuickSave();dirty=true;clearTimeout(draftTimer);draftTimer=setTimeout(localSave,300);state('Kaydedilmemiş değişiklikler');$('saveState').classList.add('dirty-tag');renderStats()}
+function scheduleQuickSave(){
+ if(!isEditable()||!dirty)return;
+ // Örnek harita gerçek depo verisi olarak gönderilmez.
+ if(layout.demo){setMessage('Örnek harita değiştirildi; gerçek harita için önce boş kroki oluştur.','info');return}
+ if(!remoteReady){setMessage('Ölçü haritada uygulandı; bulut erişimi yok, yerel taslak korunuyor.','info');return}
+ quickSaveQueued=true;clearTimeout(quickSaveTimer);
+ quickSaveTimer=setTimeout(flushQuickSave,1200);
+ showRemote();
+}
+async function flushQuickSave(){
+ quickSaveTimer=null;
+ if(!quickSaveQueued)return;
+ if(!isEditable()||!remoteReady||!dirty){quickSaveQueued=false;showRemote();return}
+ if(writeBusy)return; // Devam eden kayıt bittikten sonra yeniden sıraya alınır.
+ quickSaveQueued=false;
+ await saveRemote({automatic:true});
+}
 function afterSave(){dirty=false;clearTimeout(draftTimer);localStorage.removeItem(draftKey);$('draftBanner').classList.add('is-hidden');$('saveState').classList.remove('dirty-tag');state('Bulutta güncel')}
 function updateTool(){document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));$('modeTip').textContent=tool==='select'?'Bir bloğu seç veya sürükleyerek taşı.':TYPES[tool].label+' eklemek için haritada boş alana dokun.';renderCanvas()}
 function updateZoom(next){zoom=bound(Math.round(next*100)/100,.23,1.6);$('zoomLabel').textContent=Math.round(zoom*100)+'%';renderCanvas()}
@@ -241,7 +261,7 @@ function renderAisleInspector(b){
  const h=$('inspectorBody'),editable=isEditable();$('inspectorTitle').textContent='Koridor · Sağ / Sol';
  const left=b.products.filter(p=>p.side==='left').length,right=b.products.filter(p=>p.side==='right').length,unplaced=b.products.length-left-right;
  h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted smalltext">${b.products.length} ürün kayıtlı · Sağ ve sol taraflar ayrı.</p><div class="aisle-counts"><span>← Sol <strong>${left}</strong></span><span>Sağ <strong>${right}</strong> →</span></div>`+
- (editable?`<form id="aisleQuickRename" class="aisle-quick-rename"><label for="aisleQuickName">Koridora isim ver</label><div class="aisle-name-row"><input id="aisleQuickName" maxlength="75" required value="${esc(b.label)}" placeholder="Ör. İçecek Koridoru"><button type="submit" class="btn primary small">Kaydet</button></div></form><div class="aisle-quick-size"><strong>Koridorun yerleşimi</strong><p class="muted smalltext">Eni ve boyu kare kare ayarla; + / − anında uygular.</p><div class="aisle-size-fields"><div class="easy-size-field"><span>En (sütun)</span><div class="easy-counter"><button type="button" data-aisle-dim="w" data-delta="-1" aria-label="Koridorun enini azalt">−</button><output>${b.w}</output><button type="button" data-aisle-dim="w" data-delta="1" aria-label="Koridorun enini artır">+</button></div></div><div class="easy-size-field"><span>Boy (satır)</span><div class="easy-counter"><button type="button" data-aisle-dim="h" data-delta="-1" aria-label="Koridorun boyunu azalt">−</button><output>${b.h}</output><button type="button" data-aisle-dim="h" data-delta="1" aria-label="Koridorun boyunu artır">+</button></div></div></div><div class="row-actions"><button class="btn small secondary" id="aisleRotateLeft" type="button">↶ 90°</button><button class="btn small secondary" id="aisleRotateRight" type="button">↷ 90°</button></div></div>`:'')+
+ (editable?`<form id="aisleQuickRename" class="aisle-quick-rename"><label for="aisleQuickName">Koridora isim ver</label><div class="aisle-name-row"><input id="aisleQuickName" maxlength="75" required value="${esc(b.label)}" placeholder="Ör. İçecek Koridoru"><button type="submit" class="btn primary small">Kaydet</button></div></form><div class="aisle-quick-size"><strong>Koridorun yerleşimi</strong><p class="muted smalltext">Eni ve boyu kare kare ayarla; + / − anında uygular ve otomatik kaydeder.</p><div class="aisle-size-fields"><div class="easy-size-field"><span>En (sütun)</span><div class="easy-counter"><button type="button" data-aisle-dim="w" data-delta="-1" aria-label="Koridorun enini azalt">−</button><output>${b.w}</output><button type="button" data-aisle-dim="w" data-delta="1" aria-label="Koridorun enini artır">+</button></div></div><div class="easy-size-field"><span>Boy (satır)</span><div class="easy-counter"><button type="button" data-aisle-dim="h" data-delta="-1" aria-label="Koridorun boyunu azalt">−</button><output>${b.h}</output><button type="button" data-aisle-dim="h" data-delta="1" aria-label="Koridorun boyunu artır">+</button></div></div></div><div class="row-actions"><button class="btn small secondary" id="aisleRotateLeft" type="button">↶ 90°</button><button class="btn small secondary" id="aisleRotateRight" type="button">↷ 90°</button></div></div>`:'')+
  `<button id="aisleOpen" type="button" class="btn primary full">Koridor ürünlerini aç</button>${unplaced?`<p class="muted smalltext">${unplaced} ürünün sağ/sol konumu henüz belirlenmemiş.</p>`:''}`+
  (editable?`<details class="rack-settings"><summary>Koridor notu ve silme</summary><form id="aisleNoteForm"><label for="aisleNote">Not</label><textarea id="aisleNote" maxlength="400">${esc(b.note)}</textarea><button class="btn secondary full" type="submit">Notu kaydet</button><button type="button" id="aisleRemove" class="btn quiet full remove">Koridoru sil</button></form></details>`:'');
  $('aisleOpen').onclick=()=>openCorridor(b.id);
@@ -369,7 +389,7 @@ function bindCorridorEvents(){
   if(unplace){const i=Number(unplace.dataset.unplace),p=b.products[i];if(!p||!confirm('Bu ürünün sol/sağ konumu kaldırılsın mı? Ürün kaydı silinmeyecek.'))return;delete p.side;delete p.section;dirtyNow();renderCanvas();search();renderCorridor()}
  });
  $('corridorUnassigned').addEventListener('click',e=>{const btn=e.target.closest('[data-assign]');if(!btn||!isEditable())return;if(!corridorSlot){setMessage('Önce sol veya sağ tarafta bir raf bölümü seç.','error');return}const b=corridorBlock(),p=b?.products[Number(btn.dataset.assign)];if(!p)return;p.side=corridorSlot.side;p.section=corridorSlot.section;dirtyNow();renderCanvas();search();renderCorridor();setMessage('Ürün seçilen bölüme yerleştirildi.','success')});
- function applySections(n){const b=corridorBlock();if(!b||!isEditable())return false;if(!Number.isInteger(n)||n<2||n>60){setMessage('Bölüm sayısı 2 ile 60 arasında olmalı.','error');$('corridorSections').value=b.sections||12;return false}if(b.products.some(p=>p.section>n)){setMessage('Bu bölümde ürün var. Önce diğer bölüme taşı, sonra azalt.','error');$('corridorSections').value=b.sections||12;return false}if(b.sections!==n){b.sections=n;dirtyNow();renderCorridor();setMessage('Raf bölüm sayısı değişti. Buluta kaydet.','success')}$('corridorSections').value=n;return true}
+ function applySections(n){const b=corridorBlock();if(!b||!isEditable())return false;if(!Number.isInteger(n)||n<2||n>60){setMessage('Bölüm sayısı 2 ile 60 arasında olmalı.','error');$('corridorSections').value=b.sections||12;return false}if(b.products.some(p=>p.section>n)){setMessage('Bu bölümde ürün var. Önce diğer bölüme taşı, sonra azalt.','error');$('corridorSections').value=b.sections||12;return false}if(b.sections!==n){b.sections=n;dirtyNow();renderCorridor();scheduleQuickSave();setMessage('Raf bölüm sayısı uygulandı; otomatik kaydedilecek.','success')}$('corridorSections').value=n;return true}
  $('applyCorridorSections').addEventListener('click',()=>applySections(Number($('corridorSections').value)));
  $('corridorSectionsMinus').addEventListener('click',()=>applySections((corridorBlock()?.sections||12)-1));
  $('corridorSectionsPlus').addEventListener('click',()=>applySections((corridorBlock()?.sections||12)+1));
@@ -444,10 +464,11 @@ async function importCsv(file){
 }
 
 function downloadBackup(){const data=JSON.stringify(serialize(),null,2);const blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='aktiva-depo-haritasi-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000)}
-function showRemote(){state(!remoteReady?'SQL kurulumu gerekli':dirty?'Kaydedilmemiş değişiklikler':remoteRevision?'Bulutta güncel':'Yeni harita');$('lastSaved').textContent=remoteRevision?'Sunucu kayıt zamanı: '+prettyDate(remoteUpdated):remoteReady?'Henüz paylaşılan harita yok':'Sunucuda tablo bulunamadı — SQL kurulumunu yap.';$('saveMap').disabled=!remoteReady||writeBusy}
+function showRemote(){state(!remoteReady?'SQL kurulumu gerekli':writeBusy?'Buluta kaydediliyor…':quickSaveQueued?'Değişiklik uygulandı · otomatik kaydedilecek':dirty?'Kaydedilmemiş değişiklikler':remoteRevision?'Bulutta güncel':'Yeni harita');$('lastSaved').textContent=remoteRevision?'Sunucu kayıt zamanı: '+prettyDate(remoteUpdated):remoteReady?'Henüz paylaşılan harita yok':'Sunucuda tablo bulunamadı — SQL kurulumunu yap.';$('saveMap').disabled=!remoteReady||writeBusy}
 function findDraft(){try{const raw=localStorage.getItem(draftKey);if(!raw)return null;const d=JSON.parse(raw);return {layout:validate(d.layout),revision:d.revision,updatedAt:d.updatedAt}}catch{return null}}
 function draftPrompt(){if(!isEditable())return;const d=findDraft();$('draftBanner').classList.toggle('is-hidden',!d);}
 async function readRemote({fresh=false}={}){
+ cancelQuickSave();
  try{
   const rows=await api('/rest/v1/ak_depo_haritasi?select=data,revision,updated_at&id=eq.ana-depo&limit=1');
   remoteReady=true;remoteRevision=rows[0]?.revision||0;remoteUpdated=rows[0]?.updated_at||null;
@@ -464,13 +485,13 @@ async function readRemote({fresh=false}={}){
   showRemote();renderCanvas();renderInspector();return false;
  }
 }
-async function saveRemote(){if(!isEditable())return;if(!remoteReady){setMessage('Önce AKTIVA_DEPO_HARITASI_KURULUM.sql dosyasını Supabase SQL Editor’da çalıştır. Yerel çizimin korunuyor.','error');return}if(writeBusy)return;
+async function saveRemote({automatic=false}={}){if(!isEditable())return;if(!automatic)cancelQuickSave();if(!remoteReady){setMessage('Önce AKTIVA_DEPO_HARITASI_KURULUM.sql dosyasını Supabase SQL Editor’da çalıştır. Yerel çizimin korunuyor.','error');return}if(writeBusy)return;
  let payload;try{payload=validate(serialize());if(payload.demo)throw Error('Örnek kroki gerçek depo haritası olarak kaydedilemez. Önce “Boş krokiyle başla” deyip gerçek raflarını çiz.')}catch(e){setMessage('Kaydedilemedi: '+e.message,'error');return}
  const savingSnapshot=JSON.stringify(payload);writeBusy=true;showRemote();try{
   const rows=await api('/rest/v1/rpc/ak_depo_haritasi_kaydet',{method:'POST',body:{p_data:payload,p_expected_revision:remoteRevision}});
   const row=Array.isArray(rows)?rows[0]:rows;if(!row||typeof row.revision!=='number')throw Error('Sunucu kayıt onayı gelmedi.');
-  remoteRevision=row.revision;remoteUpdated=row.updated_at;if(JSON.stringify(validate(serialize()))===savingSnapshot){afterSave();setMessage('Depo haritası kaydedildi. Toplamacılar güncel haritayı açabilir.','success')}else{dirty=true;localSave();setMessage('Kayıt tamamlandı ancak kaydetme sırasında yeni düzenleme yapıldı. Bu değişiklikleri tekrar kaydet.','info')}showRemote();
- }catch(e){setMessage('Harita kaydedilemedi: '+e.message+'. Yerel taslak korunuyor. Gerekirse JSON yedeği indir.','error');localSave()}finally{writeBusy=false;showRemote()}
+  remoteRevision=row.revision;remoteUpdated=row.updated_at;if(JSON.stringify(validate(serialize()))===savingSnapshot){afterSave();setMessage(automatic?'Ölçü değişikliği otomatik kaydedildi.':'Depo haritası kaydedildi. Toplamacılar güncel haritayı açabilir.','success')}else{dirty=true;localSave();setMessage('Kayıt sırasında yeni düzenleme yapıldı. Yeni değişiklik için kayıt bekleniyor.','info')}showRemote();
+ }catch(e){setMessage((automatic?'Otomatik kayıt başarısız: ':'Harita kaydedilemedi: ')+e.message+'. Yerel taslak korunuyor; Buluta Kaydet ile tekrar deneyebilirsin.','error');localSave()}finally{writeBusy=false;if(quickSaveQueued&&dirty&&remoteReady){clearTimeout(quickSaveTimer);quickSaveTimer=setTimeout(flushQuickSave,1200)}showRemote()}
 }
 // Kullanıcının krokisine göre başlangıç yerleşimi. Yalnızca açık onay ile uygulanır.
 function createWarehouseTemplate(){

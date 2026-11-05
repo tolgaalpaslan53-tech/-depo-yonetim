@@ -15,12 +15,49 @@ const norm=x=>text(x).trim().toLocaleLowerCase('tr-TR').normalize('NFD').replace
 const bound=(v,min,max)=>Math.max(min,Math.min(max,v));
 let layout=empty(),session=null,profile=null,admin=false,tool='select',zoom=1,selected=null,matched=new Set();
 let remoteRevision=0,remoteReady=false,remoteUpdated=null,dirty=false,drag=null,writeBusy=false,draftTimer=null;
-let draftKey='',locationFilter='',locationPage=1;
-let corridorId=null,corridorSlot=null,corridorQuery='',pendingMove=null,suppressClickUntil=0;
+let draftKey='',locationFilter='',locationPage=1,rackLevelFilter='all',rackPage=1;
+let corridorId=null,corridorSlot=null,corridorQuery='',corridorDetailPage=1,pendingMove=null,suppressClickUntil=0;
 const SIDES={left:'Sol',right:'Sağ'};
 const L_ARMS={vertical:'Dikey kol',horizontal:'Yatay kol'};
 const L_LEVELS={lower:'Alt',upper:'Üst'};
 const L_ORIENTATIONS={'bottom-right':'┘ Alt köşe sağ','bottom-left':'└ Alt köşe sol','top-right':'┐ Üst köşe sağ','top-left':'┌ Üst köşe sol'};
+// Blok yönleri eski JSON ve Supabase haritalarıyla uyumludur (eski kayıtlarda yön otomatik belirlenir).
+const DIRECTIONS=['up','right','down','left'];
+const DIRECTION_SYMBOLS={up:'↑',right:'→',down:'↓',left:'←'};
+const L_CLOCKWISE=['bottom-right','bottom-left','top-left','top-right'];
+function blockDirection(b){return DIRECTIONS.includes(b.direction)?b.direction:(b.w>b.h?'right':'up')}
+function rotateBlock(id,delta){
+ if(!isEditable())return;
+ const b=layout.blocks.find(x=>x.id===id);if(!b)return;
+ if(b.type==='lrack'){
+  const k=L_CLOCKWISE.indexOf(L_ORIENTATIONS[b.orientation]?b.orientation:'bottom-right');
+  b.orientation=L_CLOCKWISE[(k+(delta>0?1:3))%4];
+  dirtyNow();renderCanvas();renderInspector();search();setMessage('L raf 90° çevrildi. Buluta kaydetmeyi unutma.','success');return;
+ }
+ const dir=DIRECTIONS[(DIRECTIONS.indexOf(blockDirection(b))+(delta>0?1:3))%4];
+ const w=b.h,h=b.w;
+ // Dönerken merkez mümkün olduğunca aynı kalır; harita dışına veya başka rafa taşınmaz.
+ const centerX=(b.pivot?.cx2??(2*b.x+b.w))/2,centerY=(b.pivot?.cy2??(2*b.y+b.h))/2;
+ const bx=Math.round(centerX-w/2),by=Math.round(centerY-h/2);
+ const candidates=[{x:bx,y:by}];
+ // Kareli ızgarada yarım hücreden doğan kaymayı diğer yuvarlama yönüyle de dene.
+ for(const x of [Math.floor(centerX-w/2),Math.ceil(centerX-w/2)])for(const y of [Math.floor(centerY-h/2),Math.ceil(centerY-h/2)]){
+  if(!candidates.some(c=>c.x===x&&c.y===y))candidates.push({x,y});
+ }
+ const found=candidates.find(c=>fits({...b,x:c.x,y:c.y,w,h},b.id));
+ if(!found){setMessage('Burada 90° çevirmek için yeterli boşluk yok. Önce koridoru/rafı boş bir yere taşı, sonra çevir.','error');return}
+ Object.assign(b,{...found,w,h,direction:dir,pivot:{cx2:Math.round(centerX*2),cy2:Math.round(centerY*2)}});dirtyNow();renderCanvas();renderInspector();search();
+ const label=b.type==='aisle'?'Koridor':TYPES[b.type].label;
+ setMessage(label+' 90° çevrildi ('+(w>h?'yatay':h>w?'dikey':'kare')+'). Buluta kaydetmeyi unutma.','success');
+}
+function renderSelectionToolbar(){
+ const bar=$('selectionToolbar');if(!bar)return;
+ const b=layout.blocks.find(x=>x.id===selected);
+ bar.classList.toggle('is-hidden',!isEditable()||!b);
+ if(!b){bar.innerHTML='';return}
+ bar.innerHTML=`<strong>${esc(b.label)}</strong><span class="rotate-hint">${b.type==='lrack'?'L raf':b.w>b.h?'Yatay':b.h>b.w?'Dikey':'Kare'} · ${b.type==='lrack'?'Yön ayarlanabilir':DIRECTION_SYMBOLS[blockDirection(b)]}</span><button type="button" class="btn small secondary" data-rotate="-1" title="Sola 90 derece çevir">↶ 90°</button><button type="button" class="btn small secondary" data-rotate="1" title="Sağa 90 derece çevir">↷ 90°</button>${b.type==='aisle'?'<button type="button" class="btn small secondary" data-open-corridor="1">Ürünleri aç</button>':''}`;
+}
+
 const config=()=>({url:text(window.MK_CONFIG?.url).replace(/\/+$/,''),key:text(window.MK_CONFIG?.key)});
 const setMessage=(msg,kind='info')=>{$('message').textContent=msg;$('message').dataset.kind=kind};
 const state=msg=>{$('saveState').textContent=msg};
@@ -57,6 +94,7 @@ function validate(input){
   const b={id:x.id,type:x.type,x:x.x,y:x.y,w:x.w,h:x.h,label:text(x.label).trim().slice(0,75),note:text(x.note).slice(0,400),products:[]};
   if(b.type==='aisle')b.sections=Number.isInteger(x.sections)?bound(x.sections,2,60):12;
   if(b.type==='lrack')b.orientation=L_ORIENTATIONS[x.orientation]?x.orientation:'bottom-right';
+  else {b.direction=DIRECTIONS.includes(x.direction)?x.direction:(b.w>b.h?'right':'up');b.pivot={cx2:Number.isInteger(x.pivot?.cx2)?x.pivot.cx2:b.x*2+b.w,cy2:Number.isInteger(x.pivot?.cy2)?x.pivot.cy2:b.y*2+b.h}};
   if(b.x<0||b.y<0||b.w<1||b.h<1||b.x+b.w>input.cols||b.y+b.h>input.rows)throw Error('Harita sınırı dışında blok var.');
   if(!Array.isArray(x.products)||x.products.length>MAX_LOCATION_PRODUCTS)throw Error('Bir konumda en fazla '+MAX_LOCATION_PRODUCTS+' ürün bulunabilir.');
   b.products=x.products.map(p=>({code:text(p.code).trim().slice(0,55),name:text(p.name).trim().slice(0,140),...(text(p.shelf).trim()?{shelf:text(p.shelf).trim().slice(0,75)}:{}),...(['left','right'].includes(p.side)&&Number.isInteger(p.section)&&p.section>=1&&p.section<=60?{side:p.side,section:p.section}:{}),...(['vertical','horizontal'].includes(p.arm)?{arm:p.arm}:{}),...(['upper','lower'].includes(p.level)?{level:p.level}:{})})).filter(p=>p.code||p.name);
@@ -68,7 +106,7 @@ function validate(input){
 }
 function createBlock(type,x,y,w=TYPES[type].w,h=TYPES[type].h,label=''){
  const id='b_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);
- return {id,type,x,y,w,h,...(type==='aisle'?{sections:12}:{}),...(type==='lrack'?{orientation:'bottom-right'}:{}),label:label||{rack:'Yeni Raf',lrack:'L Duvar Rafı',aisle:'Koridor',wall:'Duvar',door:'Kapı',dock:'Peron',area:'Alan'}[type],note:'',products:[]};
+ return {id,type,x,y,w,h,...(type==='aisle'?{sections:12}:{}),...(type==='lrack'?{orientation:'bottom-right'}:{direction:w>h?'right':'up',pivot:{cx2:x*2+w,cy2:y*2+h}}),label:label||{rack:'Yeni Raf',lrack:'L Duvar Rafı',aisle:'Koridor',wall:'Duvar',door:'Kapı',dock:'Peron',area:'Alan'}[type],note:'',products:[]};
 }
 function serialize(){return {version:1,cols:layout.cols,rows:layout.rows,blocks:layout.blocks.map(b=>clone(b)),...(layout.demo?{demo:true}:{})}}
 function localSave(){if(!isEditable())return;try{localStorage.setItem(draftKey,JSON.stringify({layout:serialize(),revision:remoteRevision,updatedAt:Date.now()}))}catch{setMessage('Cihazda yerel taslak saklanamadı. JSON yedeğini indir.','error')}}
@@ -86,18 +124,18 @@ function lRackShape(b){
  return `<svg class="l-rack-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M${x} ${otherY} V${y} H${otherX}" fill="none" stroke="#9cd7ed" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M${x} ${otherY} V${y} H${otherX}" fill="none" stroke="#235d7c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="l-rack-label">${esc(b.label)}</span><span class="l-rack-sub">L RAF · ALT / ÜST</span>`;
 }
 function renderCanvas(){
- const inner=$('mapCanvas'),stage=$('mapStage');inner.style.width=(layout.cols*C)+'px';inner.style.height=(layout.rows*C)+'px';inner.style.transform=`scale(${zoom})`;stage.style.width=(layout.cols*C*zoom)+'px';stage.style.height=(layout.rows*C*zoom)+'px';
+ const inner=$('mapCanvas'),stage=$('mapStage');renderSelectionToolbar();inner.style.width=(layout.cols*C)+'px';inner.style.height=(layout.rows*C)+'px';inner.style.transform=`scale(${zoom})`;stage.style.width=(layout.cols*C*zoom)+'px';stage.style.height=(layout.rows*C*zoom)+'px';
  inner.classList.toggle('edit-mode',isEditable());
  inner.innerHTML=layout.blocks.map(b=>{
   const ic=TYPES[b.type].icon;
   const hasProducts=['rack','aisle','lrack'].includes(b.type);const tooltip=esc(hasProducts?`${b.label} · ${b.products.length} ürün`:b.label);
-  return `<div class="block${b.h===1?' compact-block':''}${b.type==='lrack'?' l-rack':''}${b.type==='aisle'&&b.w>b.h?' wide-aisle':''}${b.type==='area'&&norm(b.label)==='ana koridor'?' main-aisle':''}${selected===b.id?' selected':''}${matched.has(b.id)?' matched':''}" role="button" tabindex="0" aria-label="${tooltip}" data-id="${esc(b.id)}" data-type="${b.type}" style="left:${b.x*C+3}px;top:${b.y*C+3}px;width:${b.w*C-6}px;height:${b.h*C-6}px">${b.type==='lrack'?lRackShape(b):`<span class="block-icon">${ic}</span><span class="block-label">${esc(b.label)}</span>`}${hasProducts&&b.products.length?`<small>${b.products.length} ürün</small>`:''}</div>`
+  return `<div class="block${b.h===1?' compact-block':''}${b.type==='lrack'?' l-rack':''}${b.type==='aisle'&&b.w>b.h?' wide-aisle':''}${b.type==='area'&&norm(b.label)==='ana koridor'?' main-aisle':''}${b.type==='area'&&norm(b.label)==='ana koridor'&&b.w>b.h?' wide-main-aisle':''}${selected===b.id?' selected':''}${matched.has(b.id)?' matched':''}" role="button" tabindex="0" aria-label="${tooltip}" data-id="${esc(b.id)}" data-type="${b.type}" style="left:${b.x*C+3}px;top:${b.y*C+3}px;width:${b.w*C-6}px;height:${b.h*C-6}px">${b.type==='lrack'?lRackShape(b):`<span class="block-icon">${b.type==='aisle'?DIRECTION_SYMBOLS[blockDirection(b)]:ic}</span><span class="block-label">${esc(b.label)}</span>`}${hasProducts&&b.products.length?`<small>${b.products.length} ürün</small>`:''}</div>`
  }).join('');
  renderStats();renderQuickCorridors();
 }
 function renderQuickCorridors(){const box=$('quickCorridors');if(!box)return;const corridors=layout.blocks.filter(b=>b.type==='aisle');box.innerHTML=corridors.length?`<span class="quick-label">Koridor aç:</span>`+corridors.map(b=>`<button class="quick-corridor" type="button" data-corridor-id="${esc(b.id)}">${esc(b.label)} <small>›</small></button>`).join(''):''}
 function scrollToSelected(){const node=[...$('mapCanvas').querySelectorAll('.block')].find(el=>el.dataset.id===selected);if(node){const sc=$('mapScroll');const x=node.offsetLeft*zoom;const y=node.offsetTop*zoom;sc.scrollTo({left:Math.max(0,x-sc.clientWidth/2+80),top:Math.max(0,y-sc.clientHeight/2+80),behavior:'smooth'})}}
-function selectBlock(id,{scroll=false,filter=''}={}){selected=id;locationFilter=filter;locationPage=1;tool='select';document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool==='select'));renderCanvas();renderInspector();if(scroll)scrollToSelected()}
+function selectBlock(id,{scroll=false,filter=''}={}){if(selected!==id){rackLevelFilter='all';rackPage=1}selected=id;locationFilter=filter;locationPage=1;tool='select';document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool==='select'));renderCanvas();renderInspector();if(scroll)scrollToSelected()}
 function parseProductLines(value){
  const out=[],seen=new Set();for(const line of text(value).split(/\r?\n/)){
   const v=line.trim();if(!v)continue;const parts=v.split('|').map(x=>x.trim());
@@ -124,30 +162,80 @@ function renderLRackInspector(b){
  t.textContent='L duvar rafı';
  const products=b.products.filter(p=>!locationFilter||[p.name,p.code,p.shelf,p.arm&&L_ARMS[p.arm],p.level&&L_LEVELS[p.level]].some(x=>norm(x).includes(norm(locationFilter))));
  const list=products.slice(0,locationPage*PRODUCT_PAGE_SIZE);
- h.innerHTML=`<div class="l-inspector-title"><strong>${esc(b.label)}</strong><span class="pill">L biçimli raf</span></div><p class="muted smalltext">Dikey ve yatay kolların ürünleri ayrı tutulur. Alt/üst raf bilgisi aramada görünür.</p>`+
- (editable?`<form id="lRackSettings" class="l-rack-form"><label for="lRackName">Raf alanının adı</label><input id="lRackName" maxlength="75" required value="${esc(b.label)}"><label for="lRackOrientation">L yönü</label><select id="lRackOrientation">${Object.entries(L_ORIENTATIONS).map(([value,label])=>`<option value="${value}" ${b.orientation===value?'selected':''}>${label}</option>`).join('')}</select><div class="inline-fields"><div><label for="lRackW">Genişlik</label><input type="number" id="lRackW" value="${b.w}" min="3" max="15"></div><div><label for="lRackH">Yükseklik</label><input type="number" id="lRackH" value="${b.h}" min="3" max="15"></div></div><div class="row-actions"><button class="btn primary" type="submit">Rafı Güncelle</button><button id="removeLRack" class="btn secondary" type="button">Rafı Sil</button></div></form>`:'')+
+ h.innerHTML=`<div class="l-inspector-title"><strong>${esc(b.label)}</strong><span class="pill">L biçimli raf</span></div><p class="muted smalltext">Dikey/yatay kol ve alt/üst kat ayrı kayıtlı. Her bölüme 100+ ürün ekleyebilirsin.</p><div class="l-overview">${['vertical','horizontal'].map(arm=>['upper','lower'].map(level=>`<span>${esc(L_ARMS[arm])} · ${esc(L_LEVELS[level])}: <b>${b.products.filter(p=>p.arm===arm&&p.level===level).length}</b></span>`).join('')).join('')}</div>`+
+ (editable?`<form id="lRackSettings" class="l-rack-form"><label for="lRackName">Raf alanının adı</label><input id="lRackName" maxlength="75" required value="${esc(b.label)}"><div class="rotate-fields"><span>L rafı döndür</span><button class="btn small secondary" id="lRotateLeft" type="button">↶ 90°</button><button class="btn small secondary" id="lRotateRight" type="button">↷ 90°</button></div><label for="lRackOrientation">L yönü</label><select id="lRackOrientation">${Object.entries(L_ORIENTATIONS).map(([value,label])=>`<option value="${value}" ${b.orientation===value?'selected':''}>${label}</option>`).join('')}</select><div class="inline-fields"><div><label for="lRackW">Genişlik</label><input type="number" id="lRackW" value="${b.w}" min="3" max="15"></div><div><label for="lRackH">Yükseklik</label><input type="number" id="lRackH" value="${b.h}" min="3" max="15"></div></div><div class="row-actions"><button class="btn primary" type="submit">Rafı Güncelle</button><button id="removeLRack" class="btn secondary" type="button">Rafı Sil</button></div></form>`:'')+
  `<label for="locationFilter">Bu rafta ürün ara</label><input type="search" id="locationFilter" placeholder="Ürün adı, kod veya raf…" value="${esc(locationFilter)}"><p class="location-count">${products.length} ürün · ${b.products.length} toplam</p><ul class="l-products">${list.length?list.map(p=>`<li><strong>${esc(p.name||p.code)}</strong><small>${esc(p.code)} ${p.shelf?' · Raf '+esc(p.shelf):''}</small><span class="shelf-pill">${esc(L_ARMS[p.arm]||'Kol belirtilmedi')} · ${esc(L_LEVELS[p.level]||'Kat belirtilmedi')}</span>${editable?`<button type="button" class="btn small quiet" data-lremove="${b.products.indexOf(p)}">Sil</button>`:''}</li>`).join(''):'<li class="muted">Kayıt yok.</li>'}</ul>`+
  (products.length>list.length?`<button class="btn secondary full small" id="moreLProducts">Diğer ürünleri göster (${list.length}/${products.length})</button>`:'')+
  (editable?`<form id="lAddProduct" class="l-rack-form"><h3>Rafa ürün ekle</h3><label for="lProductName">Ürün adı</label><input id="lProductName" required maxlength="140" placeholder="Ürün adı"><label for="lProductCode">Ürün kodu (isteğe bağlı)</label><input id="lProductCode" maxlength="55" placeholder="Kod"><label for="lProductShelf">Raf numarası (isteğe bağlı)</label><input id="lProductShelf" maxlength="75" placeholder="Örn. 1019"><div class="inline-fields"><div><label for="lProductArm">Raf kolu</label><select id="lProductArm"><option value="vertical">Dikey kol</option><option value="horizontal">Yatay kol</option></select></div><div><label for="lProductLevel">Kat</label><select id="lProductLevel"><option value="lower">Alt</option><option value="upper">Üst</option></select></div></div><button type="submit" class="btn primary full">+ Ürünü Rafa Ekle</button></form>`:'');
  $('locationFilter').addEventListener('input',e=>{locationFilter=e.target.value;locationPage=1;renderLRackInspector(b)});
  $('moreLProducts')?.addEventListener('click',()=>{locationPage++;renderLRackInspector(b)});
  if(!editable)return;
+ $('lRotateLeft').addEventListener('click',()=>rotateBlock(b.id,-1));
+ $('lRotateRight').addEventListener('click',()=>rotateBlock(b.id,1));
  $('lRackSettings').addEventListener('submit',e=>{e.preventDefault();try{const name=$('lRackName').value.trim(),w=Number($('lRackW').value),hh=Number($('lRackH').value),orientation=$('lRackOrientation').value;if(!name||!L_ORIENTATIONS[orientation]||!Number.isInteger(w)||!Number.isInteger(hh)||w<3||hh<3||w>15||hh>15)throw Error('L raf için ad, yön ve 3–15 hücre arası ölçüler gerekli.');const candidate={...b,w,h:hh};if(!fits(candidate,b.id))throw Error('Yeni L raf boyutu diğer bloklarla çakışıyor veya dışarı taşıyor.');const old=clone(b);Object.assign(b,{label:name,w,h:hh,orientation});try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('L raf güncellendi. Buluta kaydetmeyi unutma.','success')}catch(err){setMessage(err.message,'error')}});
  $('removeLRack').addEventListener('click',()=>{if(!confirm('Bu L raf ve ona bağlı '+b.products.length+' ürün konumu silinsin mi? Önce JSON yedeği önerilir.'))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;locationFilter='';dirtyNow();renderCanvas();renderInspector();search();setMessage('L raf silindi. Henüz buluta kaydedilmedi.','success')});
  $('lAddProduct').addEventListener('submit',e=>{e.preventDefault();const name=$('lProductName').value.trim(),code=$('lProductCode').value.trim(),shelf=$('lProductShelf').value.trim(),arm=$('lProductArm').value,level=$('lProductLevel').value;if(!name||!L_ARMS[arm]||!L_LEVELS[level])return;if(b.products.length>=MAX_LOCATION_PRODUCTS){setMessage('Raf ürün sınırı dolu.','error');return}if(b.products.some(p=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&p.arm===arm&&p.level===level&&norm(p.shelf)===norm(shelf))){setMessage('Bu ürün bu raf konumunda zaten var.','error');return}b.products.push({name,code,...(shelf?{shelf}:{}),arm,level});try{validate(serialize())}catch(err){b.products.pop();setMessage(err.message,'error');return}dirtyNow();renderCanvas();renderInspector();search();setMessage('Ürün L duvar rafına eklendi. Kaydetmeyi unutma.','success')});
- h.addEventListener('click',e=>{const btn=e.target.closest('[data-lremove]');if(!btn)return;const i=Number(btn.dataset.lremove);if(!b.products[i]||!confirm('Bu ürünün L raf konumu kaldırılsın mı?'))return;b.products.splice(i,1);dirtyNow();renderCanvas();renderInspector();search()});
+ h.onclick=e=>{const btn=e.target.closest('[data-lremove]');if(!btn)return;const i=Number(btn.dataset.lremove);if(!b.products[i]||!confirm('Bu ürünün L raf konumu kaldırılsın mı?'))return;b.products.splice(i,1);dirtyNow();renderCanvas();renderInspector();search();};
+}
+// Düz raf: 100+ ürün, üst / alt kat ayrı konumlar; eski ürünler konumsuz saklanır.
+function renderRackInspector(b){
+ const h=$('inspectorBody'),editable=isEditable();$('inspectorTitle').textContent='Raf · Alt / Üst';
+ const counts={upper:b.products.filter(p=>p.level==='upper').length,lower:b.products.filter(p=>p.level==='lower').length,unknown:b.products.filter(p=>!L_LEVELS[p.level]).length};
+ const q=norm(locationFilter);
+ const matching=b.products.map((p,i)=>({p,i})).filter(({p})=>(rackLevelFilter==='all'||(rackLevelFilter==='unknown'?!L_LEVELS[p.level]:p.level===rackLevelFilter))&&productMatches(p,q));
+ const visible=matching.slice(0,rackPage*PRODUCT_PAGE_SIZE);
+ const currentLevel=['upper','lower'].includes(rackLevelFilter)?rackLevelFilter:'lower';
+ h.innerHTML=`<div class="rack-summary"><strong>${esc(b.label)}</strong><span class="pill">${b.products.length} ürün</span></div>`+
+ `<p class="muted smalltext">Her rafın üst ve alt katına ayrı ayrı 100’den fazla ürün tanımlanabilir. Krokiyi kalabalıklaştırmadan ürünleri arayabilirsin.</p>`+
+ `<div class="rack-stack"><button type="button" class="rack-stack-row ${rackLevelFilter==='upper'?'active':''}" data-rack-tab="upper"><span>↑ ÜST KAT</span><b>${counts.upper} ürün</b></button><button type="button" class="rack-stack-row ${rackLevelFilter==='lower'?'active':''}" data-rack-tab="lower"><span>↓ ALT KAT</span><b>${counts.lower} ürün</b></button></div>`+
+ `<div class="rack-filter-chips"><button type="button" class="${rackLevelFilter==='all'?'active':''}" data-rack-tab="all">Tümü · ${b.products.length}</button>${counts.unknown?`<button type="button" class="${rackLevelFilter==='unknown'?'active':''}" data-rack-tab="unknown">Konumu belirsiz · ${counts.unknown}</button>`:''}</div>`+
+ `<label for="locationFilter">Raf içi ürün ara</label><input type="search" id="locationFilter" autocomplete="off" placeholder="Ürün adı, kod veya raf numarası..." value="${esc(locationFilter)}">`+
+ `<p class="location-count">${matching.length} ürün bulundu${q?' · '+esc(locationFilter):''}</p>`+
+ `<div class="rack-products">${visible.length?visible.map(({p,i})=>`<div class="rack-product"><div><strong>${esc(p.name||p.code)}</strong>${p.code?`<small>Kod: ${esc(p.code)}</small>`:''}${p.shelf?`<small>Raf: ${esc(p.shelf)}</small>`:''}<span class="shelf-pill">${esc(L_LEVELS[p.level]||'Kat belirtilmedi')}</span></div>${editable?`<div class="rack-product-actions">${p.level!=='upper'?`<button type="button" data-rack-set="upper" data-idx="${i}" title="Üst rafa taşı">↑ Üste</button>`:''}${p.level!=='lower'?`<button type="button" data-rack-set="lower" data-idx="${i}" title="Alt rafa taşı">↓ Alta</button>`:''}<button type="button" data-rack-remove="${i}" class="remove">Sil</button></div>`:''}</div>`).join(''):'<p class="muted">Bu bölümde henüz ürün yok.</p>'}</div>`+
+ (visible.length<matching.length?`<button id="rackMore" type="button" class="btn secondary full small">Diğer ${Math.min(PRODUCT_PAGE_SIZE,matching.length-visible.length)} ürünü göster (${visible.length}/${matching.length})</button>`:'')+
+ (editable?`<form id="rackAddProduct" class="rack-add-form"><h3>Rafa ürün ekle</h3><label for="rackProductName">Ürün adı</label><input id="rackProductName" required maxlength="140" placeholder="Ürün adı"><label for="rackProductCode">Ürün kodu (isteğe bağlı)</label><input id="rackProductCode" maxlength="55" placeholder="Kod"><label for="rackProductLevel">Hangi katta?</label><select id="rackProductLevel"><option value="lower" ${currentLevel==='lower'?'selected':''}>Alt kat</option><option value="upper" ${currentLevel==='upper'?'selected':''}>Üst kat</option></select><button type="submit" class="btn primary full">+ Ürünü ekle</button><p class="muted smalltext">Çok sayıda ürün için CSV aktarımı da kullanılabilir.</p></form><details class="rack-settings bulk-add"><summary>100+ ürünü topluca yapıştır</summary><form id="rackBulkAdd"><p class="muted smalltext">Her satıra: Ürün kodu | Ürün adı (kod isteğe bağlı). Mevcut ürünler silinmez.</p><label for="rackBulkLevel">Raf katı</label><select id="rackBulkLevel"><option value="lower" ${currentLevel==='lower'?'selected':''}>Alt kat</option><option value="upper" ${currentLevel==='upper'?'selected':''}>Üst kat</option></select><label for="rackBulkText">Ürün listesi</label><textarea id="rackBulkText" rows="5" placeholder="99001 | Ayçiçek Yağı 5 L&#10;99002 | Buono Çikolata"></textarea><button type="submit" class="btn secondary full">Listedeki ürünleri ekle</button></form></details>`:'')+
+ (editable?`<details class="rack-settings"><summary>Rafı düzenle / döndür</summary><form id="rackSettings"><label for="rackName">Raf adı / numarası</label><input id="rackName" value="${esc(b.label)}" maxlength="75" required><div class="row-actions"><button class="btn small secondary" type="button" id="rackRotateLeft">↶ 90°</button><button class="btn small secondary" type="button" id="rackRotateRight">↷ 90°</button></div><div class="inline-fields"><div><label for="rackW">Genişlik</label><input id="rackW" type="number" min="1" max="15" value="${b.w}"></div><div><label for="rackH">Yükseklik</label><input id="rackH" type="number" min="1" max="15" value="${b.h}"></div></div><label for="rackNote">Not</label><textarea id="rackNote" maxlength="400">${esc(b.note)}</textarea><button type="submit" class="btn secondary full">Raf ayarlarını kaydet</button><button type="button" id="rackRemove" class="btn quiet full remove">Rafı sil</button></form></details>`:'');
+ $('locationFilter').oninput=e=>{locationFilter=e.target.value;rackPage=1;renderRackInspector(b)};
+ h.onclick=e=>{
+  const tab=e.target.closest('[data-rack-tab]');if(tab){rackLevelFilter=tab.dataset.rackTab;rackPage=1;renderRackInspector(b);return}
+  if(e.target.closest('#rackMore')){rackPage++;renderRackInspector(b);return}
+  if(!editable)return;
+  const set=e.target.closest('[data-rack-set]');if(set){const i=Number(set.dataset.idx),p=b.products[i];if(!p)return;p.level=set.dataset.rackSet;dirtyNow();renderRackInspector(b);renderCanvas();search();setMessage('Ürün yeni katına taşındı. Buluta kaydet.','success');return}
+  const rem=e.target.closest('[data-rack-remove]');if(rem){const i=Number(rem.dataset.rackRemove);if(!b.products[i]||!confirm('Bu ürünün raf konumu silinsin mi?'))return;b.products.splice(i,1);dirtyNow();renderRackInspector(b);renderCanvas();search();return}
+  if(e.target.closest('#rackRotateLeft')){rotateBlock(b.id,-1);return}if(e.target.closest('#rackRotateRight')){rotateBlock(b.id,1);return}
+  if(e.target.closest('#rackRemove')){if(!confirm('Bu raf ve '+b.products.length+' ürün konumu silinsin mi? Önce JSON yedeği önerilir.'))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;dirtyNow();renderCanvas();renderInspector();search()}
+ };
+ if(!editable)return;
+ $('rackAddProduct').onsubmit=e=>{e.preventDefault();const name=$('rackProductName').value.trim().slice(0,140),code=$('rackProductCode').value.trim().slice(0,55),level=$('rackProductLevel').value;if(!name||!L_LEVELS[level])return;if(b.products.length>=MAX_LOCATION_PRODUCTS){setMessage('Bu rafın ürün sınırı doldu.','error');return}if(b.products.some(p=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&p.level===level)){setMessage('Bu ürün bu katta zaten kayıtlı.','error');return}b.products.push({name,code,level});try{validate(serialize())}catch(err){b.products.pop();setMessage(err.message,'error');return}dirtyNow();renderCanvas();renderRackInspector(b);search();setMessage('Ürün '+L_LEVELS[level].toLowerCase()+' rafa eklendi. Buluta kaydet.','success')};
+ $('rackBulkAdd').onsubmit=e=>{e.preventDefault();try{const level=$('rackBulkLevel').value;if(!L_LEVELS[level])throw Error('Geçerli raf katı seç.');const additions=parseProductLines($('rackBulkText').value);if(!additions.length)throw Error('En az bir ürün satırı gir.');const original=b.products.length;let count=0,skipped=0;for(const p of additions){if(b.products.some(old=>old.level===level&&norm(old.name)===norm(p.name)&&norm(old.code)===norm(p.code)&&norm(old.shelf)===norm(p.shelf))){skipped++;continue}if(b.products.length>=MAX_LOCATION_PRODUCTS){b.products.length=original;throw Error('Bu rafın ürün sınırı doldu.')}b.products.push({...p,level});count++}try{validate(serialize())}catch(err){b.products.length=original;throw err}dirtyNow();renderCanvas();renderRackInspector(b);search();setMessage(`${count} ürün ${L_LEVELS[level].toLowerCase()} rafa eklendi, ${skipped} tekrar atlandı. Buluta kaydet.`, 'success')}catch(err){setMessage(err.message,'error')}};
+ $('rackSettings').onsubmit=e=>{e.preventDefault();try{const label=$('rackName').value.trim(),w=Number($('rackW').value),height=Number($('rackH').value);if(!label||!Number.isInteger(w)||!Number.isInteger(height)||w<1||height<1||w>15||height>15)throw Error('Geçerli raf adı ve ölçü gerekli.');if(layout.blocks.some(x=>x.id!==b.id&&x.type==='rack'&&norm(x.label)===norm(label)))throw Error('Aynı raf numarası var.');if(!fits({...b,w,h:height},b.id))throw Error('Yeni boyut çakışıyor veya harita dışına taşıyor.');const old=clone(b);Object.assign(b,{label,w,h:height,note:$('rackNote').value.trim().slice(0,400),pivot:{cx2:2*b.x+w,cy2:2*b.y+height}});try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('Raf güncellendi. Ürünler korundu.','success')}catch(err){setMessage(err.message,'error')}};
+}
+function renderAisleInspector(b){
+ const h=$('inspectorBody'),editable=isEditable();$('inspectorTitle').textContent='Koridor · Sağ / Sol';
+ const left=b.products.filter(p=>p.side==='left').length,right=b.products.filter(p=>p.side==='right').length,unplaced=b.products.length-left-right;
+ h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted smalltext">${b.products.length} ürün · Sağ ve sol taraflar ayrı ayrı kayıtlıdır. Her bölümde 100+ ürün olabilir.</p><div class="aisle-counts"><span>← Sol <strong>${left}</strong></span><span>Sağ <strong>${right}</strong> →</span></div><button id="aisleOpen" type="button" class="btn primary full">Koridor ürünlerini aç</button>${unplaced?`<p class="muted smalltext">${unplaced} ürünün sağ/sol konumu henüz tanımlanmamış.</p>`:''}`+
+ (editable?`<details class="rack-settings"><summary>Koridoru düzenle / döndür</summary><form id="aisleSettings"><label for="aisleName">Koridor adı</label><input id="aisleName" value="${esc(b.label)}" required maxlength="75"><div class="row-actions"><button class="btn small secondary" id="aisleRotateLeft" type="button">↶ 90°</button><button class="btn small secondary" id="aisleRotateRight" type="button">↷ 90°</button></div><div class="inline-fields"><div><label for="aisleW">Genişlik</label><input id="aisleW" type="number" min="1" max="15" value="${b.w}"></div><div><label for="aisleH">Yükseklik</label><input id="aisleH" type="number" min="1" max="15" value="${b.h}"></div></div><label for="aisleNote">Not</label><textarea id="aisleNote" maxlength="400">${esc(b.note)}</textarea><button class="btn secondary full" type="submit">Koridor ayarlarını kaydet</button><button type="button" id="aisleRemove" class="btn quiet full remove">Koridoru sil</button></form></details>`:'');
+ $('aisleOpen').onclick=()=>openCorridor(b.id);
+ if(!editable)return;
+ $('aisleRotateLeft').onclick=()=>rotateBlock(b.id,-1);$('aisleRotateRight').onclick=()=>rotateBlock(b.id,1);
+ $('aisleRemove').onclick=()=>{if(!confirm('Bu koridor ve '+b.products.length+' ürün konumu silinsin mi? Önce JSON yedeği indir.'))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;dirtyNow();renderCanvas();renderInspector();search()};
+ $('aisleSettings').onsubmit=e=>{e.preventDefault();try{const label=$('aisleName').value.trim(),w=Number($('aisleW').value),height=Number($('aisleH').value);if(!label||!Number.isInteger(w)||!Number.isInteger(height)||w<1||height<1||w>15||height>15)throw Error('Koridor adı ve ölçü geçersiz.');if(!fits({...b,w,h:height},b.id))throw Error('Yeni koridor boyutu başka bir blokla çakışıyor.');const old=clone(b);Object.assign(b,{label,w,h:height,note:$('aisleNote').value.trim().slice(0,400),pivot:{cx2:2*b.x+w,cy2:2*b.y+height}});try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('Koridor güncellendi. Tüm sağ/sol ürün konumları korundu.','success')}catch(err){setMessage(err.message,'error')}};
 }
 function renderInspector(){
  const b=layout.blocks.find(x=>x.id===selected),t=$('inspectorTitle'),h=$('inspectorBody');
  if(!b){t.textContent='Konum bilgileri';h.innerHTML='<p class="muted">Haritada bir raf veya koridor seç. Ürünleri arayarak listeleyebilirsin.</p>';return}
  if(b.type==='lrack'){renderLRackInspector(b);return}
+ if(b.type==='rack'){renderRackInspector(b);return}
+ if(b.type==='aisle'){renderAisleInspector(b);return}
  const hasProducts=['rack','aisle','lrack'].includes(b.type);t.textContent=TYPES[b.type].label+' bilgileri';
  if(!isEditable()){
   h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted">${esc(b.note||'')}</p>`+(hasProducts?`<div class="location-header"><strong>${esc(productSummary(b))}</strong><span class="pill">${esc(TYPES[b.type].label)}</span></div><label for="locationFilter">Bu konumda ürün ara</label><input id="locationFilter" type="search" placeholder="Ürün adı, kod veya raf…" autocomplete="off" value="${esc(locationFilter)}"><div id="locationProducts"></div>`:'');
   if(hasProducts){$('locationFilter').addEventListener('input',e=>{locationFilter=e.target.value;locationPage=1;renderLocationProducts(b)});renderLocationProducts(b)}return;
  }
- h.innerHTML=`<form id="editForm"><label for="editLabel">${b.type==='rack'?'Raf numarası':b.type==='aisle'?'Koridor adı':'Ad / açıklama'}</label><input id="editLabel" name="label" maxlength="75" required value="${esc(b.label)}"><div class="inline-fields"><div><label for="editW">Genişlik (hücre)</label><input id="editW" type="number" min="1" max="15" value="${b.w}"></div><div><label for="editH">Yükseklik (hücre)</label><input id="editH" type="number" min="1" max="15" value="${b.h}"></div></div>${hasProducts?`<details class="product-editor"><summary>Ürünleri düzenle · ${b.products.length} ürün</summary><label for="editProducts">Ürünler (her satıra bir ürün)</label><textarea id="editProducts" spellcheck="false" placeholder="ÜRÜN-KODU | Ürün adı | raf numarası&#10;ÜRÜN-KODU-2 | Başka ürün">${esc(b.products.map(p=>[p.code,p.name,p.shelf||''].join(' | ').replace(/\s*\|\s*$/,'')).join('\n'))}</textarea><p class="muted smalltext">100+ ürün için sol menüdeki CSV aktarımı daha kolaydır. Her satır: Kod | Ürün | Raf (isteğe bağlı).</p></details>`:''}<label for="editNote">Not (isteğe bağlı)</label><textarea id="editNote" maxlength="400" style="min-height:55px">${esc(b.note)}</textarea><div class="row-actions"><button class="btn primary" type="submit">Uygula</button><button class="btn secondary" type="button" id="removeBlock">Sil</button></div></form>`+
+ h.innerHTML=`<form id="editForm"><label for="editLabel">${b.type==='rack'?'Raf numarası':b.type==='aisle'?'Koridor adı':'Ad / açıklama'}</label><input id="editLabel" name="label" maxlength="75" required value="${esc(b.label)}"><div class="rotate-fields"><span>Yön: <b>${DIRECTION_SYMBOLS[blockDirection(b)]}</b></span><button class="btn small secondary" id="rotateLeft" type="button">↶ Sola 90°</button><button class="btn small secondary" id="rotateRight" type="button">↷ Sağa 90°</button></div><div class="inline-fields"><div><label for="editW">Genişlik (hücre)</label><input id="editW" type="number" min="1" max="15" value="${b.w}"></div><div><label for="editH">Yükseklik (hücre)</label><input id="editH" type="number" min="1" max="15" value="${b.h}"></div></div>${hasProducts?`<details class="product-editor"><summary>Ürünleri düzenle · ${b.products.length} ürün</summary><label for="editProducts">Ürünler (her satıra bir ürün)</label><textarea id="editProducts" spellcheck="false" placeholder="ÜRÜN-KODU | Ürün adı | raf numarası&#10;ÜRÜN-KODU-2 | Başka ürün">${esc(b.products.map(p=>[p.code,p.name,p.shelf||''].join(' | ').replace(/\s*\|\s*$/,'')).join('\n'))}</textarea><p class="muted smalltext">100+ ürün için sol menüdeki CSV aktarımı daha kolaydır. Her satır: Kod | Ürün | Raf (isteğe bağlı).</p></details>`:''}<label for="editNote">Not (isteğe bağlı)</label><textarea id="editNote" maxlength="400" style="min-height:55px">${esc(b.note)}</textarea><div class="row-actions"><button class="btn primary" type="submit">Uygula</button><button class="btn secondary" type="button" id="removeBlock">Sil</button></div></form>`+
  (hasProducts?`<div class="location-header"><strong>${esc(productSummary(b))}</strong></div><label for="locationFilter">Bu konumda ürün ara</label><input id="locationFilter" type="search" placeholder="Ürün adı, kod veya raf…" autocomplete="off" value="${esc(locationFilter)}"><div id="locationProducts"></div>`:'');
+ $('rotateLeft').addEventListener('click',()=>rotateBlock(b.id,-1));
+ $('rotateRight').addEventListener('click',()=>rotateBlock(b.id,1));
  $('editForm').addEventListener('submit',e=>{e.preventDefault();try{
   const label=$('editLabel').value.trim();const w=Number($('editW').value),hh=Number($('editH').value);
   if(!label)throw Error('Ad veya raf numarası boş olamaz.');
@@ -156,7 +244,7 @@ function renderInspector(){
   const proposed={...b,w,h:hh};if(!fits(proposed,b.id))throw Error('Blok diğer bloklarla çakışıyor veya harita dışına taşıyor.');
   const products=hasProducts?parseProductLines($('editProducts').value):[];
   if(hasProducts)for(const p of products){const oldPosition=b.products.find(old=>(p.code&&norm(old.code)===norm(p.code))||(norm(old.name)===norm(p.name)&&norm(old.shelf)===norm(p.shelf)));if(oldPosition?.side&&oldPosition?.section){p.side=oldPosition.side;p.section=oldPosition.section}}
-  const old=clone(b);b.label=label;b.w=w;b.h=hh;b.note=$('editNote').value.trim().slice(0,400);if(hasProducts)b.products=products;
+  const old=clone(b);b.label=label;b.w=w;b.h=hh;b.pivot={cx2:b.x*2+w,cy2:b.y*2+hh};b.note=$('editNote').value.trim().slice(0,400);if(hasProducts)b.products=products;
   try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('Konum güncellendi. Buluta kaydetmeyi unutma.','success');
  }catch(err){setMessage(err.message,'error')}});
  $('removeBlock').addEventListener('click',()=>{if(!confirm(`“${b.label}” silinsin mi?`))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;locationFilter='';dirtyNow();renderCanvas();renderInspector();search();setMessage('Blok silindi.','success')});
@@ -171,7 +259,7 @@ function positionText(p){return p.side&&p.section?`${SIDES[p.side]} taraf · ${S
 function productMatches(p,q){return !q||norm(p.name).includes(q)||norm(p.code).includes(q)||norm(p.shelf).includes(q)}
 function openCorridor(id,q=''){
  const b=layout.blocks.find(x=>x.id===id&&x.type==='aisle');if(!b)return;
- corridorId=id;corridorSlot=null;pendingMove=null;corridorQuery=q;$('corridorSearch').value=q;
+ corridorId=id;corridorSlot=null;corridorDetailPage=1;pendingMove=null;corridorQuery=q;$('corridorSearch').value=q;
  $('corridorOverlay').classList.remove('is-hidden');document.body.classList.add('corridor-open');
  $('corridorSections').value=b.sections||12;
  $('corridorTitle').textContent=b.label;renderCorridor();
@@ -184,7 +272,7 @@ function setCorridorSlot(side,section){
   const p=b.products[pendingMove];if(p){p.side=side;p.section=section;dirtyNow();setMessage(`${p.name||p.code} → ${SIDES[side]} ${section}. bölüm`, 'success')}
   pendingMove=null;
  }
- corridorSlot={side,section};renderCorridor();focusCorridorSlot();
+ corridorSlot={side,section};corridorDetailPage=1;renderCorridor();focusCorridorSlot();
 }
 function corridorProductItem(p,index,{unplaced=false}={}){
  const name=esc(p.name||p.code),place=positionText(p);
@@ -192,7 +280,9 @@ function corridorProductItem(p,index,{unplaced=false}={}){
 }
 function renderCorridor(){
  const b=corridorBlock();if(!b)return;const q=norm(corridorQuery),cnt=b.sections||12;
- $('corridorTitle').textContent=b.label;$('corridorSubtitle').textContent=`${b.products.length} ürün · ${cnt} karşılıklı bölüm · Girişten itibaren numaralı`;
+ $('corridorTitle').textContent=b.label;$('corridorSubtitle').textContent=`${b.products.length} ürün · ${cnt} karşılıklı bölüm · Sağ/sol her tarafta 100+ ürün`;
+ const left=b.products.filter(p=>p.side==='left').length,right=b.products.filter(p=>p.side==='right').length;
+ $('corridorSideCounts').innerHTML=`<span>← SOL <b>${left} ürün</b></span><span>SAĞ → <b>${right} ürün</b></span>`;
  const rows=[];for(let i=cnt;i>=1;i--){
   const slots=['left','right'].map(side=>{
    const items=b.products.filter(p=>p.side===side&&p.section===i),matching=items.filter(p=>productMatches(p,q));
@@ -215,16 +305,18 @@ function renderCorridorDetail(){
  const b=corridorBlock(),box=$('corridorDetail');if(!b)return;
  if(!corridorSlot){box.innerHTML=`<div class="detail-placeholder"><span class="placeholder-icon">☞</span><h3>Rafı seç</h3><p>Sol veya sağdaki bir raf bölümüne dokun. Ürünlerini hemen gör.</p><p class="muted">Yöneticiysen bu bölümden ürün de ekleyebilirsin.</p></div>`;return}
  const {side,section}=corridorSlot,items=b.products.map((p,i)=>({p,i})).filter(({p})=>p.side===side&&p.section===section),q=norm(corridorQuery);
+ const filtered=q?items.filter(({p})=>productMatches(p,q)):items,visible=filtered.slice(0,corridorDetailPage*PRODUCT_PAGE_SIZE);
  box.innerHTML=`<div class="detail-heading"><div><span class="eyebrow">SEÇİLEN KONUM</span><h3>${SIDES[side]} taraf · ${String(section).padStart(2,'0')}. bölüm</h3><p>${items.length} ürün</p></div></div>`+
  (pendingMove!==null?'<p class="move-hint">Ürünü taşımak için haritadaki hedef raf bölümüne dokun.</p>':'')+
- `<div class="corridor-products">${items.length?items.map(({p,i})=>corridorProductItem(p,i)).join(''):'<p class="muted">Bu bölümde henüz ürün tanımlanmamış.</p>'}</div>`+
- (isEditable()?`<form id="corridorAddProduct" class="corridor-add"><h4>Bu bölüme ürün ekle</h4><label for="corridorProductName">Ürün adı</label><input id="corridorProductName" maxlength="140" placeholder="Örn. Ayçiçek Yağı 5 L" required><label for="corridorProductCode">Ürün kodu (isteğe bağlı)</label><input id="corridorProductCode" maxlength="55" placeholder="Ürün kodu"><button type="submit" class="btn primary full">+ Ürünü bu rafa ekle</button></form>`:'');
+ `<div class="corridor-products">${visible.length?visible.map(({p,i})=>corridorProductItem(p,i)).join(''):(items.length?'<p class="muted">Aramada eşleşen ürün yok.</p>':'<p class="muted">Bu bölümde henüz ürün tanımlanmamış.</p>')}</div>${visible.length<filtered.length?`<button type="button" class="btn secondary full small" id="corridorMoreProducts">Diğer ${Math.min(PRODUCT_PAGE_SIZE,filtered.length-visible.length)} ürünü göster (${visible.length}/${filtered.length})</button>`:''}`+
+ (isEditable()?`<form id="corridorAddProduct" class="corridor-add"><h4>Bu bölüme ürün ekle</h4><label for="corridorProductName">Ürün adı</label><input id="corridorProductName" maxlength="140" placeholder="Örn. Ayçiçek Yağı 5 L" required><label for="corridorProductCode">Ürün kodu (isteğe bağlı)</label><input id="corridorProductCode" maxlength="55" placeholder="Ürün kodu"><button type="submit" class="btn primary full">+ Ürünü bu rafa ekle</button></form><details class="bulk-add corridor-bulk"><summary>Bu bölüme 100+ ürün toplu ekle</summary><form id="corridorBulkAdd"><p class="muted smalltext">Kod | Ürün adı şeklinde satır satır yapıştır. Sol/sağ ve bölüm otomatik bağlanır. Önceki ürünler korunur.</p><textarea id="corridorBulkText" rows="5" placeholder="99001 | Ayçiçek Yağı 5 L&#10;99002 | Buono Çikolata"></textarea><button type="submit" class="btn secondary full">Listeyi bu bölüme ekle</button></form></details>`:'');
  if(isEditable())$('corridorAddProduct').addEventListener('submit',e=>{
   e.preventDefault();const name=$('corridorProductName').value.trim(),code=$('corridorProductCode').value.trim();if(!name)return;
   if(b.products.length>=MAX_LOCATION_PRODUCTS){setMessage('Koridor ürün sınırına ulaşıldı.','error');return}
   if(b.products.some(p=>p.side===side&&p.section===section&&norm(p.name)===norm(name)&&norm(p.code)===norm(code))){setMessage('Bu ürün zaten bu bölümde kayıtlı.','error');return}
-  b.products.push({name:name.slice(0,140),code:code.slice(0,55),side,section});dirtyNow();renderCanvas();search();renderCorridor();setMessage('Ürün rafa yerleştirildi. Buluta kaydetmeyi unutma.','success');
+  b.products.push({name:name.slice(0,140),code:code.slice(0,55),side,section});try{validate(serialize())}catch(err){b.products.pop();setMessage(err.message,'error');return}dirtyNow();renderCanvas();search();renderCorridor();setMessage('Ürün rafa yerleştirildi. Buluta kaydetmeyi unutma.','success');
  });
+ if(isEditable())$('corridorBulkAdd').addEventListener('submit',e=>{e.preventDefault();try{const additions=parseProductLines($('corridorBulkText').value);if(!additions.length)throw Error('En az bir ürün gir.');const orig=b.products.length;let added=0,skipped=0;for(const p of additions){if(b.products.some(old=>old.side===side&&old.section===section&&norm(old.name)===norm(p.name)&&norm(old.code)===norm(p.code)&&norm(old.shelf)===norm(p.shelf))){skipped++;continue}if(b.products.length>=MAX_LOCATION_PRODUCTS){b.products.length=orig;throw Error('Bu koridorun ürün sınırı doldu.')}b.products.push({...p,side,section});added++}try{validate(serialize())}catch(err){b.products.length=orig;throw err}dirtyNow();renderCanvas();renderCorridor();search();setMessage(`${added} ürün ${SIDES[side]} ${section}. bölüme eklendi; ${skipped} tekrar atlandı. Buluta kaydet.`, 'success')}catch(err){setMessage(err.message,'error')}});
 }
 function renderUnplaced(){const b=corridorBlock(),box=$('corridorUnassigned');if(!b)return;
  const q=norm(corridorQuery),unplaced=b.products.map((p,i)=>({p,i})).filter(({p})=>!p.side||!p.section).filter(({p})=>productMatches(p,q));
@@ -234,10 +326,10 @@ function bindCorridorEvents(){
  $('closeCorridor').addEventListener('click',closeCorridor);
  $('corridorOverlay').addEventListener('click',e=>{if(e.target.id==='corridorOverlay')closeCorridor()});
  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&corridorId)closeCorridor()});
- $('corridorSearch').addEventListener('input',e=>{corridorQuery=e.target.value;renderCorridor()});
+ $('corridorSearch').addEventListener('input',e=>{corridorQuery=e.target.value;corridorDetailPage=1;renderCorridor()});
  $('corridorRows').addEventListener('click',e=>{const x=e.target.closest('[data-slot-side]');if(x)setCorridorSlot(x.dataset.slotSide,Number(x.dataset.slotSection))});
  $('corridorSearchMatches').addEventListener('click',e=>{const x=e.target.closest('[data-match-index]');if(!x)return;const p=corridorBlock()?.products[Number(x.dataset.matchIndex)];if(p?.side&&p.section){corridorSlot={side:p.side,section:p.section};renderCorridor();focusCorridorSlot()}else{$('corridorUnassigned').querySelector('details')?.setAttribute('open','');$('corridorUnassigned').scrollIntoView({behavior:'smooth',block:'start'})}});
- $('corridorDetail').addEventListener('click',e=>{const move=e.target.closest('[data-move]'),unplace=e.target.closest('[data-unplace]');const b=corridorBlock();if(!b||!isEditable())return;
+ $('corridorDetail').addEventListener('click',e=>{if(e.target.closest('#corridorMoreProducts')){corridorDetailPage++;renderCorridorDetail();return}const move=e.target.closest('[data-move]'),unplace=e.target.closest('[data-unplace]');const b=corridorBlock();if(!b||!isEditable())return;
   if(move){pendingMove=Number(move.dataset.move);setMessage('Ürünün taşınacağı yeni raf bölümüne dokun.','info');renderCorridorDetail()}
   if(unplace){const i=Number(unplace.dataset.unplace),p=b.products[i];if(!p||!confirm('Bu ürünün sol/sağ konumu kaldırılsın mı? Ürün kaydı silinmeyecek.'))return;delete p.side;delete p.section;dirtyNow();renderCanvas();search();renderCorridor()}
  });
@@ -251,14 +343,14 @@ function pointerDown(e){const target=e.target.closest('.block');if(!target)retur
  target.setPointerCapture?.(e.pointerId)
 }
 function pointerMove(e){if(!drag||e.pointerId!==drag.pointerId)return;const target=[...$('mapCanvas').querySelectorAll('.block')].find(x=>x.dataset.id===drag.id);if(!target)return;const dx=(e.clientX-drag.startX)/zoom,dy=(e.clientY-drag.startY)/zoom;if(Math.abs(dx)>5||Math.abs(dy)>5)drag.moved=true;if(!drag.moved)return;target.style.transform=`translate(${dx}px,${dy}px)`;target.style.opacity='.8';}
-function pointerUp(e){if(!drag||e.pointerId!==drag.pointerId)return;const d=drag;drag=null;if(!d.moved)return;suppressClickUntil=Date.now()+350;const block=layout.blocks.find(x=>x.id===d.id);if(!block)return;const dx=Math.round((e.clientX-d.startX)/(C*zoom)),dy=Math.round((e.clientY-d.startY)/(C*zoom));if(dx||dy){const target={...block,x:d.originX+dx,y:d.originY+dy};if(fits(target,block.id)){block.x=target.x;block.y=target.y;dirtyNow();setMessage('Blok taşındı. Kaydedilmemiş değişiklik var.','success')}else{setMessage('O konum dolu veya harita sınırı dışında.','error')}}renderCanvas();renderInspector();}
+function pointerUp(e){if(!drag||e.pointerId!==drag.pointerId)return;const d=drag;drag=null;if(!d.moved)return;suppressClickUntil=Date.now()+350;const block=layout.blocks.find(x=>x.id===d.id);if(!block)return;const dx=Math.round((e.clientX-d.startX)/(C*zoom)),dy=Math.round((e.clientY-d.startY)/(C*zoom));if(dx||dy){const target={...block,x:d.originX+dx,y:d.originY+dy};if(fits(target,block.id)){block.x=target.x;block.y=target.y;if(block.pivot){block.pivot.cx2+=2*dx;block.pivot.cy2+=2*dy}dirtyNow();setMessage('Blok taşındı. Kaydedilmemiş değişiklik var.','success')}else{setMessage('O konum dolu veya harita sınırı dışında.','error')}}renderCanvas();renderInspector();}
 function search(){
  const q=norm($('searchInput').value),box=$('searchResults');matched.clear();if(!q){box.classList.add('is-hidden');box.innerHTML='';renderCanvas();return}
  const found=layout.blocks.filter(b=>norm(b.label).includes(q)||(['rack','aisle','lrack'].includes(b.type)&&b.products.some(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q))));
  found.forEach(b=>matched.add(b.id));
  box.innerHTML=found.length?found.slice(0,30).map(b=>{
   const products=['rack','aisle','lrack'].includes(b.type)?b.products.filter(p=>norm(p.code).includes(q)||norm(p.name).includes(q)||norm(p.shelf).includes(q)):[];
-  return `<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${products.length?esc(products.slice(0,2).map(p=>(p.name||p.code)+(p.side&&p.section?' · '+SIDES[p.side]+' '+String(p.section).padStart(2,'0'):'')+(p.arm?' · '+L_ARMS[p.arm]+' '+(L_LEVELS[p.level]||''):'')).join(' · '))+ (products.length>2?` · +${products.length-2} eşleşme`:''):esc(['rack','aisle','lrack'].includes(b.type)?`${b.products.length} ürün`:TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`;
+  return `<button type="button" class="result" data-result="${esc(b.id)}"><b>${esc(b.label)}</b><span>${products.length?esc(products.slice(0,2).map(p=>(p.name||p.code)+(p.side&&p.section?' · '+SIDES[p.side]+' '+String(p.section).padStart(2,'0'):'')+(p.arm?' · '+L_ARMS[p.arm]+' '+(L_LEVELS[p.level]||''):(p.level?' · '+L_LEVELS[p.level]+' kat':''))).join(' · '))+ (products.length>2?` · +${products.length-2} eşleşme`:''):esc(['rack','aisle','lrack'].includes(b.type)?`${b.products.length} ürün`:TYPES[b.type].label)}<small>${esc(TYPES[b.type].label)} · Haritada göster</small></span></button>`;
  }).join('')+(found.length>30?`<p class="muted">İlk 30 konum gösteriliyor. Aramayı daraltabilirsin.</p>`:''):'<div class="empty-state">Eşleşen raf, koridor veya ürün bulunamadı.</div>';
  box.classList.remove('is-hidden');renderCanvas();
 }
@@ -286,9 +378,9 @@ async function importCsv(file){
    const rawLoc=rawCorridor||text(row[locIdx]).trim(),name=text(row[nameIdx]).trim().slice(0,140),code=text(row[codeIdx]).trim().slice(0,55);
    if(!rawLoc||!name){skipped++;continue}
    const typeRaw=typeIdx>=0?norm(row[typeIdx]):'';
-   const isCorridor=!!rawCorridor||typeRaw.includes('koridor')||(!typeRaw&&norm(rawLoc).startsWith('koridor'));
+   const isCorridor=!!rawCorridor||(typeRaw.includes('koridor')||typeRaw==='aisle')||(!typeRaw&&norm(rawLoc).startsWith('koridor'));
    const type=(typeRaw==='lrack'||typeRaw.includes('l raf')||typeRaw.includes('l duvar'))?'lrack':isCorridor?'aisle':'rack';
-   const label=(isCorridor&&type==='aisle'&&!norm(rawLoc).startsWith('koridor')?'Koridor ':'')+rawLoc.slice(0,75);
+   const label=(isCorridor&&type==='aisle'&&!norm(rawLoc).includes('koridor')?'Koridor ':'')+rawLoc.slice(0,75);
    const shelf=(shelfIdx>=0?text(row[shelfIdx]).trim():rawCorridor?text(row[locIdx]).trim():'').slice(0,75);
    let target=layout.blocks.find(b=>b.type===type&&norm(b.label)===norm(label));
    if(!target){const w=type==='aisle'?1:type==='lrack'?4:2,h=type==='aisle'?3:type==='lrack'?6:1,slot=freeSlot(w,h);if(!slot){skipped++;continue}target=createBlock(type,slot.x,slot.y,w,h,label);layout.blocks.push(target);created++}
@@ -296,7 +388,7 @@ async function importCsv(file){
    const sideText=sideIdx>=0?norm(row[sideIdx]):'';const side=['sol','left','l'].includes(sideText)?'left':['sag','right','r'].includes(sideText)?'right':null;
    const section=sectionIdx>=0?Number(text(row[sectionIdx]).trim()):NaN;
    const armRaw=armIdx>=0?norm(row[armIdx]):'';const levelRaw=levelIdx>=0?norm(row[levelIdx]):'';const arm=['dikey','vertical','v'].includes(armRaw)?'vertical':['yatay','horizontal','h'].includes(armRaw)?'horizontal':null;const level=['ust','upper','u'].includes(levelRaw)?'upper':['alt','lower','a'].includes(levelRaw)?'lower':null;
-   const product={code,name,...(shelf?{shelf}:{}),...(type==='lrack'&&arm?{arm}:{}),...(type==='lrack'&&level?{level}:{}),...(type==='aisle'&&side&&Number.isInteger(section)&&section>=1&&section<=60?{side,section}:{})};
+   const product={code,name,...(shelf?{shelf}:{}),...(type==='lrack'&&arm?{arm}:{}),...((type==='lrack'||type==='rack')&&level?{level}:{}),...(type==='aisle'&&side&&Number.isInteger(section)&&section>=1&&section<=60?{side,section}:{})};
    if(product.section&&target.sections<product.section)target.sections=product.section;
    const same=(p)=>norm(p.name)===norm(name)&&norm(p.code)===norm(code)&&norm(p.shelf)===norm(shelf);
    const already=target.products.some(p=>same(p)&&p.side===product.side&&p.section===product.section&&p.arm===product.arm&&p.level===product.level);
@@ -368,6 +460,9 @@ function createDemo(){if(!isEditable())return;if(layout.blocks.length&&!confirm(
 }
 function bind(){
  bindCorridorEvents();
+ $('corridorRotateLeft').addEventListener('click',()=>rotateBlock(corridorId,-1));
+ $('corridorRotateRight').addEventListener('click',()=>rotateBlock(corridorId,1));
+ $('selectionToolbar').addEventListener('click',e=>{const button=e.target.closest('[data-rotate]');if(button){rotateBlock(selected,Number(button.dataset.rotate));return}if(e.target.closest('[data-open-corridor]'))openCorridor(selected)});
  $('quickCorridors').addEventListener('click',e=>{const btn=e.target.closest('[data-corridor-id]');if(btn){selectBlock(btn.dataset.corridorId);openCorridor(btn.dataset.corridorId)}});
  $('toolList').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(!b||!isEditable())return;tool=b.dataset.tool;updateTool()});
  $('mapCanvas').addEventListener('click',e=>{const b=e.target.closest('.block');if(b){if(Date.now()<suppressClickUntil)return;selectBlock(b.dataset.id);const block=layout.blocks.find(x=>x.id===b.dataset.id);if(block?.type==='aisle')openCorridor(block.id);return}newAt(e)});

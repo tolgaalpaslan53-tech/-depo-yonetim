@@ -260,3 +260,36 @@ body.map-barcode-open{overflow:hidden}
 .map-barcode-decision-actions button{flex:1 1 160px;min-height:44px}
 .map-barcode-decision-actions button:disabled{opacity:.6;cursor:wait}
 @media(max-width:740px){.map-barcode-decision-actions{flex-direction:column}.map-barcode-pending{align-items:start}.map-barcode-pending .btn{font-size:.75rem}}
+
+/* V3.5: hızlı isimlendirme, satır / sütun kontrolleri */
+.map-size-easy h2{margin:0 0 7px}
+.easy-size-fields,.aisle-size-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:11px 0}
+.easy-size-field{min-width:0}
+.easy-size-field>label,.easy-size-field>span{display:block;margin:0 0 5px;color:#cadbea;font-size:12px;font-weight:700}
+.easy-counter{display:flex;align-items:center;min-width:0;min-height:42px;border:1px solid #456582;background:#10263c;border-radius:10px;overflow:hidden}
+.easy-counter button{min-width:34px;width:34px;min-height:42px;border:0;background:#1d4263;color:#f5f9ff;font-size:23px;cursor:pointer;font-weight:800;touch-action:manipulation}
+.easy-counter button:active{background:#386c94}
+.easy-counter input{min-width:0;width:100%;flex:1;text-align:center;padding:5px 0;border:0;border-radius:0;background:transparent;box-shadow:none!important;font-size:16px;font-weight:800;color:#fff;appearance:textfield;-moz-appearance:textfield}
+.easy-counter input::-webkit-inner-spin-button,.easy-counter input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.easy-counter output{display:block;min-width:0;flex:1;text-align:center;color:#f6faff;font-weight:800;font-size:17px}
+.aisle-quick-rename{margin:12px 0 13px}.aisle-quick-rename label{margin:0 0 6px!important}.aisle-name-row{display:flex;gap:7px}.aisle-name-row input{flex:1;min-width:0}.aisle-name-row button{flex:none}
+.aisle-quick-size{border:1px solid #355b75;background:#122b43;border-radius:12px;padding:12px;margin:13px 0}
+.aisle-quick-size>strong{display:block;font-size:13px;color:#f4e1af}.aisle-quick-size .muted{margin:5px 0}
+.corridor-rename{margin:0 18px 4px;padding:10px;background:#122a42;border:1px solid #476580;border-radius:10px}
+.corridor-rename label{display:block;font-size:12px;margin-bottom:5px;font-weight:750;color:#d8e8f6}
+.corridor-rename>div{display:flex;gap:9px}.corridor-rename input{min-width:0;flex:1}.corridor-rename button{flex:none}
+.corridor-section-action .counter-mini{min-width:31px;min-height:36px;border:1px solid #476882;border-radius:8px;background:#27455f;color:#fff;font-size:22px;font-weight:700;cursor:pointer}
+.corridor-section-action .counter-mini:active{background:#386d95}
+.corridor-sections{width:238px}
+.corridor-section-action input{text-align:center;min-width:44px;width:51px}
+@media(max-width:720px){
+ .map-size-easy{grid-column:1/-1}
+ .corridor-rename{margin:0 9px 5px}
+ .corridor-section-action{gap:3px}.corridor-section-action .counter-mini{min-width:30px}
+ .corridor-section-action .btn{min-height:36px;padding:6px}
+ .corridor-sections{width:175px}
+ .corridor-section-action input{width:43px;padding:4px}
+ .corridor-tools{flex-wrap:wrap;align-items:end}
+ .corridor-search{flex:1 1 150px}
+ .corridor-sections{flex:1 0 175px}
+}

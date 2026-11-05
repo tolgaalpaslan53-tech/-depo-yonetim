@@ -50,6 +50,33 @@ function rotateBlock(id,delta){
  const label=b.type==='aisle'?'Koridor':TYPES[b.type].label;
  setMessage(label+' 90° çevrildi ('+(w>h?'yatay':h>w?'dikey':'kare')+'). Buluta kaydetmeyi unutma.','success');
 }
+// Kolay ölçü kontrolleri mevcut blok ürünlerini değiştirmeden yalnızca konumu/ölçüyü düzenler.
+function renameAisle(b,newLabel){
+ if(!isEditable()||!b||b.type!=='aisle')return false;
+ const label=text(newLabel).trim();
+ if(!label||label.length>75){setMessage('Koridor adı 1–75 karakter olmalı.','error');return false}
+ if(layout.blocks.some(x=>x.id!==b.id&&x.type==='aisle'&&norm(x.label)===norm(label))){setMessage('Bu isimde başka bir koridor var. Ayrı bir ad yaz.','error');return false}
+ if(b.label!==label){b.label=label;dirtyNow();renderCanvas();renderInspector();search();if(corridorId===b.id)renderCorridor();setMessage('Koridor adı güncellendi. Buluta Kaydet ile yayımla.','success')}
+ return true;
+}
+function resizeAisleQuick(id,dim,delta){
+ if(!isEditable()||!['w','h'].includes(dim)||![-1,1].includes(delta))return;
+ const b=layout.blocks.find(x=>x.id===id&&x.type==='aisle');if(!b)return;
+ const next=b[dim]+delta;if(next<1||next>15){setMessage('Koridor ölçüsü 1–15 kare arasında olmalı.','error');return}
+ const proposal={...b,[dim]:next};
+ if(!fits(proposal,b.id)){setMessage('Bu yönde boşluk yok. Koridoru taşı veya haritayı genişlet.','error');return}
+ const prior=clone(b);b[dim]=next;b.pivot={cx2:b.x*2+b.w,cy2:b.y*2+b.h};
+ try{validate(serialize())}catch(err){Object.assign(b,prior);setMessage(err.message,'error');return}
+ dirtyNow();renderCanvas();renderInspector();search();setMessage('Koridor boyutu değişti. Ürün konumları korunuyor.','success');
+}
+function applyGridSize(cols,rows){
+ if(!isEditable())return false;
+ if(!Number.isInteger(cols)||cols<10||cols>60||!Number.isInteger(rows)||rows<8||rows>40){setMessage('Harita en az 10×8, en fazla 60×40 kare olmalı.','error');return false}
+ if(layout.blocks.some(b=>b.x+b.w>cols||b.y+b.h>rows)){setMessage('Bu kadar küçültemezsin: Kenarda raf/koridor kalıyor. Önce öğeyi taşı.','error');return false}
+ if(layout.cols!==cols||layout.rows!==rows){layout.cols=cols;layout.rows=rows;dirtyNow();renderCanvas();setMessage('Harita alanı ayarlandı. Ürünler korunuyor.','success')}
+ $('gridCols').value=layout.cols;$('gridRows').value=layout.rows;
+ return true;
+}
 function renderSelectionToolbar(){
  const bar=$('selectionToolbar');if(!bar)return;
  const b=layout.blocks.find(x=>x.id===selected);
@@ -213,14 +240,22 @@ function renderRackInspector(b){
 function renderAisleInspector(b){
  const h=$('inspectorBody'),editable=isEditable();$('inspectorTitle').textContent='Koridor · Sağ / Sol';
  const left=b.products.filter(p=>p.side==='left').length,right=b.products.filter(p=>p.side==='right').length,unplaced=b.products.length-left-right;
- h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted smalltext">${b.products.length} ürün · Sağ ve sol taraflar ayrı ayrı kayıtlıdır. Her bölümde 100+ ürün olabilir.</p><div class="aisle-counts"><span>← Sol <strong>${left}</strong></span><span>Sağ <strong>${right}</strong> →</span></div><button id="aisleOpen" type="button" class="btn primary full">Koridor ürünlerini aç</button>${unplaced?`<p class="muted smalltext">${unplaced} ürünün sağ/sol konumu henüz tanımlanmamış.</p>`:''}`+
- (editable?`<details class="rack-settings"><summary>Koridoru düzenle / döndür</summary><form id="aisleSettings"><label for="aisleName">Koridor adı</label><input id="aisleName" value="${esc(b.label)}" required maxlength="75"><div class="row-actions"><button class="btn small secondary" id="aisleRotateLeft" type="button">↶ 90°</button><button class="btn small secondary" id="aisleRotateRight" type="button">↷ 90°</button></div><div class="inline-fields"><div><label for="aisleW">Genişlik</label><input id="aisleW" type="number" min="1" max="15" value="${b.w}"></div><div><label for="aisleH">Yükseklik</label><input id="aisleH" type="number" min="1" max="15" value="${b.h}"></div></div><label for="aisleNote">Not</label><textarea id="aisleNote" maxlength="400">${esc(b.note)}</textarea><button class="btn secondary full" type="submit">Koridor ayarlarını kaydet</button><button type="button" id="aisleRemove" class="btn quiet full remove">Koridoru sil</button></form></details>`:'');
+ h.innerHTML=`<h3>${esc(b.label)}</h3><p class="muted smalltext">${b.products.length} ürün kayıtlı · Sağ ve sol taraflar ayrı.</p><div class="aisle-counts"><span>← Sol <strong>${left}</strong></span><span>Sağ <strong>${right}</strong> →</span></div>`+
+ (editable?`<form id="aisleQuickRename" class="aisle-quick-rename"><label for="aisleQuickName">Koridora isim ver</label><div class="aisle-name-row"><input id="aisleQuickName" maxlength="75" required value="${esc(b.label)}" placeholder="Ör. İçecek Koridoru"><button type="submit" class="btn primary small">Kaydet</button></div></form><div class="aisle-quick-size"><strong>Koridorun yerleşimi</strong><p class="muted smalltext">Eni ve boyu kare kare ayarla; + / − anında uygular.</p><div class="aisle-size-fields"><div class="easy-size-field"><span>En (sütun)</span><div class="easy-counter"><button type="button" data-aisle-dim="w" data-delta="-1" aria-label="Koridorun enini azalt">−</button><output>${b.w}</output><button type="button" data-aisle-dim="w" data-delta="1" aria-label="Koridorun enini artır">+</button></div></div><div class="easy-size-field"><span>Boy (satır)</span><div class="easy-counter"><button type="button" data-aisle-dim="h" data-delta="-1" aria-label="Koridorun boyunu azalt">−</button><output>${b.h}</output><button type="button" data-aisle-dim="h" data-delta="1" aria-label="Koridorun boyunu artır">+</button></div></div></div><div class="row-actions"><button class="btn small secondary" id="aisleRotateLeft" type="button">↶ 90°</button><button class="btn small secondary" id="aisleRotateRight" type="button">↷ 90°</button></div></div>`:'')+
+ `<button id="aisleOpen" type="button" class="btn primary full">Koridor ürünlerini aç</button>${unplaced?`<p class="muted smalltext">${unplaced} ürünün sağ/sol konumu henüz belirlenmemiş.</p>`:''}`+
+ (editable?`<details class="rack-settings"><summary>Koridor notu ve silme</summary><form id="aisleNoteForm"><label for="aisleNote">Not</label><textarea id="aisleNote" maxlength="400">${esc(b.note)}</textarea><button class="btn secondary full" type="submit">Notu kaydet</button><button type="button" id="aisleRemove" class="btn quiet full remove">Koridoru sil</button></form></details>`:'');
  $('aisleOpen').onclick=()=>openCorridor(b.id);
  if(!editable)return;
- $('aisleRotateLeft').onclick=()=>rotateBlock(b.id,-1);$('aisleRotateRight').onclick=()=>rotateBlock(b.id,1);
- $('aisleRemove').onclick=()=>{if(!confirm('Bu koridor ve '+b.products.length+' ürün konumu silinsin mi? Önce JSON yedeği indir.'))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;dirtyNow();renderCanvas();renderInspector();search()};
- $('aisleSettings').onsubmit=e=>{e.preventDefault();try{const label=$('aisleName').value.trim(),w=Number($('aisleW').value),height=Number($('aisleH').value);if(!label||!Number.isInteger(w)||!Number.isInteger(height)||w<1||height<1||w>15||height>15)throw Error('Koridor adı ve ölçü geçersiz.');if(!fits({...b,w,h:height},b.id))throw Error('Yeni koridor boyutu başka bir blokla çakışıyor.');const old=clone(b);Object.assign(b,{label,w,h:height,note:$('aisleNote').value.trim().slice(0,400),pivot:{cx2:2*b.x+w,cy2:2*b.y+height}});try{validate(serialize())}catch(err){Object.assign(b,old);throw err}dirtyNow();renderCanvas();renderInspector();search();setMessage('Koridor güncellendi. Tüm sağ/sol ürün konumları korundu.','success')}catch(err){setMessage(err.message,'error')}};
+ $('aisleQuickRename').onsubmit=e=>{e.preventDefault();renameAisle(b,$('aisleQuickName').value)};
+ h.onclick=e=>{
+   const inc=e.target.closest('[data-aisle-dim]');if(inc){resizeAisleQuick(b.id,inc.dataset.aisleDim,Number(inc.dataset.delta));return}
+   if(e.target.closest('#aisleRotateLeft')){rotateBlock(b.id,-1);return}
+   if(e.target.closest('#aisleRotateRight')){rotateBlock(b.id,1);return}
+   if(e.target.closest('#aisleRemove')){if(!confirm('Bu koridor ve '+b.products.length+' ürün konumu silinsin mi? Önce JSON yedeği indir.'))return;layout.blocks=layout.blocks.filter(x=>x.id!==b.id);selected=null;dirtyNow();renderCanvas();renderInspector();search()}
+ };
+ $('aisleNoteForm').onsubmit=e=>{e.preventDefault();const note=$('aisleNote').value.trim().slice(0,400);if(b.note!==note){b.note=note;dirtyNow();renderInspector()}setMessage('Koridor notu kaydedildi. Buluta kaydet.','success')};
 }
+
 function renderInspector(){
  const b=layout.blocks.find(x=>x.id===selected),t=$('inspectorTitle'),h=$('inspectorBody');
  if(!b){t.textContent='Konum bilgileri';h.innerHTML='<p class="muted">Haritada bir raf veya koridor seç. Ürünleri arayarak listeleyebilirsin.</p>';return}
@@ -262,7 +297,7 @@ function openCorridor(id,q=''){
  corridorId=id;corridorSlot=null;corridorDetailPage=1;pendingMove=null;corridorQuery=q;$('corridorSearch').value=q;
  $('corridorOverlay').classList.remove('is-hidden');document.body.classList.add('corridor-open');
  $('corridorSections').value=b.sections||12;
- $('corridorTitle').textContent=b.label;renderCorridor();
+ $('corridorTitle').textContent=b.label;$('corridorRenameInput').value=b.label;$('corridorRenameForm').classList.add('is-hidden');renderCorridor();
  if(q){const first=b.products.find(p=>p.side&&p.section&&productMatches(p,norm(q)));if(first)corridorSlot={side:first.side,section:first.section};renderCorridor();focusCorridorSlot()}
 }
 function closeCorridor(){corridorId=null;corridorSlot=null;pendingMove=null;$('corridorOverlay').classList.add('is-hidden');document.body.classList.remove('corridor-open');}
@@ -334,7 +369,12 @@ function bindCorridorEvents(){
   if(unplace){const i=Number(unplace.dataset.unplace),p=b.products[i];if(!p||!confirm('Bu ürünün sol/sağ konumu kaldırılsın mı? Ürün kaydı silinmeyecek.'))return;delete p.side;delete p.section;dirtyNow();renderCanvas();search();renderCorridor()}
  });
  $('corridorUnassigned').addEventListener('click',e=>{const btn=e.target.closest('[data-assign]');if(!btn||!isEditable())return;if(!corridorSlot){setMessage('Önce sol veya sağ tarafta bir raf bölümü seç.','error');return}const b=corridorBlock(),p=b?.products[Number(btn.dataset.assign)];if(!p)return;p.side=corridorSlot.side;p.section=corridorSlot.section;dirtyNow();renderCanvas();search();renderCorridor();setMessage('Ürün seçilen bölüme yerleştirildi.','success')});
- $('applyCorridorSections').addEventListener('click',()=>{const b=corridorBlock();if(!b||!isEditable())return;const n=Number($('corridorSections').value);if(!Number.isInteger(n)||n<2||n>60){setMessage('Bölüm sayısı 2 ile 60 arasında olmalı.','error');return}if(b.products.some(p=>p.section>n)){setMessage('Önce azaltacağın bölümdeki ürünleri başka yere taşı.','error');return}b.sections=n;dirtyNow();renderCorridor();setMessage('Koridor bölüm sayısı güncellendi.','success')});
+ function applySections(n){const b=corridorBlock();if(!b||!isEditable())return false;if(!Number.isInteger(n)||n<2||n>60){setMessage('Bölüm sayısı 2 ile 60 arasında olmalı.','error');$('corridorSections').value=b.sections||12;return false}if(b.products.some(p=>p.section>n)){setMessage('Bu bölümde ürün var. Önce diğer bölüme taşı, sonra azalt.','error');$('corridorSections').value=b.sections||12;return false}if(b.sections!==n){b.sections=n;dirtyNow();renderCorridor();setMessage('Raf bölüm sayısı değişti. Buluta kaydet.','success')}$('corridorSections').value=n;return true}
+ $('applyCorridorSections').addEventListener('click',()=>applySections(Number($('corridorSections').value)));
+ $('corridorSectionsMinus').addEventListener('click',()=>applySections((corridorBlock()?.sections||12)-1));
+ $('corridorSectionsPlus').addEventListener('click',()=>applySections((corridorBlock()?.sections||12)+1));
+ $('corridorRenameToggle').addEventListener('click',()=>{if(!isEditable())return;const editor=$('corridorRenameForm');editor.classList.toggle('is-hidden');if(!editor.classList.contains('is-hidden')){$('corridorRenameInput').value=corridorBlock()?.label||'';$('corridorRenameInput').focus()}});
+ $('corridorRenameForm').addEventListener('submit',e=>{e.preventDefault();if(renameAisle(corridorBlock(),$('corridorRenameInput').value))$('corridorRenameForm').classList.add('is-hidden')});
 }
 
 function gridPosition(e){const rect=$('mapCanvas').getBoundingClientRect();return {x:Math.floor((e.clientX-rect.left)/(C*zoom)),y:Math.floor((e.clientY-rect.top)/(C*zoom))}}
@@ -747,7 +787,8 @@ function bind(){
  $('mapCanvas').addEventListener('pointerdown',pointerDown);$('mapCanvas').addEventListener('pointermove',pointerMove);$('mapCanvas').addEventListener('pointerup',pointerUp);$('mapCanvas').addEventListener('pointercancel',pointerUp);
  $('searchInput').addEventListener('input',search);$('clearSearch').addEventListener('click',()=>{$('searchInput').value='';search();$('searchInput').focus()});$('searchResults').addEventListener('click',e=>{const b=e.target.closest('[data-result]');if(!b)return;selectBlock(b.dataset.result,{scroll:true,filter:$('searchInput').value});const block=layout.blocks.find(x=>x.id===b.dataset.result);if(block?.type==='aisle')openCorridor(block.id,$('searchInput').value)});
  $('zoomOut').addEventListener('click',()=>updateZoom(zoom-.1));$('zoomIn').addEventListener('click',()=>updateZoom(zoom+.1));$('zoomFit').addEventListener('click',fitMap);
- $('resizeMap').addEventListener('click',()=>{if(!isEditable())return;const cols=Number($('gridCols').value),rows=Number($('gridRows').value);if(!Number.isInteger(cols)||cols<10||cols>60||!Number.isInteger(rows)||rows<8||rows>40){setMessage('Harita en az 10×8, en çok 60×40 hücre olmalı.','error');return}if(layout.blocks.some(b=>b.x+b.w>cols||b.y+b.h>rows)){setMessage('Bazı bloklar yeni ölçülerin dışında kalıyor. Önce blokları taşı.','error');return}layout.cols=cols;layout.rows=rows;dirtyNow();renderCanvas();setMessage('Harita ölçüsü değiştirildi.','success')});
+ $('resizeMap').addEventListener('click',()=>applyGridSize(Number($('gridCols').value),Number($('gridRows').value)));
+ document.querySelector('.map-size-easy').addEventListener('click',e=>{const step=e.target.closest('[data-grid-dim]');if(!step||!isEditable())return;const dim=step.dataset.gridDim,delta=Number(step.dataset.gridDelta);if(!['cols','rows'].includes(dim)||![-1,1].includes(delta))return;applyGridSize(layout.cols+(dim==='cols'?delta:0),layout.rows+(dim==='rows'?delta:0))});
  $('warehouseTemplate').addEventListener('click',createWarehouseTemplate);
  $('demoMap').addEventListener('click',createDemo);
  $('clearMap').addEventListener('click',()=>{if(!confirm('Yeni, boş depo krokisi başlatılsın mı? Mevcut kaydedilmemiş değişiklikleri önce JSON olarak dışa aktar.'))return;layout=empty();selected=null;dirtyNow();renderCanvas();renderInspector();showRemote();setMessage('Boş harita açıldı. Gerçek rafları ekleyebilirsin.','success')});

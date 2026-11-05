@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1729">
   <title>AKTİVA · Depo Haritası</title>
-  <link rel="stylesheet" href="depo-haritasi.css?v=20261105-BARKOD34">
+  <link rel="stylesheet" href="depo-haritasi.css?v=20261105-KOLAY35">
   <script src="config.js"></script>
-  <script defer src="depo-haritasi.js?v=20261105-BARKOD34"></script>
+  <script defer src="depo-haritasi.js?v=20261105-KOLAY35"></script>
 </head>
 <body>
 <div id="authGate" class="gate" role="status">
@@ -41,7 +41,7 @@
           </details>
         </div>
       </section>
-      <details class="panel map-advanced"><summary>Harita boyutu</summary><div class="dimensions"><label>Sütun<input id="gridCols" type="number" min="10" max="60" value="22"></label><label>Satır<input id="gridRows" type="number" min="8" max="40" value="14"></label></div><button type="button" id="resizeMap" class="btn secondary full">Ölçüyü uygula</button></details>
+      <section class="panel map-size-easy"><h2>Harita alanını ayarla</h2><p class="muted smalltext">Sağa doğru sütun, aşağı doğru satır ekle. + / − dokununca hemen uygulanır.</p><div class="easy-size-fields"><div class="easy-size-field"><label for="gridCols">Sütun (yatay)</label><div class="easy-counter"><button type="button" data-grid-dim="cols" data-grid-delta="-1" aria-label="Bir sütun azalt">−</button><input id="gridCols" type="number" min="10" max="60" value="22"><button type="button" data-grid-dim="cols" data-grid-delta="1" aria-label="Bir sütun ekle">+</button></div></div><div class="easy-size-field"><label for="gridRows">Satır (dikey)</label><div class="easy-counter"><button type="button" data-grid-dim="rows" data-grid-delta="-1" aria-label="Bir satır azalt">−</button><input id="gridRows" type="number" min="8" max="40" value="14"><button type="button" data-grid-dim="rows" data-grid-delta="1" aria-label="Bir satır ekle">+</button></div></div></div><button type="button" id="resizeMap" class="btn secondary full">Yazdığım ölçüleri uygula</button><p class="muted smalltext">Küçültürken raf dışarıda kalırsa işlem durur; ürünler silinmez.</p></section>
       <details class="panel info-panel"><summary>Aktarım ve yedekleme</summary><button type="button" id="warehouseTemplate" class="btn primary full">⊞ 5 Bölgeli Depo Şablonunu Aç</button><p class="muted smalltext">Sol dıştaki L raf, iç koridorlar, ana geçiş ve sağ dış rafları çiz. Şablon eskisini ancak onaylarsan değiştirir.</p><button type="button" id="demoMap" class="btn secondary full">Eski örnek krokiyi aç</button><button type="button" id="clearMap" class="btn secondary full">Boş krokiyle başla</button><button type="button" id="exportMap" class="btn secondary full">↓ JSON yedeği indir</button><label class="btn secondary full filelabel">↑ JSON içe aktar<input type="file" id="importMap" accept=".json,application/json"></label><label class="btn secondary full filelabel">↑ Koridor / raf ürünlerini CSV aktar<input type="file" id="importCsv" accept=".csv,.tsv,text/csv,text/plain"></label><p class="muted smalltext">CSV: koridor;taraf;bolum;urun_kodu;urun_adi;raf_no. Düz raf için kat=alt/üst. L raf için konum_tipi=lrack, kol=dikey/yatay ve kat=alt/üst de kullanabilirsin. Mevcut CSV formatı korunur.</p></details>
     </aside>
     <main class="main-panel">
@@ -58,11 +58,12 @@
   <div class="corridor-sheet">
     <div class="corridor-top">
       <div><span class="eyebrow">DEPO / KORİDOR YERLEŞİMİ</span><h2 id="corridorTitle">Koridor</h2><p id="corridorSubtitle">Sol ve sağ raflar</p></div>
-      <div class="corridor-top-actions"><button id="mapBarcodeOpenCorridor" type="button" class="btn primary small scan-admin-only">▥ Barkodla Ekle</button><button id="corridorRotateLeft" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sola çevir">↶ 90°</button><button id="corridorRotateRight" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sağa çevir">↷ 90°</button><button id="closeCorridor" class="btn secondary" type="button">✕ Kapat</button></div>
+      <div class="corridor-top-actions"><button id="mapBarcodeOpenCorridor" type="button" class="btn primary small scan-admin-only">▥ Barkodla Ekle</button><button id="corridorRenameToggle" type="button" class="btn secondary small admin-only">✎ Adlandır</button><button id="corridorRotateLeft" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sola çevir">↶ 90°</button><button id="corridorRotateRight" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sağa çevir">↷ 90°</button><button id="closeCorridor" class="btn secondary" type="button">✕ Kapat</button></div>
     </div>
+    <form class="corridor-rename is-hidden admin-only" id="corridorRenameForm"><label for="corridorRenameInput">Koridorun adı</label><div><input id="corridorRenameInput" maxlength="75" required placeholder="Ör. Kuru Gıda A"><button type="submit" class="btn primary small">Adı Kaydet</button></div></form>
     <div class="corridor-tools">
       <div class="corridor-search"><label for="corridorSearch">Ürün bul</label><input id="corridorSearch" type="search" placeholder="Ürün adı veya kodu yaz" autocomplete="off"></div>
-      <div class="corridor-sections admin-only"><label for="corridorSections">Raf bölümü sayısı</label><div class="corridor-section-action"><input id="corridorSections" type="number" min="2" max="60" value="12"><button id="applyCorridorSections" type="button" class="btn secondary small">Uygula</button></div></div>
+      <div class="corridor-sections admin-only"><label for="corridorSections">Raf bölümü sayısı</label><div class="corridor-section-action"><button type="button" id="corridorSectionsMinus" class="counter-mini" aria-label="Bir raf bölümü azalt">−</button><input id="corridorSections" type="number" min="2" max="60" value="12"><button type="button" id="corridorSectionsPlus" class="counter-mini" aria-label="Bir raf bölümü ekle">+</button><button id="applyCorridorSections" type="button" class="btn secondary small">Uygula</button></div></div>
     </div>
     <div id="corridorSideCounts" class="corridor-side-counts"></div>
     <div id="corridorSearchMatches" class="corridor-matches is-hidden"></div>

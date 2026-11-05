@@ -181,3 +181,82 @@ body.viewer .inspector .panel{max-height:72vh;overflow:auto}
 .bulk-add form{margin-top:10px;display:flex;flex-direction:column;gap:8px}
 .bulk-add textarea{width:100%;min-height:112px;resize:vertical;font-family:ui-monospace,monospace;font-size:12px;background:#091c2e;border-color:#55728d;color:#f4f8fd}
 .corridor-bulk{margin-top:10px}
+
+/* V3.3 · barkodla rafa/koridora ürün tanımlama */
+body.viewer .scan-admin-only{display:none!important}
+body.map-barcode-open{overflow:hidden}
+.map-barcode-modal{position:fixed;inset:0;z-index:7500;background:rgba(4,12,24,.76);padding:14px;display:flex;align-items:center;justify-content:center}
+.map-barcode-modal.is-hidden{display:none!important}
+.map-barcode-sheet{width:min(920px,100%);max-height:min(94dvh,980px);overflow-y:auto;overscroll-behavior:contain;border-radius:19px;border:1px solid #516783;background:#0d2034;color:#f1f7ff;box-shadow:0 26px 75px #0008}
+.map-barcode-header{padding:22px 22px 15px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:1px solid #36516d}
+.map-barcode-header h2{font-size:1.3rem;line-height:1.24;margin:6px 0;color:#fff}
+.map-barcode-header p{font-size:.86rem;color:#b2c6da;margin:0}
+.map-barcode-header .eyebrow{color:#9ab6d3;font-size:.68rem;letter-spacing:.12em}
+.map-barcode-layout{display:grid;grid-template-columns:1.08fr .92fr;gap:12px;padding:16px}
+.map-barcode-panel{border:1px solid #365574;background:#152d47;border-radius:14px;padding:16px;min-width:0}
+.map-barcode-panel h3{font-size:1rem;margin:0 0 16px;color:#f6f9fc}
+.map-barcode-panel h3:not(:first-child){margin-top:18px}
+.map-barcode-panel label{display:block;margin:11px 0 6px;color:#e1edfa;font-size:.86rem;font-weight:700}
+.map-barcode-panel input,.map-barcode-panel select{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;background:#0b2138;border:1px solid #5e7895;color:#f4f8ff;border-radius:11px;padding:11px 12px;font:inherit;font-size:16px}
+.map-barcode-panel input:focus,.map-barcode-panel select:focus{outline:2px solid #83b8ee;outline-offset:1px}
+.map-barcode-target-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.map-barcode-target-row.is-hidden{display:none!important}
+.map-barcode-target-hint{padding:10px 12px;margin:13px 0 8px;background:#203d59;border-radius:9px;color:#f2d891;font-weight:750;font-size:.82rem;line-height:1.45}
+.map-barcode-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.map-barcode-lookup{display:flex;gap:7px}
+.map-barcode-lookup input{flex:1}
+.map-barcode-lookup button{flex:0 0 auto}
+.map-barcode-camera{background:#071827;border:1px solid #4a7794;border-radius:12px;padding:8px;text-align:center;margin:10px 0}
+.map-barcode-camera.is-hidden{display:none!important}
+.map-barcode-camera video{width:100%;max-height:230px;object-fit:cover;display:block;border-radius:7px}
+.map-barcode-camera span{display:block;font-size:.8rem;color:#cadce8;padding:7px 0}
+.map-barcode-matches{display:flex;flex-direction:column;gap:7px;margin-top:12px;max-height:240px;overflow-y:auto}
+.map-barcode-match{background:#1b3853;color:#f7fbff;border:1px solid #456783;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:5px;font:inherit;line-height:1.35}
+.map-barcode-match:hover,.map-barcode-match:focus{border-color:#85b6e9;background:#284a69}
+.map-barcode-match strong{font-size:.88rem}
+.map-barcode-match small{font-size:.72rem;color:#c1d4e5}
+.map-barcode-notfound{font-size:.84rem;color:#ffd6b1;background:#48362d;border-radius:10px;padding:12px}
+.map-barcode-chosen{background:#0c2339;border:1px solid #385978;border-radius:11px;padding:14px;margin:8px 0 14px;min-height:116px}
+.map-barcode-confirm{display:flex;flex-direction:column;gap:7px}
+.map-barcode-confirm strong{font-size:1.06rem;line-height:1.35;overflow-wrap:anywhere}
+.map-barcode-confirm small{color:#c1d3e4}
+.map-barcode-ok{color:#92e6b7;font-size:.8rem;font-weight:750}
+.map-barcode-feedback{font-size:.86rem;line-height:1.5;margin:12px 0;min-height:18px;color:#bdd8f3}
+.map-barcode-feedback[data-kind=error]{color:#ffc0bd}
+.map-barcode-feedback[data-kind=success]{color:#95e6ae}
+.map-barcode-history{border-top:1px solid #3f5b74;padding-top:13px;margin:12px 0}
+.map-barcode-history h4{display:flex;align-items:center;justify-content:space-between;font-size:.87rem;margin:0 0 9px}
+.map-barcode-history h4 span{background:#213f5c;padding:4px 9px;border-radius:30px}
+.map-barcode-added{display:flex;flex-direction:column;padding:8px 0;border-bottom:1px solid #2c4a62;gap:3px;font-size:.81rem}
+.map-barcode-added strong{overflow-wrap:anywhere}
+.map-barcode-added small{color:#abc2d6}
+.map-barcode-panel .btn{min-height:43px}
+.map-barcode-panel .btn:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:740px){
+ .map-barcode-modal{padding:0;align-items:stretch}
+ .map-barcode-sheet{max-height:100dvh;height:100dvh;border-radius:0;border:0;padding-bottom:max(15px,env(safe-area-inset-bottom))}
+ .map-barcode-header{padding:15px 14px 12px}
+ .map-barcode-header h2{font-size:1.1rem}
+ .map-barcode-header p{font-size:.75rem}
+ .map-barcode-layout{display:flex;flex-direction:column;padding:10px;gap:10px}
+ .map-barcode-panel{padding:14px}
+ .map-barcode-camera video{max-height:200px}
+ .topbar .top-actions{gap:6px}
+ #mapBarcodeOpen{font-size:.74rem;padding:8px 10px;white-space:normal}
+ .map-barcode-target-row{gap:7px}
+}
+
+/* V3.4 — isteğe bağlı barkod ekleme/değiştirme onayı */
+.map-barcode-pending{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#183e53;border:1px solid #5d9bb6;color:#effaff;border-radius:12px;padding:11px 12px;margin-top:12px}
+.map-barcode-pending.is-hidden,.map-barcode-decision.is-hidden{display:none!important}
+.map-barcode-pending div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.map-barcode-pending strong{overflow-wrap:anywhere;font-size:.9rem}
+.map-barcode-pending small{font-size:.74rem;color:#c3e3f0;line-height:1.35}
+.map-barcode-decision{border:1px solid #d0a958;border-radius:13px;background:#3b3023;color:#fff4d5;padding:14px;margin:10px 0 16px}
+.map-barcode-decision strong{font-size:1rem;display:block;line-height:1.35}
+.map-barcode-decision p{font-size:.89rem;line-height:1.55;margin:8px 0 12px;overflow-wrap:anywhere}
+.map-barcode-decision small{font-size:.72rem;color:#f3dcb1;line-height:1.45;display:block;margin-top:10px}
+.map-barcode-decision-actions{display:flex;gap:8px;flex-wrap:wrap}
+.map-barcode-decision-actions button{flex:1 1 160px;min-height:44px}
+.map-barcode-decision-actions button:disabled{opacity:.6;cursor:wait}
+@media(max-width:740px){.map-barcode-decision-actions{flex-direction:column}.map-barcode-pending{align-items:start}.map-barcode-pending .btn{font-size:.75rem}}

@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1729">
   <title>AKTİVA · Depo Haritası</title>
-  <link rel="stylesheet" href="depo-haritasi.css?v=20261105-P100">
+  <link rel="stylesheet" href="depo-haritasi.css?v=20261105-BARKOD34">
   <script src="config.js"></script>
-  <script defer src="depo-haritasi.js?v=20261105-P100"></script>
+  <script defer src="depo-haritasi.js?v=20261105-BARKOD34"></script>
 </head>
 <body>
 <div id="authGate" class="gate" role="status">
@@ -21,7 +21,7 @@
 <div id="workspace" class="workspace is-hidden">
   <header class="topbar">
     <div class="brand-group"><div class="brand-icon">A</div><div><h1>Depo Haritası</h1><p>Koridorun sağ ve solundaki ürünleri bul</p></div></div>
-    <div class="top-actions"><span id="roleBadge" class="role-pill"></span><a class="btn secondary compact" href="./index.html" aria-label="AKTİVA ana sayfa">← Ana Sayfa</a></div>
+    <div class="top-actions"><button id="mapBarcodeOpen" class="btn primary compact scan-admin-only" type="button">▥ Barkodla Yerleştir</button><span id="roleBadge" class="role-pill"></span><a class="btn secondary compact" href="./index.html" aria-label="AKTİVA ana sayfa">← Ana Sayfa</a></div>
   </header>
   <div id="message" class="message" role="status" aria-live="polite"></div>
   <div id="draftBanner" class="draft-banner is-hidden"><span>Bu cihazda henüz yayımlanmamış bir taslak var.</span><button id="restoreDraft" class="btn small secondary" type="button">Taslağı aç</button><button id="discardDraft" class="btn small quiet" type="button">Sil</button></div>
@@ -58,7 +58,7 @@
   <div class="corridor-sheet">
     <div class="corridor-top">
       <div><span class="eyebrow">DEPO / KORİDOR YERLEŞİMİ</span><h2 id="corridorTitle">Koridor</h2><p id="corridorSubtitle">Sol ve sağ raflar</p></div>
-      <div class="corridor-top-actions"><button id="corridorRotateLeft" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sola çevir">↶ 90°</button><button id="corridorRotateRight" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sağa çevir">↷ 90°</button><button id="closeCorridor" class="btn secondary" type="button">✕ Kapat</button></div>
+      <div class="corridor-top-actions"><button id="mapBarcodeOpenCorridor" type="button" class="btn primary small scan-admin-only">▥ Barkodla Ekle</button><button id="corridorRotateLeft" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sola çevir">↶ 90°</button><button id="corridorRotateRight" class="btn secondary small admin-only" type="button" title="Koridoru 90 derece sağa çevir">↷ 90°</button><button id="closeCorridor" class="btn secondary" type="button">✕ Kapat</button></div>
     </div>
     <div class="corridor-tools">
       <div class="corridor-search"><label for="corridorSearch">Ürün bul</label><input id="corridorSearch" type="search" placeholder="Ürün adı veya kodu yaz" autocomplete="off"></div>
@@ -75,6 +75,52 @@
       <div id="corridorDetail" class="corridor-detail"><p>Bir raf bölümüne dokun.</p></div>
     </div>
     <div id="corridorUnassigned" class="corridor-unassigned"></div>
+  </div>
+</div>
+
+<!-- Excel kataloğundan ürün seçer, onaylanırsa mevcut ürünün barkodunu merkezi RPC ile günceller; harita konumunu ayrı kaydeder. -->
+<div id="mapBarcodeModal" class="map-barcode-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="mapBarcodeTitle">
+  <div class="map-barcode-sheet">
+    <div class="map-barcode-header"><div><span class="eyebrow">AKTİVA / DEPO HARİTASI</span><h2 id="mapBarcodeTitle">Barkodla Ürün Yerleştir</h2><p>Konum seç, okut, ürünü doğrula ve ekle.</p></div><button type="button" class="btn secondary small" id="mapBarcodeClose">✕ Kapat</button></div>
+    <div class="map-barcode-layout">
+      <section class="map-barcode-panel">
+        <h3>1. Ürünün yerini seç</h3>
+        <label for="mapBarcodeBlock">Koridor veya raf</label><select id="mapBarcodeBlock"></select>
+        <div id="mapBarcodeAisleFields" class="map-barcode-target-row is-hidden"><label>Taraf<select id="mapBarcodeSide"><option value="left">Sol</option><option value="right">Sağ</option></select></label><label>Bölüm<select id="mapBarcodeSection"></select></label></div>
+        <div id="mapBarcodeRackFields" class="map-barcode-target-row is-hidden"><label>Raf katı<select id="mapBarcodeRackLevel"><option value="lower">Alt</option><option value="upper">Üst</option></select></label><label>Raf konumu (isteğe bağlı)<input id="mapBarcodeShelf" maxlength="75" placeholder="Örn. 1019"></label></div>
+        <div id="mapBarcodeLRackFields" class="map-barcode-target-row is-hidden"><label>L raf kolu<select id="mapBarcodeArm"><option value="vertical">Dikey kol</option><option value="horizontal">Yatay kol</option></select></label><label>Kat<select id="mapBarcodeLLevel"><option value="lower">Alt</option><option value="upper">Üst</option></select></label></div>
+        <p id="mapBarcodeTargetHint" class="map-barcode-target-hint">Önce konum seç.</p>
+        <h3>2. Barkodu okut veya ürünü ara</h3>
+        <p id="mapBarcodeCatalogStatus" class="muted smalltext" aria-live="polite">Ürün kataloğu yükleniyor…</p>
+        <div class="map-barcode-actions"><button type="button" id="mapBarcodeStart" class="btn primary">▥ Kamerayla Okut</button><button type="button" id="mapBarcodeStop" class="btn secondary is-hidden">Kamerayı Kapat</button></div>
+        <div id="mapBarcodeCameraWrap" class="map-barcode-camera is-hidden"><video id="mapBarcodeVideo" playsinline muted autoplay></video><span>Ürün barkodunu çerçeve içinde tut</span></div>
+        <label for="mapBarcodeLookup">Barkod / ürün kodu / ürün adı</label>
+        <div class="map-barcode-lookup"><input id="mapBarcodeLookup" autocomplete="off" inputmode="search" placeholder="Barkod yaz veya ürün ara"><button type="button" id="mapBarcodeFind" class="btn secondary">Bul</button></div>
+        <div id="mapBarcodePendingInfo" class="map-barcode-pending is-hidden" role="status">
+          <div><strong id="mapBarcodePendingLabel"></strong><small>Ürünün adını veya kodunu arayıp doğru ürünü seç.</small></div>
+          <button id="mapBarcodeForget" class="btn secondary small" type="button">Barkodu Unut</button>
+        </div>
+        <div id="mapBarcodeMatches" class="map-barcode-matches" aria-live="polite"></div>
+      </section>
+      <section class="map-barcode-panel">
+        <h3>3. Ürünü doğrula ve yerleştir</h3>
+        <div id="mapBarcodeChosen" class="map-barcode-chosen"><p class="muted">Kamerayla okutulan veya listeden seçilen ürün burada görünecek.</p></div>
+        <div id="mapBarcodeDecision" class="map-barcode-decision is-hidden" role="group" aria-label="Barkod kaydetme onayı">
+          <strong id="mapBarcodeDecisionTitle">Barkod kaydı</strong>
+          <p id="mapBarcodeDecisionText"></p>
+          <div class="map-barcode-decision-actions">
+            <button type="button" class="btn primary" id="mapBarcodeDecisionSave">Evet, Kaydet</button>
+            <button type="button" class="btn secondary" id="mapBarcodeDecisionSkip">Hayır, Sadece Konuma Ekle</button>
+          </div>
+          <small>Barkod kaydı ortak ürün kataloğuna yazılır; haritadaki ürün konumu ayrıca Buluta Kaydet ile paylaşılır.</small>
+        </div>
+        <button type="button" id="mapBarcodeAdd" class="btn primary full" disabled>+ Ürünü Seçili Konuma Ekle</button>
+        <p class="muted smalltext">Aynı konuma ikinci kez eklenen ürün atlanır. Bir ürün farklı raflarda bulunabilir. Ürünler önce yerel harita taslağına eklenir; işlemler bitince <b>Buluta Kaydet</b> demelisin.</p>
+        <div id="mapBarcodeFeedback" class="map-barcode-feedback" role="status" aria-live="polite"></div>
+        <div class="map-barcode-history"><h4>Bu oturumda eklenenler <span id="mapBarcodeAddedCount">0</span></h4><div id="mapBarcodeAddedList"><p class="muted">Henüz ürün eklenmedi.</p></div></div>
+        <button type="button" id="mapBarcodeDone" class="btn secondary full">Bitti, Haritaya Dön</button>
+      </section>
+    </div>
   </div>
 </div>
 </body>

@@ -458,7 +458,284 @@ function createDemo(){if(!isEditable())return;if(layout.blocks.length&&!confirm(
  const c=layout.blocks.find(b=>b.label==='3050');c.products=[{code:'UR-003',name:'Makarna'}];
  layout.demo=true;selected=null;dirtyNow();renderCanvas();renderInspector();setMessage('Örnek kroki açıldı. Bu temsili çizim buluta kaydedilemez; gerçek rafları çizmek için “Boş krokiyle başla”yı kullan.','success');
 }
+
+/* V3.4: Harita konumu ayrı; barkod kaydı yalnızca yöneticinin açık onayıyla merkezi katalog RPC üzerinden yapılır. */
+let mapCatalog=[],mapCatalogRemote=false,mapCatalogLoaded=false,mapCatalogPromise=null;
+let mapBarcodeChosen=null,mapBarcodeAdded=[],mapBarcodeTimer=null;
+let mapBarcodePending='',mapBarcodeDecisionBusy=false;
+let mapBarcodeStream=null,mapBarcodeControls=null,mapBarcodeReader=null,mapBarcodeDetector=null,mapBarcodeFrame=null,mapBarcodeActive=false,mapBarcodeGeneration=0,mapBarcodeLastSeen='';
+function mapBarcodeStatus(message,kind='info'){
+ const box=$('mapBarcodeFeedback');if(!box)return;box.textContent=message;box.dataset.kind=kind;
+}
+function mapBarcodeOpen(blockId=null){
+ if(!isEditable())return;
+ const blocks=layout.blocks.filter(b=>['aisle','rack','lrack'].includes(b.type));
+ if(!blocks.length){setMessage('Önce en az bir koridor veya raf çiz.','error');return}
+ // Koridorun açık detay penceresinden de başlatılabilir.
+ const previousCorridorSlot=corridorSlot?{...corridorSlot}:null;
+ if(corridorId&&$('corridorOverlay')&&!$('corridorOverlay').classList.contains('is-hidden'))closeCorridor();
+ $('mapBarcodeModal').classList.remove('is-hidden');document.body.classList.add('map-barcode-open');
+ const select=$('mapBarcodeBlock');select.innerHTML=blocks.map(b=>`<option value="${esc(b.id)}">${esc(b.label)} · ${b.type==='aisle'?'Koridor':b.type==='lrack'?'L Raf':'Raf'}</option>`).join('');
+ const initial=blocks.find(b=>b.id===(blockId||selected))||blocks[0];select.value=initial.id;
+ if(initial.type==='aisle'&&previousCorridorSlot){$('mapBarcodeSide').value=previousCorridorSlot.side;$('mapBarcodeSection').dataset.preferred=String(previousCorridorSlot.section)}
+ mapBarcodeChosen=null;mapBarcodePending='';mapBarcodeDecisionBusy=false;mapBarcodeAdded=[];$('mapBarcodeLookup').value='';$('mapBarcodeMatches').innerHTML='';mapBarcodeStatus('');mapBarcodePendingDisplay();
+ mapBarcodeRenderChosen();mapBarcodeRenderHistory();mapBarcodeTargetChanged();
+ mapBarcodeLoadCatalog();
+}
+function mapBarcodeClose(){
+ if(mapBarcodeDecisionBusy)return;
+ mapBarcodeGeneration++;mapBarcodeStopCamera();
+ $('mapBarcodeModal').classList.add('is-hidden');document.body.classList.remove('map-barcode-open');
+ $('mapBarcodeLookup').value='';mapBarcodeChosen=null;mapBarcodePending='';mapBarcodeDecisionBusy=false;mapBarcodePendingDisplay();
+}
+function mapBarcodeTarget(){
+ const b=layout.blocks.find(x=>x.id===$('mapBarcodeBlock').value&&['aisle','rack','lrack'].includes(x.type));if(!b)return null;
+ if(b.type==='aisle')return {b,side:$('mapBarcodeSide').value,section:Number($('mapBarcodeSection').value)};
+ if(b.type==='rack')return {b,level:$('mapBarcodeRackLevel').value,shelf:$('mapBarcodeShelf').value.trim().slice(0,75)};
+ return {b,arm:$('mapBarcodeArm').value,level:$('mapBarcodeLLevel').value};
+}
+function mapBarcodeTargetLabel(t){
+ if(!t)return 'Konum seçilmedi';
+ if(t.b.type==='aisle')return `${t.b.label} · ${t.side==='left'?'Sol':'Sağ'} · ${String(t.section).padStart(2,'0')}. bölüm`;
+ if(t.b.type==='lrack')return `${t.b.label} · ${L_ARMS[t.arm]} · ${L_LEVELS[t.level]}`;
+ return `${t.b.label} · ${L_LEVELS[t.level]}${t.shelf?' · Raf '+t.shelf:''}`;
+}
+function mapBarcodeTargetChanged(){
+ const t=mapBarcodeTarget(),b=t?.b;
+ ['mapBarcodeAisleFields','mapBarcodeRackFields','mapBarcodeLRackFields'].forEach(x=>$(x).classList.add('is-hidden'));
+ if(!b){$('mapBarcodeTargetHint').textContent='Önce koridor veya raf seç.';return}
+ if(b.type==='aisle'){
+  $('mapBarcodeAisleFields').classList.remove('is-hidden');
+  const sec=$('mapBarcodeSection'),prev=Number(sec.dataset.preferred||sec.value)||1;
+  sec.innerHTML=Array.from({length:b.sections||12},(_,i)=>`<option value="${i+1}">${String(i+1).padStart(2,'0')}. bölüm</option>`).join('');sec.value=String(Math.min(b.sections||12,prev));delete sec.dataset.preferred;
+ }else if(b.type==='rack'){$('mapBarcodeRackFields').classList.remove('is-hidden')}
+ else{$('mapBarcodeLRackFields').classList.remove('is-hidden')}
+ const target=mapBarcodeTarget();$('mapBarcodeTargetHint').textContent='Seçili konum: '+mapBarcodeTargetLabel(target);
+}
+async function mapBarcodeLoadCatalog(force=false){
+ if(mapCatalogLoaded&&!force){mapBarcodeCatalogNotice();return}
+ if(mapCatalogPromise)return mapCatalogPromise;
+ const p=(async()=>{
+  $('mapBarcodeCatalogStatus').textContent='Excel ürün kataloğu yükleniyor…';
+  // Basılı katalog eski ürünlerin adlarını çevrimdışı aramak içindir; barkodların tek kaynağı Supabase tablosudur.
+  let staticRows=[];try{const r=await fetch('./aktiva-urunler.json',{cache:'no-store'});if(r.ok){const list=await r.json();if(Array.isArray(list))staticRows=list}}catch(e){console.warn('Katalog dosyası alınamadı',e)}
+  let remote=[];let remoteError='';
+  try{const records=await api('/rest/v1/aktiva_excel_catalog?select=code,name,position,pack,barcode&order=code.asc&limit=10000');if(Array.isArray(records)){remote=records;mapCatalogRemote=true}else throw Error('Katalog yanıtı geçersiz')}catch(e){mapCatalogRemote=false;remoteError=e.message}
+  const byCode=new Map();for(const p of staticRows)if(p?.code&&p?.name)byCode.set(String(p.code).trim(),p);
+  for(const p of remote)if(p?.code&&p?.name)byCode.set(String(p.code).trim(),p);
+  mapCatalog=Array.from(byCode.values()).map(p=>({code:text(p.code).trim(),name:text(p.name).trim(),barcode:text(p.barcode).trim(),position:text(p.position).trim(),pack:p.pack}));
+  mapCatalogLoaded=true;mapBarcodeCatalogNotice(remoteError);
+  if($('mapBarcodeLookup').value.trim())mapBarcodeSearch();
+ })().finally(()=>{if(mapCatalogPromise===p)mapCatalogPromise=null});
+ mapCatalogPromise=p;return p;
+}
+function mapBarcodeCatalogNotice(error=''){
+ const c=$('mapBarcodeCatalogStatus');if(!c)return;
+ c.textContent=mapCatalogRemote?`${mapCatalog.length} ürün · Excel kataloğu güncel. Barkod eşleştirmeleri kullanılabilir.`:`${mapCatalog.length} yerel ürün · ${error?'Canlı katalog okunamadı: '+error+'. ':''}Barkod eşleştirmesi için çevrimiçi katalog gerekli; ürün kodu/adıyla arayabilirsin.`;
+}
+function mapBarcodeMatchesQuery(p,q){const term=norm(q);return norm(p.name).includes(term)||norm(p.code).includes(term)||norm(p.position).includes(term)||p.barcode===q.trim()}
+function mapBarcodeSearch(){
+ const raw=$('mapBarcodeLookup').value.trim(),box=$('mapBarcodeMatches');
+ if(!raw){box.innerHTML='<p class="muted smalltext">Ürün adı, ürün kodu veya barkod arayabilirsin.</p>';return}
+ if(!mapCatalogLoaded){box.innerHTML='<p class="muted">Katalog yükleniyor…</p>';return}
+ const found=mapCatalog.filter(p=>mapBarcodeMatchesQuery(p,raw)).slice(0,15);
+ box.innerHTML=found.length?found.map(p=>`<button type="button" class="map-barcode-match" data-map-code="${esc(p.code)}"><strong>${esc(p.name)}</strong><small>Kod: ${esc(p.code)}${p.position?' · Excel pozisyonu: '+esc(p.position):''}</small></button>`).join(''):`<p class="map-barcode-notfound">${mapBarcodePending?'Barkod kayıtlı değil. Ürünü adı veya koduyla arayıp seçtiğinde barkodu kaydetme onayı gösterilecek.':'“'+esc(raw)+'” katalogda bulunamadı. Önce ürünün adını veya kodunu kontrol et.'}</p>`;
+}
+function mapBarcodePendingDisplay(){
+ const box=$('mapBarcodePendingInfo');if(!box)return;
+ box.classList.toggle('is-hidden',!mapBarcodePending);
+ $('mapBarcodePendingLabel').textContent=mapBarcodePending?'Okutulan / girilen barkod: '+mapBarcodePending:'';
+}
+function mapBarcodePick(p){
+ if(!p||mapBarcodeDecisionBusy)return;
+ mapBarcodeChosen=p;
+ // Okutulan eşleşmeyen barkod, ürün seçilince kaybolmaz; onay gelene dek bekletilir.
+ if(!mapBarcodePending)$('mapBarcodeLookup').value=p.barcode||p.code;
+ $('mapBarcodeMatches').innerHTML='';mapBarcodeRenderChosen();
+ mapBarcodeStatus(mapBarcodePending?'Barkod bilgisini kontrol et ve kaydetme tercihini seç.':'Ürünü ve hedef konumu kontrol edip ekle.','info');
+}
+function mapBarcodeRenderChosen(){
+ const box=$('mapBarcodeChosen'),p=mapBarcodeChosen;
+ const dec=$('mapBarcodeDecision'),pending=mapBarcodePending;
+ $('mapBarcodeAdd').disabled=!p||!!pending||mapBarcodeDecisionBusy;
+ box.innerHTML=p?`<div class="map-barcode-confirm"><span class="map-barcode-ok">✓ Katalogda bulundu</span><strong>${esc(p.name)}</strong><small>Ürün kodu: ${esc(p.code)}</small><small>Excel pozisyonu: ${esc(p.position||'Belirtilmemiş')}${p.pack?' · Koli içi: '+esc(p.pack):''}</small><small>Mevcut barkod: ${esc(p.barcode||'Tanımlanmamış')}</small></div>`:'<p class="muted">Kamerayla okutulan veya listeden seçilen ürün burada görünecek.</p>';
+ if(!p||!pending){dec.classList.add('is-hidden');return}
+ dec.classList.remove('is-hidden');
+ const owner=mapCatalog.find(x=>x.code!==p.code&&x.barcode===pending);
+ const same=p.barcode===pending;
+ $('mapBarcodeDecisionTitle').textContent=owner?'Barkod başka üründe kayıtlı':same?'Barkod zaten kayıtlı':p.barcode?'Barkod farklı — değiştirmek ister misiniz?':'Barkod kayıtlı değil — kaydetmek ister misiniz?';
+ $('mapBarcodeDecisionText').textContent=owner?`Bu barkod “${owner.name}” (Kod: ${owner.code}) ürününe kayıtlı. Başka bir ürüne aktarılamaz.`:same?'Bu barkod seçilen ürüne zaten tanımlı.':'Seçilen ürün: '+p.name+' (Kod: '+p.code+'). '+(p.barcode?'Mevcut barkod: '+p.barcode+'. Yeni barkod: '+pending+'. Kaydedersen eski barkodun yerine yenisi geçer.':'Yeni barkod: '+pending+'. Bu ürüne barkod kaydedilsin mi?');
+ const action=$('mapBarcodeDecisionSave');action.disabled=mapBarcodeDecisionBusy||!!owner||same||!mapCatalogRemote||!/^[0-9]{6,20}$/.test(pending);
+ action.textContent=mapBarcodeDecisionBusy?'Kaydediliyor…':p.barcode?'Evet, Barkodu Değiştir':'Evet, Barkodu Kaydet';
+ $('mapBarcodeDecisionSkip').disabled=mapBarcodeDecisionBusy;
+ $('mapBarcodeForget').disabled=mapBarcodeDecisionBusy;
+ if(!mapCatalogRemote&&!owner&&!same)$('mapBarcodeDecisionText').textContent+=' Canlı kataloğa erişim yok; barkod kaydedilemez, sadece konuma ekleme yapılabilir.';
+ if(!/^[0-9]{6,20}$/.test(pending)&&!owner&&!same)$('mapBarcodeDecisionText').textContent+=' Barkod kaydı için 6–20 rakam gerekir.';
+}
+function mapBarcodeBusyUI(value){
+ // RPC sırasında yanlışlıkla başka ürün seçilip kayıt sonucunun karışmasını önle.
+ for(const id of ['mapBarcodeLookup','mapBarcodeFind','mapBarcodeStart','mapBarcodeClose','mapBarcodeDone','mapBarcodeBlock']){
+  const element=$(id);if(element)element.disabled=value;
+ }
+}
+async function mapBarcodeSaveConfirmed(){
+ const p=mapBarcodeChosen,value=mapBarcodePending;
+ if(!isEditable()||!p||!value||mapBarcodeDecisionBusy||!mapCatalogRemote)return;
+ if(!/^[0-9]{6,20}$/.test(value))return mapBarcodeStatus('Barkod 6–20 rakam olmalı.','error');
+ const pack=Number(p.pack);
+ if(!Number.isSafeInteger(pack)||pack<1)return mapBarcodeStatus('Bu ürünün koli içi adedi geçersiz; önce Mal Kabul kataloğundan düzelt.','error');
+ mapBarcodeDecisionBusy=true;mapBarcodeBusyUI(true);mapBarcodeRenderChosen();
+ let rpcAccepted=false;
+ try{
+  // Güncel durumu yeniden oku. Yanlış veya eş zamanlı güncellenmiş barkodları ezme.
+  const existing=await api('/rest/v1/aktiva_excel_catalog?select=code,name,position,pack,barcode&code=eq.'+encodeURIComponent(p.code)+'&limit=2');
+  if(!Array.isArray(existing)||existing.length!==1)throw Error('Bu ürün ortak katalogda bulunamadı; önce Excel ürün kataloğuna ekleyin.');
+  const current=existing[0];
+  if(text(current.barcode).trim()!==text(p.barcode).trim()){
+   mapBarcodeChosen={...p,barcode:text(current.barcode).trim()};
+   throw Error('Bu ürünün barkodu başka bir cihazda değişmiş. Yeni bilgiyi kontrol ederek tekrar onaylayın.');
+  }
+  const other=await api('/rest/v1/aktiva_excel_catalog?select=code,name,barcode&barcode=eq.'+encodeURIComponent(value)+'&limit=3');
+  if(!Array.isArray(other))throw Error('Barkodun başka ürüne bağlı olup olmadığı denetlenemedi.');
+  if(other.some(x=>text(x.code)!==p.code))throw Error('Bu barkod başka bir ürüne tanımlı. Başka ürünün barkodu değiştirilemez.');
+  // Mal Kabul'ün mevcut barkod kayıt fonksiyonu; sunucudaki yetkilendirme geçerlidir.
+  const currentPack=Number(current.pack);
+  if(!Number.isSafeInteger(currentPack)||currentPack<1)throw Error('Katalogdaki koli içi miktar geçersiz.');
+  await api('/rest/v1/rpc/aktiva_set_product_barcode',{method:'POST',body:{p_code:p.code,p_name:text(current.name),p_position:text(current.position),p_pack:currentPack,p_barcode:value}});
+  rpcAccepted=true;
+  // Katalog kaydının gerçekten güncellendiğini doğrula.
+  const verify=await api('/rest/v1/aktiva_excel_catalog?select=code,name,position,pack,barcode&code=eq.'+encodeURIComponent(p.code)+'&limit=1');
+  if(!Array.isArray(verify)||verify[0]?.barcode!==value)throw Error('Sunucu yeni barkodu doğrulamadı. Ürün Kataloğu bölümünden kontrol edin.');
+  mapBarcodeChosen={...p,...verify[0],barcode:value};
+  mapCatalog=mapCatalog.map(x=>x.code===p.code?{...x,barcode:value}:x);
+  mapBarcodePending='';mapBarcodePendingDisplay();
+  mapBarcodeStatus('✓ Barkod ortak ürün kataloğuna kaydedildi. Ürünü şimdi seçili konuma ekleyebilirsin.','success');
+ }catch(e){mapBarcodeStatus(rpcAccepted?'Barkod kaydı gönderildi ancak sunucudan doğrulanamadı. Yeniden kaydetmeden önce Mal Kabul / Ürün Kataloğu bölümünden kontrol et. Ayrıntı: '+e.message:'Barkod kaydedilemedi: '+e.message,'error')}
+ finally{mapBarcodeDecisionBusy=false;mapBarcodeBusyUI(false);mapBarcodeRenderChosen()}
+}
+function mapBarcodeSkip(){
+ if(!mapBarcodeChosen||mapBarcodeDecisionBusy)return;
+ mapBarcodePending='';mapBarcodePendingDisplay();mapBarcodeRenderChosen();
+ mapBarcodeStatus('Barkod kataloğa kaydedilmedi. Ürünü yalnızca seçilen harita konumuna ekleyebilirsin.','info');
+}
+function mapBarcodeRenderHistory(){
+ $('mapBarcodeAddedCount').textContent=String(mapBarcodeAdded.length);
+ $('mapBarcodeAddedList').innerHTML=mapBarcodeAdded.length?mapBarcodeAdded.slice(-6).reverse().map(p=>`<div class="map-barcode-added"><strong>${esc(p.name)}</strong><small>${esc(p.target)}</small></div>`).join(''):'<p class="muted">Henüz ürün eklenmedi.</p>';
+}
+function mapBarcodeAdd(){
+ if(!isEditable()||!mapBarcodeChosen||mapBarcodePending||mapBarcodeDecisionBusy)return;
+ const t=mapBarcodeTarget(),p=mapBarcodeChosen;if(!t){mapBarcodeStatus('Geçerli bir koridor veya raf seç.','error');return}
+ const {b}=t;
+ if(b.products.length>=MAX_LOCATION_PRODUCTS){mapBarcodeStatus('Bu rafın veya koridorun kapasitesi doldu.','error');return}
+ const item={code:p.code.slice(0,55),name:p.name.slice(0,140)};
+ if(b.type==='aisle'){if(!SIDES[t.side]||!Number.isInteger(t.section)||t.section<1||t.section>(b.sections||12)){mapBarcodeStatus('Sol/sağ bölüm geçersiz.','error');return}Object.assign(item,{side:t.side,section:t.section})}
+ if(b.type==='rack'){if(!L_LEVELS[t.level])return mapBarcodeStatus('Alt/üst raf seç.','error');item.level=t.level;if(t.shelf)item.shelf=t.shelf}
+ if(b.type==='lrack'){if(!L_ARMS[t.arm]||!L_LEVELS[t.level])return mapBarcodeStatus('L raf kolu ve katını seç.','error');Object.assign(item,{arm:t.arm,level:t.level})}
+ const duplicates=b.products.some(old=>{
+  if(item.code&&norm(old.code)!==norm(item.code))return false;
+  if(!item.code&&norm(old.name)!==norm(item.name))return false;
+  if(b.type==='aisle')return old.side===item.side&&old.section===item.section;
+  if(b.type==='lrack')return old.arm===item.arm&&old.level===item.level;
+  return old.level===item.level&&norm(old.shelf)===norm(item.shelf);
+ });
+ if(duplicates){mapBarcodeStatus('Bu ürün seçilen konumda zaten var; tekrar eklenmedi. Başka bir ürün okutabilirsin.','info');return}
+ b.products.push(item);
+ try{validate(serialize())}catch(e){b.products.pop();mapBarcodeStatus('Ürün eklenemedi: '+e.message,'error');return}
+ mapBarcodeAdded.push({name:p.name,target:mapBarcodeTargetLabel(t)});mapBarcodeRenderHistory();mapBarcodeChosen=null;mapBarcodePending='';mapBarcodePendingDisplay();mapBarcodeRenderChosen();$('mapBarcodeLookup').value='';$('mapBarcodeMatches').innerHTML='';
+ dirtyNow();renderCanvas();renderInspector();search();
+ mapBarcodeStatus('✓ Ürün '+mapBarcodeTargetLabel(t)+' konumuna eklendi. Başka ürün okutabilir veya bitirip Buluta Kaydet diyebilirsin.','success');
+}
+async function mapBarcodeDetected(raw){
+ if(mapBarcodeDecisionBusy)return;
+ const value=text(raw).trim();if(!value||value.length>100)return;
+ mapBarcodeStopCamera();$('mapBarcodeLookup').value=value;
+ mapBarcodePending='';mapBarcodeChosen=null;mapBarcodePendingDisplay();mapBarcodeRenderChosen();
+ if(!mapCatalogLoaded){
+  mapBarcodeStatus('Barkod okundu. Katalog kontrol ediliyor…','info');
+  try{await mapBarcodeLoadCatalog();if(!$('mapBarcodeModal').classList.contains('is-hidden'))return mapBarcodeDetected(value)}
+  catch(e){mapBarcodeStatus('Katalog açılamadı: '+e.message,'error')}return;
+ }
+ // Ürün kodu ile bulunan kaydı barkodla karıştırma: kod eşleşmesi barkod kaydı değiştirmez.
+ const exact=mapCatalog.filter(p=>p.barcode===value||p.code===value);
+ if(exact.length===1){mapBarcodePick(exact[0]);mapBarcodeStatus('✓ Ürün barkod/kod eşleşmesi bulundu. Konumu kontrol et.','success');return}
+ if(exact.length>1){mapBarcodeSearch();mapBarcodeStatus('Birden fazla eşleşme var. Doğru ürünü listeden seç.','error');return}
+ mapBarcodePending=value;mapBarcodePendingDisplay();
+ $('mapBarcodeLookup').value='';mapBarcodeSearch();
+ mapBarcodeStatus('Barkod kayıtlı değil. Ürünü adı veya koduyla ara, seç; sonra kaydetme onayı çıkacak.','info');
+}
+function mapBarcodeStopCamera(){
+ mapBarcodeActive=false;
+ if(mapBarcodeFrame){cancelAnimationFrame(mapBarcodeFrame);mapBarcodeFrame=null}
+ if(mapBarcodeControls){try{mapBarcodeControls.stop()}catch{}mapBarcodeControls=null}
+ if(mapBarcodeStream){for(const tr of mapBarcodeStream.getTracks())tr.stop();mapBarcodeStream=null}
+ const video=$('mapBarcodeVideo');if(video){try{video.pause()}catch{}video.srcObject=null}
+ $('mapBarcodeCameraWrap')?.classList.add('is-hidden');$('mapBarcodeStop')?.classList.add('is-hidden');$('mapBarcodeStart').disabled=false;
+}
+async function mapBarcodeLoadZXing(){
+ if(window.ZXingBrowser?.BrowserMultiFormatReader)return window.ZXingBrowser;
+ const scripts=[...document.scripts],old=scripts.find(s=>s.dataset.mapZxing==='1');if(old){if(window.ZXingBrowser?.BrowserMultiFormatReader)return window.ZXingBrowser;old.remove()}
+ await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.dataset.mapZxing='1';sc.src='https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';sc.onload=resolve;sc.onerror=()=>reject(Error('Barkod okuyucu indirilemedi; internet bağlantını kontrol et.'));document.head.append(sc)});
+ if(!window.ZXingBrowser?.BrowserMultiFormatReader)throw Error('Barkod okuyucu yüklenemedi.');return window.ZXingBrowser;
+}
+async function mapBarcodeStartCamera(){
+ if(!isEditable())return;
+ if(mapBarcodeActive)return;
+ const token=++mapBarcodeGeneration;
+ $('mapBarcodeStart').disabled=true;
+ mapBarcodeStatus('Kamera hazırlanıyor…','info');
+ const valid=()=>mapBarcodeGeneration===token&&!$('mapBarcodeModal').classList.contains('is-hidden');
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)throw Error('Kamera için HTTPS ve kamera izni gerekli. Elle barkod girebilirsin.');
+  const video=$('mapBarcodeVideo');$('mapBarcodeCameraWrap').classList.remove('is-hidden');$('mapBarcodeStop').classList.remove('is-hidden');
+  mapBarcodeActive=true;
+  if(typeof window.BarcodeDetector==='function'){
+   let detector=null;try{detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','upc_a','upc_e','itf']})}catch{}
+   if(detector){
+    const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'}}});if(!valid()){stream.getTracks().forEach(t=>t.stop());return}
+    mapBarcodeStream=stream;video.srcObject=stream;await video.play();if(!valid())return;
+    mapBarcodeDetector=detector;mapBarcodeStatus('Kamerayı barkoda tut.','info');
+    let busy=false;
+    const tick=async()=>{
+     if(!mapBarcodeActive||!valid())return;
+     if(!busy&&video.readyState>=2){busy=true;try{const hits=await detector.detect(video);if(hits.length){mapBarcodeDetected(hits[0].rawValue);return}}catch{}finally{busy=false}}
+     mapBarcodeFrame=requestAnimationFrame(tick);
+    };mapBarcodeFrame=requestAnimationFrame(tick);return;
+   }
+  }
+  // Daha önce Mal Kabul'de kullanılan ZXing kütüphanesiyle aynı fallback.
+  const ZXing=await mapBarcodeLoadZXing();if(!valid())return;
+  mapBarcodeReader=new ZXing.BrowserMultiFormatReader();
+  const controls=await mapBarcodeReader.decodeFromVideoDevice(undefined,video,(result)=>{if(!mapBarcodeActive||!valid()||!result)return;const value=result.getText?.()||String(result.text||'');if(value)mapBarcodeDetected(value)});
+  if(!valid()||!mapBarcodeActive){try{controls.stop()}catch{}mapBarcodeStopCamera();return}
+  mapBarcodeControls=controls;
+  mapBarcodeStatus('Kamerayı barkoda tut.','info');
+ }catch(e){mapBarcodeStopCamera();if(valid())mapBarcodeStatus('Kamera açılamadı: '+e.message+' Barkodu elle yazabilir veya ürünü arayabilirsin.','error')}
+ finally{if(!mapBarcodeActive)$('mapBarcodeStart').disabled=false}
+}
+function mapBarcodeBind(){
+ $('mapBarcodeOpen').addEventListener('click',()=>mapBarcodeOpen());
+ $('mapBarcodeOpenCorridor').addEventListener('click',()=>mapBarcodeOpen(corridorId));
+ $('mapBarcodeClose').addEventListener('click',mapBarcodeClose);
+ $('mapBarcodeDone').addEventListener('click',mapBarcodeClose);
+ $('mapBarcodeModal').addEventListener('click',e=>{if(e.target.id==='mapBarcodeModal')mapBarcodeClose()});
+ $('mapBarcodeBlock').addEventListener('change',()=>{mapBarcodeTargetChanged()});
+ ['mapBarcodeSide','mapBarcodeSection','mapBarcodeRackLevel','mapBarcodeRackLevel','mapBarcodeShelf','mapBarcodeArm','mapBarcodeLLevel'].forEach(id=>$(id).addEventListener('change',mapBarcodeTargetChanged));
+ $('mapBarcodeLookup').addEventListener('input',()=>{mapBarcodeChosen=null;mapBarcodeRenderChosen();clearTimeout(mapBarcodeTimer);mapBarcodeTimer=setTimeout(mapBarcodeSearch,160)});
+ $('mapBarcodeFind').addEventListener('click',()=>{const q=$('mapBarcodeLookup').value.trim();if(!mapBarcodePending&&/^[0-9]{6,20}$/.test(q))mapBarcodeDetected(q);else mapBarcodeSearch()});
+ $('mapBarcodeLookup').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('mapBarcodeFind').click()}});
+ $('mapBarcodeMatches').addEventListener('click',e=>{const b=e.target.closest('[data-map-code]');if(b)mapBarcodePick(mapCatalog.find(p=>p.code===b.dataset.mapCode))});
+ $('mapBarcodeAdd').addEventListener('click',mapBarcodeAdd);
+ $('mapBarcodeDecisionSave').addEventListener('click',mapBarcodeSaveConfirmed);
+ $('mapBarcodeDecisionSkip').addEventListener('click',mapBarcodeSkip);
+ $('mapBarcodeForget').addEventListener('click',()=>{if(mapBarcodeDecisionBusy)return;mapBarcodePending='';mapBarcodePendingDisplay();mapBarcodeRenderChosen();mapBarcodeStatus('Barkod eşleştirmesi iptal edildi.','info')});
+ $('mapBarcodeStart').addEventListener('click',mapBarcodeStartCamera);
+ $('mapBarcodeStop').addEventListener('click',()=>{mapBarcodeGeneration++;mapBarcodeStopCamera()});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){mapBarcodeGeneration++;mapBarcodeStopCamera()}});
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('mapBarcodeModal').classList.contains('is-hidden'))mapBarcodeClose()});
+}
+
 function bind(){
+ mapBarcodeBind();
  bindCorridorEvents();
  $('corridorRotateLeft').addEventListener('click',()=>rotateBlock(corridorId,-1));
  $('corridorRotateRight').addEventListener('click',()=>rotateBlock(corridorId,1));

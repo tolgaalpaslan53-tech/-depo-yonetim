@@ -59,6 +59,7 @@
   function canPlay(card, r=app.room){
     if (!card || !r || r.status!=='playing') return false;
     if (r.opening_club) return card.s==='C' && !['7','J','A','10'].includes(card.r);
+    if (r.my_first_turn && ['7','10','J','A'].includes(card.r)) return false;
     if (r.penalty>0) return card.r==='7';
     if (r.ace_chain) return card.r==='A' || card.s===r.active_suit;
     return card.r==='J' || card.s===r.active_suit || card.r===r.top_card?.r;
@@ -203,7 +204,7 @@
     const scorePanel=`<div class="panel-card scoreboard"><div class="score-heading"><div><span>🏆 MAÇ PUANLARI</span><h3>${roundNo(r)} / ${roundTotal(r)}. El</h3></div><span class="score-low">↓ Az puan kazanır</span></div>
       <div class="score-progress"><span style="width:${Math.min(100,Math.round(((r.status==='finished'?roundNo(r):roundNo(r)-1)/roundTotal(r))*100))}%"></span></div>
       <div class="score-rows">${scoreRows(r)}</div>${historyHTML(r)}
-      <small class="score-help">Elini bitiren 0 puan alır. Diğerleri elde kalan kartların puanını alır.</small></div>`;
+      <small class="score-help">Özel kart (7, 10, Vale, As) ile bitirilirse rakiplerin o eldeki ceza puanları 2 katına çıkar.</small></div>`;
     const rulesShort=`<div class="panel-card rules-panel"><h3>♧ Özel Kartlar</h3><div class="rule-line"><b class="rule-icon red">7</b><span>Sonrakine +3 kart; 7'ler birikir.</span></div>
       <div class="rule-line"><b class="rule-icon blue">J</b><span>İstediğin türü seçersin.</span></div>
       <div class="rule-line"><b class="rule-icon purple">A</b><span>Aynı oyuncu aynı türü veya başka As'ı atar.</span></div>
@@ -228,7 +229,7 @@
           <div class="my-hand" role="group" aria-label="Elindeki kartlar">${options.map(c=>cardHTML(c,{selectable:!app.preview,selected:app.selected===c.id,legal:ownTurn&&c.legal,disabled:!ownTurn||!c.legal})).join('')||'<div class="empty-hand">Elinde kart kalmadı.</div>'}</div>
           <div class="action-bar">
             <button class="draw-btn" type="button" data-action="draw" ${!ownTurn||!canDraw()||app.busy||app.preview?'disabled':''}>▣ <span>${drawTitle}</span></button>
-            <div class="action-hint">${ownTurn?(selectedCard?`Seçilen: <b>${escapeHTML(cardName(selectedCard))}</b>`:r.opening_club?'♣ İlk hamlede özel olmayan sinek zorunlu':r.ace_chain?'As serisini tamamla':penalty?'7 cezası birikiyor':eligible?'Uygun kartı seç':'Atılacak kart yok, çek'):'Sıranı bekle'}</div>
+            <div class="action-hint">${ownTurn?(selectedCard?`Seçilen: <b>${escapeHTML(cardName(selectedCard))}</b>`:r.opening_club?'♣ İlk hamlede özel olmayan sinek zorunlu':r.my_first_turn?'İlk sıranda özel kart oynanamaz':r.ace_chain?'As serisini tamamla':penalty?'7 cezası birikiyor':eligible?'Uygun kartı seç':'Atılacak kart yok, çek'):'Sıranı bekle'}</div>
             ${r.drawn&&ownTurn?`<button class="pass-btn" data-action="pass" ${app.busy||app.preview?'disabled':''}>Pas Geç</button>`:''}
             <button class="play-btn" data-action="play" ${!ownTurn||!selectedCard||!canPlay(selectedCard)||app.busy||app.preview?'disabled':''}>▶ <span>Kartı Oyna</span></button>
           </div>
@@ -255,7 +256,7 @@
         <li><b>10:</b> Oyun yönünü tersine çevirir.</li>
         <li><b>Normal tur:</b> Kendi sırasında kart çekme her zaman açıktır. Çekilen kart uygunsa oynanabilir veya pas geçilebilir; uygun değilse sıra geçer.</li>
         <li><b>Elin bitişi:</b> As dışındaki son kartını atan oyuncu eli kazanır. Son kart As ise takip kartını oynama kuralı devam eder.</li>
-        <li><b>Puan:</b> Eli bitiren 0 puan alır. Diğerlerinin elinde kalan 2–10 değerindeki kartlar üzerindeki sayı kadar (7 hariç), 7 = 20, Vale/Kız/Papaz = 10, As = 15 ceza puanı getirir.</li>
+        <li><b>Puan:</b> Eli bitiren 0 puan alır. Özel kartla bitişte rakiplerin cezası 2 katına çıkar. Diğerlerinin elinde kalan 2–10 değerindeki kartlar üzerindeki sayı kadar (7 hariç), 7 = 20, Vale/Kız/Papaz = 10, As = 15 ceza puanı getirir.</li>
         <li><b>Maç sonucu:</b> Seçilen tüm eller bitince toplam ceza puanı en düşük olan kazanır. Eşitlik varsa beraberlik olur.</li>
       </ul><p class="rules-note">Son kart uyarısı otomatik yapılır. Oda sahibi maç başlamadan önce 3, 5, 10, 20 veya özel el sayısı seçebilir.</p>
       <button class="primary-btn" data-action="close-modal">Anladım</button></div></div>`;
@@ -270,7 +271,14 @@
       (app.room.status==='lobby' ? waiting() : game()) : `${header()}<div class="load-screen"><span class="small-spinner"></span> Odaya bağlanılıyor...</div>`;
     if(app.rulesOpen) body+=rulesModal();
     if(app.suitPicker) body+=suitModal();
+    const oldHand=root.querySelector('.my-hand');
+    const handLeft=oldHand ? oldHand.scrollLeft : null;
+    const handWasAtEnd=oldHand ? oldHand.scrollLeft + oldHand.clientWidth >= oldHand.scrollWidth-3 : false;
     root.innerHTML=body;
+    const newHand=root.querySelector('.my-hand');
+    if(newHand && handLeft !== null){
+      newHand.scrollLeft=handWasAtEnd ? newHand.scrollWidth-newHand.clientWidth : handLeft;
+    }
   }
 
   async function rpc(name,args){
